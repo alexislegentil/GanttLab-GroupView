@@ -27,7 +27,7 @@ export default class MainModule extends VuexModule {
   public justLoggedOut = false;
   public sourceGateway: Source | AuthenticatableSource | null = null;
   public viewGateway: SourceVisitor<unknown> | null = null;
-  public filterGateway: Filter | null = null;
+  public filterGateway: FilterGateway | null = null;
   public chart: string | null = null;
 
   @Mutation
