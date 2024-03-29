@@ -186,6 +186,7 @@ import {
   PaginatedListOfTasks,
   PaginatedListOfMilestones,
   Project,
+Filter,
 } from 'ganttlab-entities';
 import { ImplementedSourcesGateways } from '../helpers/ImplementedSourcesGateways';
 import { DisplayableError } from '../helpers/DisplayableError';
@@ -193,6 +194,7 @@ import { addDisplaybleError } from '../helpers';
 import { TasksAndMilestones } from 'ganttlab-use-cases';
 import LocalForage, { getRememberedViews } from '../helpers/LocalForage';
 import { trackVirtualpageView, trackInteractionEvent } from '../helpers/GTM';
+import { FilterGateway } from '@/helpers/ImplementedFiltersGateways';
 
 const mainState = getModule(MainModule);
 
@@ -304,6 +306,12 @@ export default class Home extends Vue {
       return this.viewGateway.configuration.activeMilestone;
     }
     return null;
+  }
+
+  async setFilter(filter: FilterGateway) {
+    mainState.setFilterGateway(filter);
+    this.refresh(false);
+    trackInteractionEvent('Filter', 'Changed', `${filter}` );
   }
 
   async setView(view: SourceVisitor<unknown>) {

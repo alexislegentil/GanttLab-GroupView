@@ -6,6 +6,7 @@ import {
   Credentials,
   AuthenticatableSource,
   SourceVisitor,
+  Filter,
 } from 'ganttlab-entities';
 import { DisplayableError } from '../../helpers/DisplayableError';
 import { FilterGateway } from '@/helpers/ImplementedFiltersGateways';
@@ -26,7 +27,7 @@ export default class MainModule extends VuexModule {
   public justLoggedOut = false;
   public sourceGateway: Source | AuthenticatableSource | null = null;
   public viewGateway: SourceVisitor<unknown> | null = null;
-  public filterGateway: FilterGateway | null = null;
+  public filterGateway: Filter | null = null;
   public chart: string | null = null;
 
   @Mutation
