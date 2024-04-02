@@ -4,19 +4,26 @@ import {
   Configuration,
   PaginatedListOfTasks,
   Task,
+  Filter,
 } from 'ganttlab-entities';
 import { GitLabIssue } from '../../../sources/gitlab/types/GitLabIssue';
 import {
   getTaskFromGitLabIssue,
   getPaginationFromGitLabHeaders,
 } from '../../../sources/gitlab/helpers';
+import { IssuesStateFilter } from '../../../filters/IssuesStateFilter';
 
 export class ViewMineGitLabStrategy
   implements ViewSourceStrategy<PaginatedListOfTasks> {
   async execute(
     source: GitLabGateway,
     configuration: Configuration,
+    filter: Filter | null,
   ): Promise<PaginatedListOfTasks> {
+    let stateFilter = null;
+    if (filter instanceof IssuesStateFilter)  {
+      stateFilter = filter.requestGitLabArgs();
+    }
     const { data, headers } = await source.safeAxiosRequest<Array<GitLabIssue>>(
       {
         method: 'GET',
@@ -25,7 +32,7 @@ export class ViewMineGitLabStrategy
           page: configuration.tasks.page,
           // eslint-disable-next-line @typescript-eslint/camelcase
           per_page: configuration.tasks.pageSize,
-       //   state: '',
+          state: stateFilter? stateFilter : 'opened',
         },
       },
     );

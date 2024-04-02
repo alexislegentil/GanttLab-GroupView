@@ -1,3 +1,4 @@
+import { Filter } from '../filters/Filter';
 import { SourceVisitor } from '../views/SourceVisitor';
 
 /**
@@ -20,12 +21,13 @@ export abstract class Source {
    */
   public getDataFor<T>(
     visitor: SourceVisitor<T>,
+    filter: Filter | null,
   ): ReturnType<typeof visitor.getDataFrom> {
     if (!visitor.supportedSourcesSlugs().includes(this.slug)) {
       throw new Error(
         `The '${visitor.name}' view does not support '${this.name}' as a source`,
       );
     }
-    return visitor.getDataFrom(this);
+    return visitor.getDataFrom(this, filter);
   }
 }

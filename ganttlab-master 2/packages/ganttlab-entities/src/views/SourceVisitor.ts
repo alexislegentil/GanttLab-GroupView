@@ -1,6 +1,7 @@
 import { View } from './View';
 import { ViewSourceStrategy } from './ViewSourceStrategy';
 import { Source } from '../sources/Source';
+import { Filter } from '../filters/Filter';
 
 /**
  * Implemented by {@link View} objects visiting {@link Source}s
@@ -27,13 +28,13 @@ export abstract class SourceVisitor<T> extends View {
    *
    * @param source - The visited {@link Source}
    */
-  async getDataFrom(source: Source): Promise<T> {
+  async getDataFrom(source: Source, filter: Filter | null ): Promise<T> {
     if (!this.slugStrategies[source.slug]) {
       throw new Error(
         `The '${source.slug}' source is not supported by the '${this.slug}'`,
       );
     }
 
-    return this.slugStrategies[source.slug].execute(source, this.configuration);
+    return this.slugStrategies[source.slug].execute(source, this.configuration, filter);
   }
 }

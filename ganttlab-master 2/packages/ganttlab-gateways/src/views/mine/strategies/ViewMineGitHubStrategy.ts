@@ -4,6 +4,7 @@ import {
   Configuration,
   PaginatedListOfTasks,
   Task,
+  Filter,
 } from 'ganttlab-entities';
 import { GitHubIssue } from '../../../sources/github/types/GitHubIssue';
 import {
@@ -16,6 +17,7 @@ export class ViewMineGitHubStrategy
   async execute(
     source: GitHubGateway,
     configuration: Configuration,
+    filter: Filter | null,
   ): Promise<PaginatedListOfTasks> {
     const { data, headers } = await source.safeAxiosRequest<{
       items: Array<GitHubIssue>;

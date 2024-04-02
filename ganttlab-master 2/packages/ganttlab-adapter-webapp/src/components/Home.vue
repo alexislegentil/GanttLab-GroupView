@@ -114,7 +114,8 @@
                   <!-- <div class="flex items-center px-2 text-lead-100">
                     <p class="flex-grow text-lg text-lead-300">Opened issues</p>
                   </div> -->
-                  <FilterSelector />
+                  <FilterSelector 
+                  @set-filter="setFilter($event)"/>
                 </div>
                 <div class="h-full w-48 p-3 border-l border-lead-500">
                   <p class="pb-2 text-xs tracking-wider text-lead-300">CHART</p>
@@ -309,8 +310,9 @@ export default class Home extends Vue {
   }
 
   async setFilter(filter: FilterGateway) {
+    console.log(`Selected filter: ${filter.name}`);
     mainState.setFilterGateway(filter);
-    this.refresh(false);
+    this.viewGateway ? this.setView(this.viewGateway) : null;
     trackInteractionEvent('Filter', 'Changed', `${filter}` );
   }
 
@@ -321,9 +323,11 @@ export default class Home extends Vue {
     // clear data so we get the spinner back while loading the new ones
     this.paginatedTasks = null;
     this.paginatedMilestones = null;
+    const filter = mainState.filterGateway ? mainState.filterGateway.instance : null;
+    console.log("filter",filter)
     // get the view data
     try {
-      const data = await this.sourceGateway.getDataFor(view);
+      const data = await this.sourceGateway.getDataFor(view, filter);
       console.log(data);
       if (data instanceof PaginatedListOfTasks) {
         this.paginatedTasks = data;

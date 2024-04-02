@@ -17,7 +17,7 @@
                   <div
                     class="flex items-center justify-center w-12 h-12 mr-4 rounded-full bg-lead-200 text-lead-600"
                   >
-                    <Icon size="32" :name="filter.icon" />
+                    <!-- <Icon size="32" :name="filter.icon" /> -->
                   </div>
                   <div class="w-56">
                     <p class="text-lg">{{ filter.name }}</p>
@@ -37,7 +37,7 @@
             >
                 <p class="flex-grow text-lg">
                     <span v-if="filterGateway">{{ filterGateway.name }}</span>
-                    <span v-else>...</span>
+                    <span v-else>Opened Issues</span>
                 </p>
 
                 <div class="text-lead-500">
@@ -102,7 +102,7 @@ const mainState = getModule(MainModule);
   
     async selectNewFilter(newFilter: FilterGateway) {
       // Handle filter selection
-      console.log(`Selected filter: ${newFilter.name}`);
+    //  console.log(`Selected filter: ${newFilter.name}`);
       this.closeModal();
 
       import(`./configurators/${newFilter.slug}.vue`)
@@ -139,10 +139,9 @@ const mainState = getModule(MainModule);
       //  filter.instance.setConfiguration(configuration);
         // store it in vuex
         mainState.setFilterGateway(filter);
-        console.log(mainState.filterGateway)
         // close the modal and emit the filter
         this.closeModal();
-        return filter.instance;
+        return filter;
     }
 
     async mounted() {

@@ -6,6 +6,7 @@ import {
   Configuration,
   Task,
   PaginatedListOfTasks,
+  Filter,
 } from 'ganttlab-entities';
 import {
   getTaskFromGitHubIssue,
@@ -21,6 +22,7 @@ export class ViewMilestoneGitHubStrategy
   async execute(
     source: GitHubGateway,
     configuration: Configuration,
+    filter: Filter | null,
   ): Promise<TasksAndMilestones> {
     const { data, headers } = await source.safeAxiosRequest<
       Array<GitHubMilestone>

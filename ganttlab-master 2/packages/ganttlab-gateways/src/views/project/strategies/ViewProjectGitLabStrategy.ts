@@ -3,6 +3,7 @@ import {
   Configuration,
   PaginatedListOfTasks,
   Task,
+  Filter,
 } from 'ganttlab-entities';
 import { GitLabGateway } from '../../../sources/gitlab/GitLabGateway';
 import { GitLabIssue } from '../../../sources/gitlab/types/GitLabIssue';
@@ -16,6 +17,7 @@ export class ViewProjectGitLabStrategy
   async execute(
     source: GitLabGateway,
     configuration: Configuration,
+    filter: Filter | null,
   ): Promise<PaginatedListOfTasks> {
     const encodedProject = encodeURIComponent(
       configuration.project.path as string,

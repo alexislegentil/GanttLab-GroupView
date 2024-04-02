@@ -1,3 +1,4 @@
+import { Filter } from '../filters/Filter';
 import { Source } from '../sources/Source';
 import { Configuration } from './Configuration';
 
@@ -15,5 +16,5 @@ export interface ViewSourceStrategy<T> {
    * @param source - The visited {@link Source}
    * @param configuration - The {@link Configuration} to use for the {@link View}
    */
-  execute(source: Source, configuration: Configuration): Promise<T>;
+  execute(source: Source, configuration: Configuration, filter: Filter | null): Promise<T>;
 }

@@ -5,6 +5,7 @@ import {
   Task,
   Milestone,
   PaginatedListOfMilestones,
+  Filter,
 } from 'ganttlab-entities';
 import { GitLabGateway } from '../../../sources/gitlab/GitLabGateway';
 import { GitLabMilestone } from '../../../sources/gitlab/types/GitLabMilestone';
@@ -21,6 +22,7 @@ export class ViewMilestoneGitLabStrategy
   async execute(
     source: GitLabGateway,
     configuration: Configuration,
+    filter: Filter | null,
   ): Promise<TasksAndMilestones> {
     const encodedProject = encodeURIComponent(
       configuration.project.path as string,
