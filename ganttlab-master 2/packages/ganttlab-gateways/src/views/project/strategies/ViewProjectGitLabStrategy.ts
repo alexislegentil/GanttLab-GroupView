@@ -11,6 +11,7 @@ import {
   getTaskFromGitLabIssue,
   getPaginationFromGitLabHeaders,
 } from '../../../sources/gitlab/helpers';
+import { IssuesStateFilter } from '../../../filters/IssuesStateFilter';
 
 export class ViewProjectGitLabStrategy
   implements ViewSourceStrategy<PaginatedListOfTasks> {
@@ -19,6 +20,10 @@ export class ViewProjectGitLabStrategy
     configuration: Configuration,
     filter: Filter | null,
   ): Promise<PaginatedListOfTasks> {
+    let stateFilter = null;
+    if (filter instanceof IssuesStateFilter)  {
+      stateFilter = filter.requestGitLabArgs();
+    }
     const encodedProject = encodeURIComponent(
       configuration.project.path as string,
     );
@@ -30,7 +35,7 @@ export class ViewProjectGitLabStrategy
           page: configuration.tasks.page,
           // eslint-disable-next-line @typescript-eslint/camelcase
           per_page: configuration.tasks.pageSize,
-          state: 'opened',
+          state: stateFilter? stateFilter : 'opened',
         },
       },
     );

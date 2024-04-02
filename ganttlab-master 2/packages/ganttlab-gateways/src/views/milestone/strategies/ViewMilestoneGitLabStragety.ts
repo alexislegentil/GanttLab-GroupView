@@ -16,6 +16,7 @@ import {
   getMilestoneFromGitLabMilestone,
 } from '../../../sources/gitlab/helpers';
 import { TasksAndMilestones } from 'ganttlab-use-cases';
+import { IssuesStateFilter } from '../../../filters/IssuesStateFilter';
 
 export class ViewMilestoneGitLabStrategy
   implements ViewSourceStrategy<TasksAndMilestones> {
@@ -24,6 +25,10 @@ export class ViewMilestoneGitLabStrategy
     configuration: Configuration,
     filter: Filter | null,
   ): Promise<TasksAndMilestones> {
+    let stateFilter = null;
+    if (filter instanceof IssuesStateFilter)  {
+      stateFilter = filter.requestGitLabArgs();
+    }
     const encodedProject = encodeURIComponent(
       configuration.project.path as string,
     );
@@ -60,7 +65,7 @@ export class ViewMilestoneGitLabStrategy
             page: configuration.tasks.page,
             // eslint-disable-next-line @typescript-eslint/camelcase
             per_page: configuration.tasks.pageSize,
-            state: 'opened',
+            state: stateFilter? stateFilter : 'opened',
             milestone: milestone.name,
           },
         });
