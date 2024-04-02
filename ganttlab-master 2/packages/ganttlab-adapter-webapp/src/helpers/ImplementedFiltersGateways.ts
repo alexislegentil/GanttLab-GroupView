@@ -20,7 +20,7 @@ export const ImplementedFiltersGateways: Array<FilterGateway> = [
     slug: 'openedIssues',
     name: 'Opened Issues',
     icon: '',
-    shortDescription: 'Show opnly opened issues',
+    shortDescription: 'Show only opened issues',
     instance: new IssuesStateFilter(true),
     defaultConfiguration: {
       filers : {

@@ -53,6 +53,7 @@
   <script lang="ts">
 import { Component, Emit, Vue } from 'vue-property-decorator';
 import Modal from '../../generic/Modal.vue';
+import Icon from '../../generic/Icon.vue';
 import { getModule } from 'vuex-module-decorators';
 import MainModule from '../../../store/modules/MainModule';
 import { trackInteractionEvent } from '../../../helpers/GTM';
@@ -68,6 +69,7 @@ const mainState = getModule(MainModule);
   @Component({
     components: {
       Modal,
+      Icon,
     },
   })
   export default class FilterSelector extends Vue {
