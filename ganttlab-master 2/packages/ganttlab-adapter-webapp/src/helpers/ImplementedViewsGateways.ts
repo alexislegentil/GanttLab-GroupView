@@ -4,6 +4,7 @@ import {
   ViewProject,
   ViewRepository,
   ViewMilestone,
+  ViewGroup,
 } from 'ganttlab-gateways';
 
 export interface ViewGateway {
@@ -42,6 +43,12 @@ export const ImplementedViewsGateways: Array<ViewGateway> = [
     slug: 'milestone',
     icon: 'file-tray-stacked-outline',
     instance: new ViewMilestone(),
+    defaultConfiguration: {},
+  },
+  {
+    slug: 'group',
+    icon: 'file-tray-stacked-outline',
+    instance: new ViewGroup(),
     defaultConfiguration: {},
   },
 ];

@@ -8,6 +8,7 @@ export class IssuesStateFilter implements Filter {
   public shortDescription = "Filter issues by state, can be opened or closed";
 
     constructor(state: boolean | string) {
+      // find a way to know if the instance used is github or gitlab and set the slug accordingly
         if (state) {
           if (state === 'allIssues') {
             this.slug = "all";
