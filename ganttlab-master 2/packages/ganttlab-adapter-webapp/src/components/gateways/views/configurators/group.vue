@@ -58,7 +58,7 @@
             </div>
             <p class="flex-shrink truncate">
               <span class="font-bold">{{
-                slotProps.result.path_with_namespace
+                slotProps.result.name
               }}</span>
               <br />
               <span class="text-sm">{{ slotProps.result.description }}</span>
@@ -142,6 +142,7 @@
     }
   
     setGroup(group: GitLabGroup) {
+        console.log(group);
       if (
         this.group &&
         this.group.path === group.path
@@ -155,14 +156,15 @@
   
     get configuration() {
       if (this.group) {
+        console.log(this.group);
         return {
           group: new Group(
             this.group.name,
             this.group.path,
-            [],
-            this.group.avatarUrl,
-            this.group.url,
+           [],// await this.sourceGateway.getProjectsFromGitLabGroup(this.group),
+            this.group.web_url,
             this.group.description,
+            this.group.avatar_url,
             
           ),
           tasks: {

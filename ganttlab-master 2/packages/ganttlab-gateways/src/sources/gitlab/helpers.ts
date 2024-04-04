@@ -69,9 +69,9 @@ export function getGroupFromGitLabGroup(
   return new Group(
     GitLabGroup.name,
     GitLabGroup.path,
-    GitLabGroup.projects,
-    GitLabGroup.avatarUrl,
-    GitLabGroup.url,
+    [],
+    GitLabGroup.avatar_url,
+    GitLabGroup.web_url,
     GitLabGroup.description,
   );
 }

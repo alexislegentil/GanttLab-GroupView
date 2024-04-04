@@ -1,26 +1,27 @@
 import { Project } from "ganttlab-entities";
+import { GitLabProject } from "./GitLabProject";
 
 export class GitLabGroup {
     name: string;
     path: string;
-    projects: Array<Project>;
-    avatarUrl?: string;
-    url?: string;
+    projects: Array<GitLabProject>;
+    avatar_url?: string;
+    web_url?: string;
     description?: string;
     
     constructor(
       name: string,
       path: string,
-      projects: Array<Project>,
-      avatarUrl?: string,
+      projects: Array<GitLabProject>,
       url?: string,
       description?: string,
+      avatarUrl?: string,
     ) {
       this.name = name;
       this.path = path;
       this.projects = projects;
-      this.avatarUrl = avatarUrl;
-      this.url = url;
+      this.avatar_url = avatarUrl;
+      this.web_url = url;
       this.description = description;
     }
 
