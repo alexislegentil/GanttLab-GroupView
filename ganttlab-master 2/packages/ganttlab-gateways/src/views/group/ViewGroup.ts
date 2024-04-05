@@ -10,7 +10,7 @@ import {
   //import { ViewGroupGitHubStrategy } from './strategies/ViewGroupGitHubStrategy';
   import { ViewGroupGitLabStrategy } from './strategies/ViewGroupGitLabStategy';
   
-  export class ViewGroup extends SourceVisitor<PaginatedListOfTasks> {
+  export class ViewGroup extends SourceVisitor<Group> {
     public slug = 'group';
     public name = 'By group';
     public shortDescription = 'Issues in project/repo group';

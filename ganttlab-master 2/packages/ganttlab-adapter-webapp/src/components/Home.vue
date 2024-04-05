@@ -131,7 +131,7 @@
     <div class="p-2">
       <transition name="component-fade" mode="out-in">
         <div
-          v-if="paginatedTasks === null && paginatedMilestones === null"
+          v-if="paginatedTasks === null && paginatedMilestones === null && group === null"
           key="spinner"
           class="w-full h-64 mb-12 flex items-center justify-center text-lead-600"
         >
@@ -156,6 +156,9 @@
             @set-tasks-page="setTasksPage($event)"
           />
         </div>
+        <div v-else-if="group">
+          <GroupDisplay :group="group" />
+        </div>
         <div v-else class="w-full p-16">
           <NoData
             :project="project"
@@ -178,6 +181,7 @@ import FilterSelector from './gateways/views/FilterSelector.vue';
 import Spinner from './generic/Spinner.vue';
 import TasksDisplay from './displays/TasksDisplay.vue';
 import MilestonesDisplay from './displays/MilestonesDisplay.vue';
+import GroupDisplay from './displays/GroupDisplay.vue';
 import NoData from './gateways/views/NoData.vue';
 import {
   User,
@@ -188,6 +192,7 @@ import {
   PaginatedListOfMilestones,
   Project,
 Filter,
+Group,
 } from 'ganttlab-entities';
 import { ImplementedSourcesGateways } from '../helpers/ImplementedSourcesGateways';
 import { DisplayableError } from '../helpers/DisplayableError';
@@ -207,12 +212,14 @@ const mainState = getModule(MainModule);
     Spinner,
     TasksDisplay,
     MilestonesDisplay,
+    GroupDisplay,
     NoData,
   },
 })
 export default class Home extends Vue {
   public paginatedTasks: PaginatedListOfTasks | null = null;
   public paginatedMilestones: PaginatedListOfMilestones | null = null;
+  public group: Group | null = null;
 
   setTasksPage(page: number) {
     mainState.setViewGatewayTasksPage(page);
@@ -323,12 +330,13 @@ export default class Home extends Vue {
     // clear data so we get the spinner back while loading the new ones
     this.paginatedTasks = null;
     this.paginatedMilestones = null;
+    this.group = null;
     const filter = mainState.filterGateway ? mainState.filterGateway.instance : null;
-    console.log("filter",filter)
+    
     // get the view data
     try {
       const data = await this.sourceGateway.getDataFor(view, filter);
-      console.log(data);
+     // console.log(data);
       if (data instanceof PaginatedListOfTasks) {
         this.paginatedTasks = data;
       }
@@ -338,6 +346,10 @@ export default class Home extends Vue {
       if (data instanceof TasksAndMilestones) {
         this.paginatedTasks = data.tasks;
         this.paginatedMilestones = data.milestones;
+      }
+      if (data instanceof Group) {
+        this.group = data;
+        console.log(this.group);
       }
       trackVirtualpageView(
         `${this.sourceGateway.name} - ${view.name}`,

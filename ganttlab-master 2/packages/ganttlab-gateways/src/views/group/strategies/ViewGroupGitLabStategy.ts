@@ -20,17 +20,17 @@ import {
 import { GitLabProject } from '../../../sources/gitlab/types/GitLabProject';
     
     export class ViewGroupGitLabStrategy
-        implements ViewSourceStrategy<PaginatedListOfTasks> {
+        implements ViewSourceStrategy<Group> {
         async execute(
             source: GitLabGateway,
             configuration: Configuration,
             filter: Filter | null,
-        ): Promise<PaginatedListOfTasks> {
+        ): Promise<Group> {
             let stateFilter = null;
             if (filter instanceof IssuesStateFilter)  {
                 stateFilter = filter.requestGitLabArgs();
             }
-            console.log('configuration', configuration);
+
             const encodedGroup = encodeURIComponent(
                 configuration.group.path as string,
             );
@@ -42,12 +42,12 @@ import { GitLabProject } from '../../../sources/gitlab/types/GitLabProject';
                 url: `/groups/${encodedGroup}`,
             });
 
-            console.log('group', groupResponse.data);
+
 
             const gitlabGroup = groupResponse.data;
             activeGroup = new Group(gitlabGroup.name, gitlabGroup.path, [] , gitlabGroup.avatar_url, gitlabGroup.web_url, gitlabGroup.description);
 
-            console.log('activeGroup', activeGroup);
+
 
 
 
@@ -76,7 +76,7 @@ import { GitLabProject } from '../../../sources/gitlab/types/GitLabProject';
                 {
                     let tasksForActiveProject: PaginatedListOfTasks | null = null;
                     let activeTaskList: Array<Task> = [];
-                    console.log('project', projectsResponse.data[projectIndex]);
+
                     const gitlabProject = projectsResponse.data[projectIndex];
                     const project = new Project(gitlabProject.name, gitlabProject.path_with_namespace, gitlabProject.web_url, gitlabProject.description, gitlabProject.avatar_url);
                     projectsList.push(project);
@@ -113,6 +113,13 @@ import { GitLabProject } from '../../../sources/gitlab/types/GitLabProject';
                             pagination.total,
                         );
 
+                        activeTaskList.sort((a: Task, b: Task) => {
+                            if (a.due && b.due) {
+                                return a.due.getTime() - b.due.getTime();
+                            }
+                            return 0;
+                        });
+
                         activeGroup.addTasks(tasksForActiveProject, project);
                 }
 
@@ -141,7 +148,7 @@ import { GitLabProject } from '../../../sources/gitlab/types/GitLabProject';
                 pagination.total,
             );
 
-            console.log('projectList', tasksForActiveGroup);
+
 
            
             tasksForAllProjects = new PaginatedListOfTasks(
@@ -154,13 +161,13 @@ import { GitLabProject } from '../../../sources/gitlab/types/GitLabProject';
                 pagination.total,
             );
 
-            console.log('tasksList', tasksForAllProjects);
+
 
             console.log(activeGroup);
 
             
-    
-            return tasksForAllProjects as PaginatedListOfTasks;
+            return activeGroup;
+          //  return tasksForAllProjects as PaginatedListOfTasks;
         }
     }
   
