@@ -2,6 +2,7 @@ export { Filter } from './filters/Filter';
 export { PaginatedList } from './pagination/PaginatedList';
 export { PaginatedListOfMilestones } from './pagination/PaginatedListOfMilestones';
 export { PaginatedListOfTasks } from './pagination/PaginatedListOfTasks';
+export { PaginatedListOfProjects } from './pagination/PaginatedListOfProjects';
 export { Sort } from './sorts/Sort';
 export { AuthenticatableSource } from './sources/AuthenticatableSource';
 export { Credentials } from './sources/Credentials';
