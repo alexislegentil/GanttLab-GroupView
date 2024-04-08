@@ -91,6 +91,32 @@
         » with a
         <br />trailing slash to find groups in the ganttlab group
       </p>
+
+      <template>
+  
+        
+    <!-- ... -->
+    <div class="radio-group">
+      <input
+        type="radio"
+        id="sortByEpic"
+        value="epic"
+        v-model="sortBy"
+      />
+      <label for="sortByEpic">Sort by Epic</label>
+
+      <input
+        type="radio"
+        id="sortByProjects"
+        value="projects"
+        v-model="sortBy"
+      />
+      <label for="sortByProjects">Sort by Projects</label>
+    </div>
+    <!-- ... -->
+  
+</template>
+
     </div>
   </template>
   
@@ -114,6 +140,7 @@
     public loading = false;
     public groups: Array<GitLabGroup> | null = null;
     public group: GitLabGroup | null = null;
+    public sortBy = 'epic'; // 'projects' or 'epic'
   
     @Prop({ required: true }) readonly sourceGateway!: GitLabGateway;
   
@@ -171,6 +198,7 @@
             page: 1,
             pageSize: 50,
           },
+            sortBy: this.sortBy,
         };
       }
       return null;
@@ -185,4 +213,26 @@
     }
   }
   </script>
+  <style scoped>
+  .radio-group {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
   
+  .radio-group input[type="radio"] {
+    display: none;
+  }
+  
+  .radio-group label {
+    padding: 10px 20px;
+    background-color: #f2f2f2;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .radio-group input[type="radio"]:checked + label {
+    background-color: #4caf50;
+    color: white;
+  }
+  </style>

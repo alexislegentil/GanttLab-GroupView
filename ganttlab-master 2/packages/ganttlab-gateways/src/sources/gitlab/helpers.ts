@@ -1,9 +1,10 @@
 import { issueDescriptionToTaskDetails } from '../abstracts/helpers';
-import { Task, Milestone, Group } from 'ganttlab-entities';
+import { Task, Milestone, Group, Project } from 'ganttlab-entities';
 import { GitLabIssue } from './types/GitLabIssue';
 import { AxiosHeaders } from '../abstracts/AxiosHeaders';
 import { GitLabMilestone } from './types/GitLabMilestone';
 import { GitLabGroup } from './types/GitLabGroup';
+import { GitLabProject } from './types/GitLabProject';
 
 export function getTaskFromGitLabIssue(gitlabIssue: GitLabIssue): Task {
   const { startDate, dueDate } = issueDescriptionToTaskDetails(
@@ -73,5 +74,17 @@ export function getGroupFromGitLabGroup(
     GitLabGroup.avatar_url,
     GitLabGroup.web_url,
     GitLabGroup.description,
+  );
+}
+
+export function getProjectFromGitLabProject(
+  GitLabProject: GitLabProject,
+): Project {
+  return new Project(
+    GitLabProject.name,
+    GitLabProject.path_with_namespace,
+    GitLabProject.web_url,
+    GitLabProject.description,
+    GitLabProject.avatar_url,
   );
 }

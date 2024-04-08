@@ -157,7 +157,11 @@
           />
         </div>
         <div v-else-if="group">
-          <GroupDisplay :group="group" />
+          <GroupDisplay 
+          :group="group"
+          :project="project"
+          :sourceUrl="sourceUrl"
+          :viewGateway="viewGateway" />
         </div>
         <div v-else class="w-full p-16">
           <NoData

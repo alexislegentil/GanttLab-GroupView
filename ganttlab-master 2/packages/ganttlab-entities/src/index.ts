@@ -15,5 +15,6 @@ export { Milestone } from './core/Milestone';
 export { Group } from './core/Group';
 export { Project } from './core/Project';
 export { Task } from './core/Task';
+export { Epic } from './core/Epic';
 export { TimeEstimate } from './core/TimeEstimate';
 export { User } from './core/User';

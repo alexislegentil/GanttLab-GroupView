@@ -1,4 +1,5 @@
 import { PaginatedListOfTasks } from '../pagination/PaginatedListOfTasks';
+import { Epic } from './Epic';
 import { Project } from './Project';
 
 /**
@@ -16,12 +17,17 @@ export class Group {
    * @param avatar_url - The URL to this group avatar (directly usable in an img src) 
    * @param web_url - The URL to this group (directly usable in an `<a>` href)
    * @param description - The group description
-
+   * @param projects - The list of projects in the group
+   * @param epics - The list of epics in the group
 
    */
+
+  public epics: Array<Epic> = [];
+  
   constructor(
     public name: string,
     public path: string,
+    public projects: Array<Project>,
     public avatar_url?: string,
     public web_url?: string,
     public description?: string,
@@ -33,6 +39,10 @@ export class Group {
 
   public getTasks(project: Project): PaginatedListOfTasks | null {
     return this.tasks ? this.tasks[project.name]? this.tasks[project.name] : null : null;
+  }
+
+  public addEpic(epic: Epic) {
+    this.epics.push(epic);
   }
 
 }

@@ -18,6 +18,7 @@ import {
 
     import { IssuesStateFilter } from '../../../filters/IssuesStateFilter';
 import { GitLabProject } from '../../../sources/gitlab/types/GitLabProject';
+import { Epic } from 'ganttlab-entities/dist/core/Epic';
     
     export class ViewGroupGitLabStrategy
         implements ViewSourceStrategy<Group> {
@@ -42,14 +43,75 @@ import { GitLabProject } from '../../../sources/gitlab/types/GitLabProject';
                 url: `/groups/${encodedGroup}`,
             });
 
-
-
             const gitlabGroup = groupResponse.data;
             activeGroup = new Group(gitlabGroup.name, gitlabGroup.path, [] , gitlabGroup.avatar_url, gitlabGroup.web_url, gitlabGroup.description);
 
 
 
+            //does the group have epics?
+            if (configuration.sortBy === 'epic') {
+            
+            const epicsResponse = await source.safeAxiosRequest<Array<Epic>>({
+                method: 'GET',
+                url: `/groups/${encodedGroup}/epics`,
+                params: {
+                    page: configuration.group.page,
+                    // eslint-disable-next-line @typescript-eslint/camelcase
+                    per_page: configuration.group.pageSize,
+                    state: stateFilter? stateFilter : 'opened',
+                },
+            });
+            const epicsList: Array<Epic> = [];
+            for (const epic of epicsResponse.data) {
+                const newEpic = new Epic(epic.title, epic.description, epic.web_url, epic.state, epic.start_date, epic.due_date, epic.iid);
+               epicsList.push(newEpic);
 
+               let tasksForEpics: PaginatedListOfTasks | null = null;
+               let tasksListByEpic: Array<Task> = [];
+
+                const { data, headers } = await source.safeAxiosRequest<Array<GitLabIssue>>({
+                 method: 'GET',
+                 url: `/groups/${encodedGroup}/epics/${epic.iid}/issues`,
+                 params: {
+                      page: configuration.tasks.page,
+                      // eslint-disable-next-line @typescript-eslint/camelcase
+                      per_page: configuration.tasks.pageSize,
+                      state: stateFilter? stateFilter : 'opened',
+                 },
+                });
+                const epicPagination = getPaginationFromGitLabHeaders(headers);
+                for (const gitlabIssue of data) {
+                    console.log(gitlabIssue);
+                    const task = getTaskFromGitLabIssue(gitlabIssue);
+                    tasksListByEpic.push(task);
+                }
+
+                tasksForEpics = new PaginatedListOfTasks(
+                    tasksListByEpic,
+                    configuration.tasks.page as number,
+                    configuration.tasks.pageSize as number,
+                    epicPagination.previousPage,
+                    epicPagination.nextPage,
+                    epicPagination.lastPage,
+                    epicPagination.total,
+                );
+
+                tasksListByEpic.sort((a: Task, b: Task) => {
+                    if (a.due && b.due) {
+                        return a.due.getTime() - b.due.getTime();
+                    }
+                    return 0;
+                });
+
+                newEpic.addTasks(tasksForEpics);
+               activeGroup.addEpic(newEpic);
+            }
+            }
+
+
+
+            //does the group have projects?
+            else if (configuration.sortBy === 'projects') {
 
             const projectsResponse = await source.safeAxiosRequest<Array<GitLabProject>>({
                 method: 'GET',
@@ -147,9 +209,6 @@ import { GitLabProject } from '../../../sources/gitlab/types/GitLabProject';
                 pagination.lastPage,
                 pagination.total,
             );
-
-
-
            
             tasksForAllProjects = new PaginatedListOfTasks(
                 tasksList,
@@ -160,10 +219,9 @@ import { GitLabProject } from '../../../sources/gitlab/types/GitLabProject';
                 pagination.lastPage,
                 pagination.total,
             );
-
-
-
             console.log(activeGroup);
+
+            }
 
             
             return activeGroup;
