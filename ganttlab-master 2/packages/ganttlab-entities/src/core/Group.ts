@@ -9,7 +9,6 @@ export class Group {
   /**
    * The paginated list of {@link Task}s in the group
    */
-  public tasks: { [key: string]: PaginatedListOfTasks } | null = null;
 
   /**
    * @param name - The group name
@@ -23,6 +22,7 @@ export class Group {
    */
 
   public epics: Array<Epic> = [];
+  public tasks: PaginatedListOfTasks | null = null;
   
   constructor(
     public name: string,
@@ -33,16 +33,20 @@ export class Group {
     public description?: string,
   ) {}
 
-  public addTasks(tasks: PaginatedListOfTasks, project: Project) {
-    this.tasks = { ...this.tasks, [project.name]: tasks };
+  public addTasks(tasks: PaginatedListOfTasks) {
+    this.tasks = tasks ;
   }
 
-  public getTasks(project: Project): PaginatedListOfTasks | null {
-    return this.tasks ? this.tasks[project.name]? this.tasks[project.name] : null : null;
+  public getTasks(): PaginatedListOfTasks | null {
+    return this.tasks;
   }
 
   public addEpic(epic: Epic) {
     this.epics.push(epic);
+  }
+
+  public addProjects(projects: Array<Project>) {
+    this.projects = projects;
   }
 
 }

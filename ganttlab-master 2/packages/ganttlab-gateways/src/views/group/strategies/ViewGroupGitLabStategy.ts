@@ -37,6 +37,8 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
             );
 
             let activeGroup: Group | null = null;
+            let allTasksPaginated: PaginatedListOfTasks | null = null;
+            let allTasksList: Array<Task> = [];
 
             const groupResponse = await source.safeAxiosRequest<Group>({
                 method: 'GET',
@@ -124,7 +126,7 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                  //   archived: false,
                 },
             });
-            const pagination = getPaginationFromGitLabHeaders(projectsResponse.headers);
+            const projectPagination = getPaginationFromGitLabHeaders(projectsResponse.headers);
             let tasksForAllProjects: PaginatedListOfTasks | null = null;
             let tasksForActiveGroup: PaginatedListOfProjects | null = null;
             
@@ -142,6 +144,7 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                     const gitlabProject = projectsResponse.data[projectIndex];
                     const project = new Project(gitlabProject.name, gitlabProject.path_with_namespace, gitlabProject.web_url, gitlabProject.description, gitlabProject.avatar_url);
                     projectsList.push(project);
+                    activeGroup.addProjects(projectsList);
                     
                     const encodedProject = encodeURIComponent(
                         gitlabProject.path_with_namespace as string,
@@ -169,10 +172,10 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                             activeTaskList,
                             configuration.tasks.page as number,
                             configuration.tasks.pageSize as number,
-                            pagination.previousPage,
-                            pagination.nextPage,
-                            pagination.lastPage,
-                            pagination.total,
+                            projectPagination.previousPage,
+                            projectPagination.nextPage,
+                            projectPagination.lastPage,
+                            projectPagination.total,
                         );
 
                         activeTaskList.sort((a: Task, b: Task) => {
@@ -181,37 +184,34 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                             }
                             return 0;
                         });
-
-                        activeGroup.addTasks(tasksForActiveProject, project);
+                        project.addTasks(tasksForActiveProject);
                 }
+            
+            const {data, headers} = await source.safeAxiosRequest<Array<GitLabIssue>>({
+                method: 'GET',
+                url: `/groups/${encodedGroup}/issues`,
+                params: {
+                    page: configuration.tasks.page,
+                    // eslint-disable-next-line @typescript-eslint/camelcase
+                    per_page: configuration.tasks.pageSize,
+                    state: stateFilter? stateFilter : 'opened',
+                },
+            });
+            const pagination = getPaginationFromGitLabHeaders(headers);
+            for (const gitlabIssue of data) {
+                const task = getTaskFromGitLabIssue(gitlabIssue);
+                allTasksList.push(task);
+            }
 
-
-            tasksList.sort((a: Task, b: Task) => {
+            allTasksList.sort((a: Task, b: Task) => {
                 if (a.due && b.due) {
                     return a.due.getTime() - b.due.getTime();
                 }
                 return 0;
             });
 
-            projectsList.sort((a: Project, b: Project) => {
-                if (a.name && b.name) {
-                    return a.name.localeCompare(b.name);
-                }
-                return 0;
-            });
-
-            tasksForActiveGroup = new PaginatedListOfProjects(
-                projectsList,
-                configuration.group.page as number,
-                configuration.group.pageSize as number,
-                pagination.previousPage,
-                pagination.nextPage,
-                pagination.lastPage,
-                pagination.total,
-            );
-           
-            tasksForAllProjects = new PaginatedListOfTasks(
-                tasksList,
+            allTasksPaginated = new PaginatedListOfTasks(
+                allTasksList,
                 configuration.tasks.page as number,
                 configuration.tasks.pageSize as number,
                 pagination.previousPage,
@@ -219,6 +219,9 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                 pagination.lastPage,
                 pagination.total,
             );
+
+            activeGroup.addTasks(allTasksPaginated);
+
             console.log(activeGroup);
 
             }

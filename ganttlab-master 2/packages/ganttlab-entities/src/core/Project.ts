@@ -1,3 +1,6 @@
+import { PaginatedListOfTasks } from "../pagination/PaginatedListOfTasks";
+import { Task } from "./Task";
+
 /**
  * A project, which can contain tasks, milestones...
  */
@@ -15,5 +18,10 @@ export class Project {
     public url: string,
     public shortDescription: string,
     public avatarUrl: string,
+    public tasks?: PaginatedListOfTasks,
   ) {}
+
+  public addTasks(tasks: PaginatedListOfTasks) {
+    this.tasks = tasks;
+  }
 }

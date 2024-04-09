@@ -13,7 +13,7 @@ import {
   export class ViewGroup extends SourceVisitor<Group> {
     public slug = 'group';
     public name = 'By group';
-    public shortDescription = 'Issues in project/repo group';
+    public shortDescription = 'Issues in a group sorted by Epic or Projects';
     public slugStrategies = {
   //    github: new ViewGroupGitHubStrategy(),
       gitlab: new ViewGroupGitLabStrategy(),
