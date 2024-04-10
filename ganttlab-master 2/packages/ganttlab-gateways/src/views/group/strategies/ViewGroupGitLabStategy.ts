@@ -122,7 +122,7 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                     page: configuration.group.page,
                     // eslint-disable-next-line @typescript-eslint/camelcase
                     per_page: configuration.group.pageSize,
-             // state: stateFilter? stateFilter : 'opened',
+                    state: stateFilter? stateFilter : 'opened',
                  //   archived: false,
                 },
             });
@@ -186,7 +186,10 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                         });
                         project.addTasks(tasksForActiveProject);
                 }
-            
+            }
+
+            // in every case, get all tasks
+              
             const {data, headers} = await source.safeAxiosRequest<Array<GitLabIssue>>({
                 method: 'GET',
                 url: `/groups/${encodedGroup}/issues`,
@@ -195,10 +198,12 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                     // eslint-disable-next-line @typescript-eslint/camelcase
                     per_page: configuration.tasks.pageSize,
                     state: stateFilter? stateFilter : 'opened',
+                    epic_id: 'none'
                 },
             });
             const pagination = getPaginationFromGitLabHeaders(headers);
             for (const gitlabIssue of data) {
+                console.log(gitlabIssue);
                 const task = getTaskFromGitLabIssue(gitlabIssue);
                 allTasksList.push(task);
             }
@@ -223,8 +228,6 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
             activeGroup.addTasks(allTasksPaginated);
 
             console.log(activeGroup);
-
-            }
 
             
             return activeGroup;

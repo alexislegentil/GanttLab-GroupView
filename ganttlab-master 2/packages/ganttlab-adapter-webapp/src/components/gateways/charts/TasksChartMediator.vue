@@ -1,17 +1,25 @@
 <template>
   <div class="w-full">
     <component
-      v-if="chart && tasks.length"
+      v-if="chart && tasks && tasks.length"
       :is="chartComponent"
       :tasks="tasks"
     />
+    <component
+      v-else-if="chart && group"
+      :is="chartComponent"
+      :group="group"
+    />
+    <div v-else>
+      <NoData />
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue, Prop } from 'vue-property-decorator';
 import legacyChart from '../../gateways/charts/legacy/Chart.vue';
-import { Task } from 'ganttlab-entities';
+import { Group, Task } from 'ganttlab-entities';
 
 @Component({
   components: {
@@ -19,8 +27,13 @@ import { Task } from 'ganttlab-entities';
   },
 })
 export default class TasksChartMediator extends Vue {
-  @Prop() readonly tasks!: Array<Task>;
+  @Prop() readonly group?: Group | null;
+  @Prop() readonly tasks?: Array<Task> | null;
   @Prop() readonly chart!: string;
+
+  mounted() {
+    console.log('ChartComponent mounted. Group:', this.group);
+  }
 
   get chartComponent() {
     return `${this.chart}Chart`;

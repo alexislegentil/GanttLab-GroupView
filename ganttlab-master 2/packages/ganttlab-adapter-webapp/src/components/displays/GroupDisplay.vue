@@ -27,7 +27,7 @@
             @set-page="setTasksPage($event)"
             />
         </div>
-        <TasksChartMediator :tasks="group.tasks.list" :chart="chart" />
+        <TasksChartMediator :group="group" :chart="chart" />
 
         </div>
 
