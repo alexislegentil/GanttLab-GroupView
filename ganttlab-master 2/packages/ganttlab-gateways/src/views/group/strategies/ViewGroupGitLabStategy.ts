@@ -61,6 +61,7 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                     // eslint-disable-next-line @typescript-eslint/camelcase
                     per_page: configuration.group.pageSize,
                     state: stateFilter? stateFilter : 'opened',
+                    scope : 'all',
                 },
             });
             const epicsList: Array<Epic> = [];
@@ -79,6 +80,7 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                       // eslint-disable-next-line @typescript-eslint/camelcase
                       per_page: configuration.tasks.pageSize,
                       state: stateFilter? stateFilter : 'opened',
+                      scope : 'all',
                  },
                 });
                 const epicPagination = getPaginationFromGitLabHeaders(headers);
@@ -123,6 +125,7 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                     // eslint-disable-next-line @typescript-eslint/camelcase
                     per_page: configuration.group.pageSize,
                     state: stateFilter? stateFilter : 'opened',
+                    scope : 'all',
                  //   archived: false,
                 },
             });
@@ -158,6 +161,7 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                                 // eslint-disable-next-line @typescript-eslint/camelcase
                                 per_page: configuration.tasks.pageSize,
                                 state: stateFilter? stateFilter : 'opened',
+                                scope : 'all',
                             //  group: gitlabProject.name,
                             },
                         });
@@ -198,7 +202,8 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                     // eslint-disable-next-line @typescript-eslint/camelcase
                     per_page: configuration.tasks.pageSize,
                     state: stateFilter? stateFilter : 'opened',
-                    epic_id: 'none'
+                    epic_id: 'none',
+                    scope : 'all',
                 },
             });
             const pagination = getPaginationFromGitLabHeaders(headers);

@@ -27,7 +27,11 @@
             @set-page="setTasksPage($event)"
             />
         </div>
-        <TasksChartMediator :group="group" :chart="chart" />
+        <!-- <TasksChartMediator :group="group" :chart="chart" /> -->
+        <TasksDisplay
+                    :paginatedTasks="group.tasks"
+                    @set-tasks-page="setTasksPage($event)"
+                    />
 
         </div>
 

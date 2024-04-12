@@ -8,31 +8,17 @@
 import * as d3 from 'd3-v3';
 import moment from 'moment-timezone';
 import { getConvertedTasks } from '.';
-import { getConvertedGroups } from '.';
-
-const INVALID_TYPE = 0;
-const TYPE_TASK = 1;
-const TYPE_GROUP = 2;
 
 export default {
   data: function () {
-    if (this.group) {
-      return {
-        convertedGroup: [],
-      };
-    }
-    else {
     return {
       convertedTasks: [],
-    }};
+    };
   },
-  props: ['tasks', 'group'],
+  props: ['tasks'],
   watch: {
     tasks: function (value) {
       if (value && value.length) this.refreshChart();
-    },
-    group: function (value) {
-      if (value) this.refreshChart();
     },
   },
   methods: {
@@ -123,11 +109,9 @@ export default {
           // check how data is arranged
           if (definedBlocks === null) {
             definedBlocks = 0;
-            if (dataset && typeof dataset[Symbol.iterator] === 'function') {
-
             for (const element of dataset) {
               if (element.data[0].length === 3) {
-                definedBlocks = TYPE_TASK;
+                definedBlocks = 1;
                 break;
               } else {
                 if (definedBlocks) {
@@ -137,25 +121,6 @@ export default {
                   );
                 }
               }
-            }
-            } else {
-             //dataset isn't iterable, then its a group, lets check it
-             
-             // HAS TO BE IMPLEMENTED, FOR NOW LETS JUST TRUST 
-             definedBlocks = TYPE_GROUP;
-
-
-
-
-
-              //then, get dataset from a group
-              const group = dataset;
-              dataset = [];
-              console.log('group', group.TasksContained);
-              for (const task of group.TasksContained) {
-                console.log('task', task);
-              }
-
             }
           }
 
@@ -664,10 +629,7 @@ export default {
       return chart;
     },
     refreshChart: function () {
-      if (this.group) {
-        this.convertedGroup = getConvertedGroups(this.group);
-      }
-      else if (this.tasks) {this.convertedTasks = getConvertedTasks(this.tasks)};
+      this.convertedTasks = getConvertedTasks(this.tasks);
 
       // removing all created taskTooltips to avoid useless scrolling
       const paras = document.getElementsByClassName('taskTooltip');
@@ -677,11 +639,7 @@ export default {
 
       const chart = this.visavailChart().width(document.body.clientWidth - 290);
 
-      if (this.convertedGroup) {
-        console.log('convertedGroup', this.convertedGroup);
-        d3.select('#legacyChart').datum(this.convertedGroup).call(chart);
-      }
-      else if (this.convertedTasks) {d3.select('#legacyChart').datum(this.convertedTasks).call(chart) };
+      d3.select('#legacyChart').datum(this.convertedTasks).call(chart) ;
     },
     pad: function (number) {
       let r = String(number);
@@ -694,7 +652,6 @@ export default {
   mounted: function () {
     // refresh the gantt graph
     if (this.tasks && this.tasks.length) this.refreshChart();
-    else if (this.group) this.refreshChart();
   },
 };
 </script>
