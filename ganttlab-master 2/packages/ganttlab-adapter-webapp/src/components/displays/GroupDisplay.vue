@@ -28,10 +28,11 @@
             />
         </div>
         <!-- <TasksChartMediator :group="group" :chart="chart" /> -->
-        <TasksDisplay
+        <!-- <TasksDisplay
                     :paginatedTasks="group.tasks"
                     @set-tasks-page="setTasksPage($event)"
-                    />
+                    /> -->
+            <GroupChartMediator></GroupChartMediator>
 
         </div>
 
@@ -79,12 +80,14 @@
   import { getModule } from 'vuex-module-decorators';
   import MainModule from '../../store/modules/MainModule';
   import TasksChartMediator from '../gateways/charts/TasksChartMediator.vue';
+  import GroupChartMediator from '../gateways/charts/GroupChartMediator.vue';
   import TasksDisplay from './TasksDisplay.vue';
   import Paginator from '../generic/Paginator.vue';
   import { Group, PaginatedListOfTasks } from 'ganttlab-entities';
 import { Project } from 'ganttlab-entities';
 import { SourceVisitor } from 'ganttlab-entities';
 import NoData from '../generic/illustrations/NoData.vue';
+import Gantt from "./components/Gantt.vue";
 import { Task } from 'ganttlab-entities';
   
   const mainState = getModule(MainModule);
@@ -93,6 +96,7 @@ import { Task } from 'ganttlab-entities';
   @Component({
     components: {
       TasksChartMediator,
+      GroupChartMediator,
       Paginator,
       TasksDisplay,
       NoData

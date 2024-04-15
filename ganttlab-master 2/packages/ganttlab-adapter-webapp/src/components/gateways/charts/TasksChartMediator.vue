@@ -5,11 +5,6 @@
       :is="chartComponent"
       :tasks="tasks"
     />
-    <component
-      v-else-if="chart && group"
-      :is="chartComponent"
-      :group="group"
-    />
     <div v-else>
       <NoData />
     </div>
@@ -19,6 +14,7 @@
 <script lang="ts">
 import { Component, Vue, Prop } from 'vue-property-decorator';
 import legacyChart from '../../gateways/charts/legacy/Chart.vue';
+import Gantt from "./components/Gantt.vue";
 import { Group, Task } from 'ganttlab-entities';
 
 @Component({
