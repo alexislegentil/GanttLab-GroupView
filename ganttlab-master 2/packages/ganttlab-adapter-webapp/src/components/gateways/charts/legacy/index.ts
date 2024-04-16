@@ -7,15 +7,14 @@ interface LegacyTask {
   data: [[string, number, string]] | null;
 }
 
-interface LegacyContainer {
+interface LegacyDhtmlXgantt {
+  id: number;
   name: string;
-  tasks: Array<LegacyTask>;
-}
-
-interface LegacyGroup {
-  name: string;
-  groupTaskContainers: Array<LegacyContainer>;
-  TasksNotContained: Array<LegacyTask>;
+  start_date: string | null;
+  duration: number | null;
+  parent: number;
+  progress: number;
+  user?: string;
 }
 
 export function getConvertedTasks(tasks: Array<Task>): Array<LegacyTask> {
@@ -69,36 +68,89 @@ export function getConvertedTasks(tasks: Array<Task>): Array<LegacyTask> {
   return convertedTasks;
 }
 
-export function getConvertedGroups(group: Group): LegacyGroup{
-  const convertedGroup: LegacyGroup = {} as LegacyGroup;
-  convertedGroup.name = group.name;
-  if (group.epics && group.epics.length > 0) {
-    convertedGroup.groupTaskContainers = [];
-    for (const epic of group.epics) {
-      if (epic.Tasks) {
-        const convertedContainer: LegacyContainer = {} as LegacyContainer;
-        convertedContainer.name = epic.title;
-        convertedContainer.tasks = getConvertedTasks(epic.Tasks.list);
-        convertedGroup.groupTaskContainers.push(convertedContainer);
+export function getConvertedGroup(group: Group): Array<LegacyDhtmlXgantt> {
+  const data: Array<LegacyDhtmlXgantt> = [];
+  let taskID = 1;
+
+  // Convert epics
+if (group.epics && group.epics.length > 0) {
+  for (const epic of group.epics) {
+    const epicRow : LegacyDhtmlXgantt = {
+      id: taskID,
+      name: epic.title,
+      start_date: moment(epic.start_date).format('YYYY-MM-DD HH:mm:ss'),
+      duration: moment(epic.due_date).diff(moment(epic.start_date), 'days'),
+      parent: 0,
+      progress: 0,
+    };
+    taskID++;
+    data.push(epicRow);
+
+    if (epic.Tasks && epic.Tasks.list) {
+      for (const task of epic.Tasks.list) {
+        console.log(moment(task.start).format('YYYY-MM-DD HH:mm:ss'));
+        const taskRow : LegacyDhtmlXgantt = {
+          id: taskID,
+          name: task.title,
+          start_date: moment(task.start).format('YYYY-MM-DD HH:mm:ss'),
+          duration: moment(task.due).diff(moment(task.start), 'days'),
+          parent: epicRow.id,
+          progress: 0,
+        };
+        data.push(taskRow);
+        taskID++;
       }
     }
   }
-  else if (group.projects && group.projects.length > 0) {
-    convertedGroup.groupTaskContainers = [];
-    for (const project of group.projects) {
-      if (project.tasks && project.tasks.list.length > 0) {
-        const convertedContainer: LegacyContainer = {} as LegacyContainer;
-        convertedContainer.name = project.name;
-        convertedContainer.tasks = getConvertedTasks(project.tasks.list);
-        convertedGroup.groupTaskContainers.push(convertedContainer);
-      }
-    }
-  }
-
-  if (group.tasks && group.tasks.list.length > 0) {
-    convertedGroup.TasksNotContained = getConvertedTasks(group.tasks.list);
-  }
-
-  return convertedGroup;
 }
+
+if (group.projects && group.projects.length > 0) {
+  // Convert projects
+  for (const project of group.projects) {
+    const projectRow : LegacyDhtmlXgantt = {
+      id: taskID,
+      name: project.name,
+      start_date: null,
+      duration: null,
+      parent: 0,
+      progress: 0,
+    };
+    taskID++;
+    data.push(projectRow);
+    if (project.tasks && project.tasks.list) {
+      for (const task of project.tasks.list) {
+        console.log(task.start);
+        const taskRow : LegacyDhtmlXgantt = {
+          id: taskID,
+          name: task.title,
+          start_date: moment(task.start).format('YYYY-MM-DD HH:mm:ss'),
+          duration: moment(task.due).diff(moment(task.start), 'days'),
+          parent: projectRow.id,
+          progress: 0,
+        };
+        data.push(taskRow);
+        taskID++;
+      }
+    }
+  }
+}
+
+if (group.tasks && group.tasks.list && group.tasks.list.length > 0) {
+  // Add standalone tasks
+  for (const task of group.tasks.list) {
+    const taskRow : LegacyDhtmlXgantt = {
+      id: taskID,
+      name: task.title,
+      start_date: moment(task.start).format('YYYY-MM-DD HH:mm:ss'),
+      duration: moment(task.due).diff(moment(task.start), 'days'),
+      parent: 0,
+      progress: 0,
+    };
+    data.push(taskRow);
+    taskID++;
+  }
+}
+  return  data ;
+}
+
 

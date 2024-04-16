@@ -32,7 +32,9 @@
                     :paginatedTasks="group.tasks"
                     @set-tasks-page="setTasksPage($event)"
                     /> -->
-            <GroupChartMediator></GroupChartMediator>
+            <GroupChartMediator
+            :group="group"
+            />
 
         </div>
 

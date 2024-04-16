@@ -14,8 +14,7 @@
 <script lang="ts">
 import { Component, Vue, Prop } from 'vue-property-decorator';
 import legacyChart from '../../gateways/charts/legacy/Chart.vue';
-import Gantt from "./components/Gantt.vue";
-import { Group, Task } from 'ganttlab-entities';
+import { Task } from 'ganttlab-entities';
 
 @Component({
   components: {
@@ -23,13 +22,8 @@ import { Group, Task } from 'ganttlab-entities';
   },
 })
 export default class TasksChartMediator extends Vue {
-  @Prop() readonly group?: Group | null;
   @Prop() readonly tasks?: Array<Task> | null;
   @Prop() readonly chart!: string;
-
-  mounted() {
-    console.log('ChartComponent mounted. Group:', this.group);
-  }
 
   get chartComponent() {
     return `${this.chart}Chart`;
