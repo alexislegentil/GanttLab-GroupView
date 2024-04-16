@@ -37,7 +37,7 @@
             >
                 <p class="flex-grow text-lg">
                     <span v-if="filterGateway">{{ filterGateway.name }}</span>
-                    <span v-else>Opened Issues</span>
+                    <span v-else>All Issues</span>
                 </p>
 
                 <div class="text-lead-500">

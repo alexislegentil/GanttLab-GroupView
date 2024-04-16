@@ -60,7 +60,7 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                     page: configuration.group.page,
                     // eslint-disable-next-line @typescript-eslint/camelcase
                     per_page: configuration.group.pageSize,
-                    state: stateFilter? stateFilter : 'opened',
+                    state: stateFilter? stateFilter : 'all',
                     scope : 'all',
                 },
             });
@@ -79,7 +79,7 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                       page: configuration.tasks.page,
                       // eslint-disable-next-line @typescript-eslint/camelcase
                       per_page: configuration.tasks.pageSize,
-                      state: stateFilter? stateFilter : 'opened',
+                      state: stateFilter? stateFilter : 'all',
                       scope : 'all',
                  },
                 });
@@ -87,6 +87,8 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                 for (const gitlabIssue of data) {
                     console.log(gitlabIssue);
                     const task = getTaskFromGitLabIssue(gitlabIssue);
+                    task.addState(gitlabIssue.state);
+                    if (gitlabIssue.assignee) task.addUser(gitlabIssue.assignee.name);
                     tasksListByEpic.push(task);
                 }
 
@@ -169,6 +171,8 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                         for (const gitlabIssue of data) {
                             const task = getTaskFromGitLabIssue(gitlabIssue);
                             tasksList.push(task);
+                            task.addState(gitlabIssue.state);
+                            if (gitlabIssue.assignee) task.addUser(gitlabIssue.assignee.name);
                             activeTaskList.push(task);
                         }   
                         
@@ -201,7 +205,7 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                     page: configuration.tasks.page,
                     // eslint-disable-next-line @typescript-eslint/camelcase
                     per_page: configuration.tasks.pageSize,
-                    state: stateFilter? stateFilter : 'opened',
+                    state: stateFilter? stateFilter : 'all',
                     epic_id: 'none',
                     scope : 'all',
                 },
@@ -210,6 +214,8 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
             for (const gitlabIssue of data) {
                 console.log(gitlabIssue);
                 const task = getTaskFromGitLabIssue(gitlabIssue);
+                task.addState(gitlabIssue.state);
+                if (gitlabIssue.assignee) task.addUser(gitlabIssue.assignee.name);
                 allTasksList.push(task);
             }
 

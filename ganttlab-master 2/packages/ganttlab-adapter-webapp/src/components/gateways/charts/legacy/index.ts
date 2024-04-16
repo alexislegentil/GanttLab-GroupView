@@ -14,8 +14,19 @@ interface LegacyDhtmlXgantt {
   duration: number | null;
   parent: number;
   progress: number;
-  user?: string;
+  state?: TaskState | null;
+  user?: string | null;
 }
+
+export enum TaskState {
+  Opened = 'Opened',
+  Closed = 'Closed',
+  InProgress = 'InProgress',
+  Late = 'Late',
+  Unscheduled = 'Unscheduled'
+}
+
+
 
 export function getConvertedTasks(tasks: Array<Task>): Array<LegacyTask> {
   const convertedTasks: Array<LegacyTask> = [];
@@ -88,7 +99,28 @@ if (group.epics && group.epics.length > 0) {
 
     if (epic.Tasks && epic.Tasks.list) {
       for (const task of epic.Tasks.list) {
-        console.log(moment(task.start).format('YYYY-MM-DD HH:mm:ss'));
+
+        let taskState: TaskState | null = null;
+
+        if (task.due) {
+          switch (task.state) {
+            case 'closed':
+              taskState = TaskState.Closed;
+              break;
+            case 'opened':
+              taskState = task.user ? TaskState.InProgress : TaskState.Opened;
+              if (task.due < new Date()) {
+                taskState = TaskState.Late;
+              }
+              break;
+            default:
+              taskState = TaskState.Unscheduled;
+              break;
+          }
+        } else {
+          taskState = TaskState.Unscheduled;
+        }
+
         const taskRow : LegacyDhtmlXgantt = {
           id: taskID,
           name: task.title,
@@ -96,6 +128,8 @@ if (group.epics && group.epics.length > 0) {
           duration: moment(task.due).diff(moment(task.start), 'days'),
           parent: epicRow.id,
           progress: 0,
+          state: taskState ? taskState : null,
+          user: task.user ? task.user : null,
         };
         data.push(taskRow);
         taskID++;
@@ -119,7 +153,26 @@ if (group.projects && group.projects.length > 0) {
     data.push(projectRow);
     if (project.tasks && project.tasks.list) {
       for (const task of project.tasks.list) {
-        console.log(task.start);
+        let taskState: TaskState | null = null;
+
+        if (task.due) {
+          switch (task.state) {
+            case 'closed':
+              taskState = TaskState.Closed;
+              break;
+            case 'opened':
+              taskState = task.user ? TaskState.InProgress : TaskState.Opened;
+              if (task.due < new Date()) {
+                taskState = TaskState.Late;
+              }
+              break;
+            default:
+              taskState = TaskState.Unscheduled;
+              break;
+          }
+        } else {
+          taskState = TaskState.Unscheduled;
+        }
         const taskRow : LegacyDhtmlXgantt = {
           id: taskID,
           name: task.title,
@@ -127,6 +180,8 @@ if (group.projects && group.projects.length > 0) {
           duration: moment(task.due).diff(moment(task.start), 'days'),
           parent: projectRow.id,
           progress: 0,
+          state: taskState ? taskState : null,
+          user: task.user ? task.user : null,
         };
         data.push(taskRow);
         taskID++;
@@ -138,6 +193,26 @@ if (group.projects && group.projects.length > 0) {
 if (group.tasks && group.tasks.list && group.tasks.list.length > 0) {
   // Add standalone tasks
   for (const task of group.tasks.list) {
+    let taskState: TaskState | null = null;
+
+    if (task.due) {
+      switch (task.state) {
+        case 'closed':
+          taskState = TaskState.Closed;
+          break;
+        case 'opened':
+          taskState = task.user ? TaskState.InProgress : TaskState.Opened;
+          if (task.due < new Date()) {
+            taskState = TaskState.Late;
+          }
+          break;
+        default:
+          taskState = TaskState.Unscheduled;
+          break;
+      }
+    } else {
+      taskState = TaskState.Unscheduled;
+    }
     const taskRow : LegacyDhtmlXgantt = {
       id: taskID,
       name: task.title,
@@ -145,6 +220,8 @@ if (group.tasks && group.tasks.list && group.tasks.list.length > 0) {
       duration: moment(task.due).diff(moment(task.start), 'days'),
       parent: 0,
       progress: 0,
+      state: taskState ? taskState : null,
+      user: task.user ? task.user : null,
     };
     data.push(taskRow);
     taskID++;
