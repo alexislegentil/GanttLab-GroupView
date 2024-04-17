@@ -41,12 +41,12 @@ export default {
     {name: "user", label: "User", align: "center", width: 100, editor: usersEditor},
     {name: "state", label: "State", align: "center", width: 100,
      editor: {type: "select", options: [
-        {key: "1", label: "Opened"},
-        {key: "2", label: "Closed"},
-        {key: "3", label: "In progress"},
-        {key: "4", label: "Late"},
-        {key: "5", label: "Unscheduled"}
-    ]}}
+        {key: "Opened", label: "Opened"},
+        {key: "Closed", label: "Closed"},
+        {key: "InProgress", label: "In progress"},
+        {key: "Late", label: "Late"},
+        {key: "Unscheduled", label: "Unscheduled"}
+    ], map_to: "state"}}
     ];
     gantt.templates.task_text = function(start, end, task) {
       return "<b>Name:</b> " + task.name + (task.user ? ",<b> Holders:</b> " + task.user : "");
@@ -91,10 +91,11 @@ export default {
       text: "Now", //the marker title
       title: dateToStr( new Date()) // the marker's tooltip
     });
-
+    gantt.config.open_tree_initially = true;
     
     gantt.init(this.$refs.ganttContainer);
     gantt.parse(this.$props.tasks);
+
   }
 }
 </script>
@@ -105,10 +106,12 @@ export default {
 /* common styles for overriding borders/progress color */
 .gantt_task_line{
         border-color: rgba(0, 0, 0, 0.25);
-    }
-    .gantt_task_line .gantt_task_progress {
-        background-color: rgba(0, 0, 0, 0.25);
-    }
+}
+.gantt_task_line .gantt_task_progress {
+    background-color: rgba(0, 0, 0, 0.25);
+    border-right: 1px solid black;
+    box-shadow: none;
+}
 
 .gantt_task_line.opened {
     background-color: #168af0;

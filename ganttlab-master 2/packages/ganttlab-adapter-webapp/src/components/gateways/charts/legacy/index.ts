@@ -16,6 +16,7 @@ interface LegacyDhtmlXgantt {
   progress: number;
   state?: TaskState | null;
   user?: string | null;
+  color?: string;
 }
 
 export enum TaskState {
@@ -93,34 +94,14 @@ if (group.epics && group.epics.length > 0) {
       duration: moment(epic.due_date).diff(moment(epic.start_date), 'days'),
       parent: 0,
       progress: 0,
+      color:"#4f4e4e"
     };
     taskID++;
     data.push(epicRow);
 
     if (epic.Tasks && epic.Tasks.list) {
       for (const task of epic.Tasks.list) {
-
-        let taskState: TaskState | null = null;
-
-        if (task.due) {
-          switch (task.state) {
-            case 'closed':
-              taskState = TaskState.Closed;
-              break;
-            case 'opened':
-              taskState = task.user ? TaskState.InProgress : TaskState.Opened;
-              if (task.due < new Date()) {
-                taskState = TaskState.Late;
-              }
-              break;
-            default:
-              taskState = TaskState.Unscheduled;
-              break;
-          }
-        } else {
-          taskState = TaskState.Unscheduled;
-        }
-
+        let taskState: TaskState | null = getStateFromGitLabState(task);
         const taskRow : LegacyDhtmlXgantt = {
           id: taskID,
           name: task.title,
@@ -153,26 +134,7 @@ if (group.projects && group.projects.length > 0) {
     data.push(projectRow);
     if (project.tasks && project.tasks.list) {
       for (const task of project.tasks.list) {
-        let taskState: TaskState | null = null;
-
-        if (task.due) {
-          switch (task.state) {
-            case 'closed':
-              taskState = TaskState.Closed;
-              break;
-            case 'opened':
-              taskState = task.user ? TaskState.InProgress : TaskState.Opened;
-              if (task.due < new Date()) {
-                taskState = TaskState.Late;
-              }
-              break;
-            default:
-              taskState = TaskState.Unscheduled;
-              break;
-          }
-        } else {
-          taskState = TaskState.Unscheduled;
-        }
+        let taskState: TaskState | null = getStateFromGitLabState(task);
         const taskRow : LegacyDhtmlXgantt = {
           id: taskID,
           name: task.title,
@@ -193,26 +155,7 @@ if (group.projects && group.projects.length > 0) {
 if (group.tasks && group.tasks.list && group.tasks.list.length > 0) {
   // Add standalone tasks
   for (const task of group.tasks.list) {
-    let taskState: TaskState | null = null;
-
-    if (task.due) {
-      switch (task.state) {
-        case 'closed':
-          taskState = TaskState.Closed;
-          break;
-        case 'opened':
-          taskState = task.user ? TaskState.InProgress : TaskState.Opened;
-          if (task.due < new Date()) {
-            taskState = TaskState.Late;
-          }
-          break;
-        default:
-          taskState = TaskState.Unscheduled;
-          break;
-      }
-    } else {
-      taskState = TaskState.Unscheduled;
-    }
+    let taskState: TaskState | null = getStateFromGitLabState(task);
     const taskRow : LegacyDhtmlXgantt = {
       id: taskID,
       name: task.title,
@@ -228,6 +171,30 @@ if (group.tasks && group.tasks.list && group.tasks.list.length > 0) {
   }
 }
   return  data ;
+}
+
+function getStateFromGitLabState(task: Task): TaskState{
+  let taskState: TaskState | null = null;
+
+        if (task.due) {
+          switch (task.state) {
+            case 'closed':
+              taskState = TaskState.Closed;
+              break;
+            case 'opened':
+              taskState = task.user ? TaskState.InProgress : TaskState.Opened;
+              if (task.due < new Date()) {
+                taskState = TaskState.Late;
+              }
+              break;
+            default:
+              taskState = TaskState.Unscheduled;
+              break;
+          }
+        } else {
+          taskState = TaskState.Unscheduled;
+        }
+    return taskState;
 }
 
 
