@@ -33,7 +33,7 @@ export default class GroupChartMediator extends Vue {
     padding: 0;
   }
   .ganttContainer {
-    height: 100vh;
+    height: 80vh;
     width: 100%;
   }
   .left-ganttContainer {

@@ -8,5 +8,5 @@ export interface GitLabIssue {
   due_date: string;
   milestone: GitLabMilestone | null;
   state: string;
-  assignee: { name: string } | null;
+  assignees: Array<any> | null;
 }

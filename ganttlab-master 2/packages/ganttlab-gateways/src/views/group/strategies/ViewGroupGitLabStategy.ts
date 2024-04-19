@@ -88,7 +88,11 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                     console.log(gitlabIssue);
                     const task = getTaskFromGitLabIssue(gitlabIssue);
                     task.addState(gitlabIssue.state);
-                    if (gitlabIssue.assignee) task.addUser(gitlabIssue.assignee.name);
+                    if (gitlabIssue.assignees) {
+                        for (const user of gitlabIssue.assignees) {
+                            task.addUser(user.username);
+                        }
+                    } 
                     tasksListByEpic.push(task);
                 }
 
@@ -172,7 +176,11 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                             const task = getTaskFromGitLabIssue(gitlabIssue);
                             tasksList.push(task);
                             task.addState(gitlabIssue.state);
-                            if (gitlabIssue.assignee) task.addUser(gitlabIssue.assignee.name);
+                            if (gitlabIssue.assignees) {
+                                for (const user of gitlabIssue.assignees) {
+                                    task.addUser(user.username);
+                                }
+                            } 
                             activeTaskList.push(task);
                         }   
                         
@@ -215,7 +223,11 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                 console.log(gitlabIssue);
                 const task = getTaskFromGitLabIssue(gitlabIssue);
                 task.addState(gitlabIssue.state);
-                if (gitlabIssue.assignee) task.addUser(gitlabIssue.assignee.name);
+                if (gitlabIssue.assignees) {
+                    for (const user of gitlabIssue.assignees) {
+                        task.addUser(user.username);
+                    }
+                } 
                 allTasksList.push(task);
             }
 

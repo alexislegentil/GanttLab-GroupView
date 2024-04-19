@@ -17,7 +17,7 @@ export class Task {
    * @param predecessor - The parent of this task, which might be used to override the start date
    */
   public state: string | null = null;
-  public user: string | null = null;
+  public users: Array<string> = [];
 
   constructor(
     public title: string,
@@ -42,6 +42,6 @@ export class Task {
   }
 
   public addUser(user: string): void {
-    this.user = user;
+    this.users.push(user);
   }
 }

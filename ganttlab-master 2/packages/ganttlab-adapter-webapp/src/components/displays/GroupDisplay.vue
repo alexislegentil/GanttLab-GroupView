@@ -32,6 +32,7 @@
                     :paginatedTasks="group.tasks"
                     @set-tasks-page="setTasksPage($event)"
                     /> -->
+            <div class="gantt-controls"></div>
             <GroupChartMediator
             :group="group"
             />
