@@ -8,6 +8,7 @@
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import GanttComponent from './legacy/GanttComponent.vue';
 import { getConvertedGroup } from './legacy/index';
+import { getLinksFromGroup } from './legacy/index';
 import { Group } from 'ganttlab-entities';
 
 @Component({
@@ -18,9 +19,15 @@ import { Group } from 'ganttlab-entities';
 export default class GroupChartMediator extends Vue {
   @Prop() readonly group!: Group;
 
+  public convertedGroup = getConvertedGroup(this.group);
+  public links = getLinksFromGroup(this.group, this.convertedGroup);
+
+
   get tasks() {
+    console.log(this.convertedGroup);
     return {
-      data: getConvertedGroup(this.group),
+      data: this.convertedGroup,
+      links: this.links
     };
   }
 }

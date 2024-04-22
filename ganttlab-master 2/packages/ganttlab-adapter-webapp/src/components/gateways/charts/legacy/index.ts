@@ -21,6 +21,13 @@ interface LegacyDhtmlXgantt {
   row_height?: number;
 }
 
+interface dhtmlxLink {
+  id: number;
+  source: number;
+  target: number;
+  type: string;
+}
+
 export enum TaskState {
   Opened = 'Opened',
   Closed = 'Closed',
@@ -28,7 +35,6 @@ export enum TaskState {
   Late = 'Late',
   Unscheduled = 'Unscheduled'
 }
-
 
 
 export function getConvertedTasks(tasks: Array<Task>): Array<LegacyTask> {
@@ -81,6 +87,11 @@ export function getConvertedTasks(tasks: Array<Task>): Array<LegacyTask> {
   }
   return convertedTasks;
 }
+
+
+
+
+
 
 export function getConvertedGroup(group: Group): Array<LegacyDhtmlXgantt> {
   const data: Array<LegacyDhtmlXgantt> = [];
@@ -192,6 +203,85 @@ if (group.tasks && group.tasks.list && group.tasks.list.length > 0) {
   }
 }
   return  data ;
+}
+
+export function getLinksFromGroup(group: Group, convertedGroup: Array<LegacyDhtmlXgantt>): Array<dhtmlxLink> {
+  const links: Array<dhtmlxLink> = [];
+  let linkID = 1;
+
+  // Convert epics
+  if (group.epics && group.epics.length > 0) {
+    for (const epic of group.epics) {
+      if (epic.Tasks && epic.Tasks.list) {
+        for (const task of epic.Tasks.list) {
+          if (task.blockedBy && task.blockedBy.length > 0) {
+            for (const blockedBy of task.blockedBy) {
+              const link : dhtmlxLink = {
+                id: linkID,
+                source: getTaskIdFromTitle(convertedGroup, blockedBy),
+                target: getTaskIdFromTitle(convertedGroup, task.title),
+                type: "0"
+              };
+              links.push(link);
+              linkID++;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  if (group.projects && group.projects.length > 0) {
+    // Convert projects
+    for (const project of group.projects) {
+      if (project.tasks && project.tasks.list) {
+        for (const task of project.tasks.list) {
+          if (task.blockedBy && task.blockedBy.length > 0) {
+            for (const blockedBy of task.blockedBy) {
+              const link : dhtmlxLink = {
+                id: linkID,
+                source: getTaskIdFromTitle(convertedGroup, blockedBy),
+                target: getTaskIdFromTitle(convertedGroup, task.title),
+                type: "0"
+              };
+              links.push(link);
+              linkID++;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  if (group.tasks && group.tasks.list && group.tasks.list.length > 0) {
+    // Add standalone tasks
+    for (const task of group.tasks.list) {
+      if (task.blockedBy && task.blockedBy.length > 0) {
+        for (const blockedBy of task.blockedBy) {
+          const link : dhtmlxLink = {
+            id: linkID,
+            source: getTaskIdFromTitle(convertedGroup, blockedBy),
+            target: getTaskIdFromTitle(convertedGroup, task.title),
+            type: "0"
+          };
+          links.push(link);
+          linkID++;
+        }
+      }
+    }
+  }
+  return links;
+}
+
+function getTaskIdFromTitle(convertedGroup: Array<LegacyDhtmlXgantt>, title: string): number {
+  let id = 0;
+  for (const task of convertedGroup) {
+    if (task.name === title) {
+      id = task.id;
+      break;
+    }
+  }
+  return id;
 }
 
 function getStateFromGitLabState(task: Task): TaskState{

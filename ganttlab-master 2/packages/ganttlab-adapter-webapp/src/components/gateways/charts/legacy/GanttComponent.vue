@@ -114,7 +114,7 @@ export default {
     gantt.config.fit_tasks = true;
 
     gantt.config.columns = [
-      {name: "name", label: "Task name", tree: true, width: 170, tree : true, resize: true },
+      {name: "name", label: "<div class='searchEl'>Task name <input id='filter' style='width: 120px;' type='text'"+"placeholder='Search tasks...'></div>", tree: true, width: 170, tree : true, resize: true },
       {name: "start_date", label: "Start time", align: "center", width: 150 , resize: true, editor: dateEditor},
       {name: "duration", label: "Duration", align: "center", width: 50, editor: durationEditor},
       {name: "user", label: "User", align: "center", width: 100},
@@ -124,6 +124,7 @@ export default {
     gantt.config.lightbox.sections = [
       {name: "name", label: "Name", height:30, map_to:"name", type:"textarea", focus:true},
       {name:"state",    height:22, map_to:"state", type:"select", options: stateEditor.options},
+      {name:"template", height:37, type:"template", map_to:"my_template"}, 
       {name: "time", height:72, map_to:"auto", type:"duration"}
     ];
 
@@ -134,8 +135,16 @@ export default {
 
     gantt.locale.labels.section_name = "Title";
     gantt.locale.labels.section_state = "State";
+    gantt.locale.labels.section_template = "Details";
 
     gantt.config.lightbox.project_sections.allow_root = false;
+
+    gantt.attachEvent("onBeforeLightbox", function(id) {
+    var task = gantt.getTask(id);
+    task.my_template = "<span id='lightbox_users'>Assign to: </span>"+ task.user
+    +"<br>  <span id='lightbox_progress'>Progress: </span>"+ task.progress*100 +" %";
+    return true;
+});
 
 
     gantt.config.lightbox.allow_root = false;
@@ -181,7 +190,7 @@ export default {
 
     gantt.config.columns_resizable = true;
     gantt.config.columns_autoresize = true;
-    gantt.config.links = false;
+
 
     gantt.addMarker({
       start_date: new Date(), //a Date object that sets the marker's date
@@ -197,6 +206,41 @@ export default {
 
     gantt.init(this.$refs.ganttContainer);
     gantt.parse(this.$props.tasks);
+
+
+    gantt.attachEvent("onDataRender", function () {
+    const filterEl = document.querySelector("#filter")
+    filterEl.addEventListener('input', function (e) {
+        filterValue = filterEl.value;
+        gantt.refreshData();
+    });
+    });
+
+
+    let filterValue = "";
+
+    function filterLogic(task, match) {
+        match = match || false;
+        // check children
+        gantt.eachTask(function (child) {
+            if (filterLogic(child)) {
+                match = true;
+            }
+        }, task.id);
+
+        // check task
+        if (task.name.toLowerCase().indexOf(filterValue.toLowerCase()) > -1) {
+            match = true;
+        }
+        return match;
+    }
+
+    gantt.attachEvent("onBeforeTaskDisplay", function (id, task) {
+        if (!filterValue) {
+            return true;
+        }
+        return filterLogic(task);
+    });
 
     gantt.$root.appendChild(controlsDiv);
     gantt.$root.appendChild(legend);
@@ -225,6 +269,19 @@ export default {
     border-right: 1px solid black;
     box-shadow: none;
 }
+
+.gantt_tree_content {
+    overflow:hidden;
+    text-overflow: ellipsis;
+}
+
+/* .gantt_tree_icon.gantt_folder_open {
+    background-image: url("../../../generic/icons/Folder\ Minus\ Classic.svg")!important;
+}
+
+.gantt_tree_icon.gantt_folder_closed {
+    background-image: url("../../../generic/icons/Folder\ plus\ solid.svg")!important;
+} */
 
 .opened {
     background-color: #168af0;

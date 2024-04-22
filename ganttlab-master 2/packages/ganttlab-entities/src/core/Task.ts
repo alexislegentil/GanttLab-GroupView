@@ -18,6 +18,7 @@ export class Task {
    */
   public state: string | null = null;
   public users: Array<string> = [];
+  public blockedBy: Array<string> = [];
 
   constructor(
     public title: string,
@@ -43,5 +44,9 @@ export class Task {
 
   public addUser(user: string): void {
     this.users.push(user);
+  }
+
+  public addBlockedBy(blockedBy: string): void {
+    this.blockedBy.push(blockedBy);
   }
 }
