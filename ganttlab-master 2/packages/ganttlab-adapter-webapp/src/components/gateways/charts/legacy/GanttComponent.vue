@@ -75,6 +75,47 @@ for (let i = 0; i < states.length; i++) {
 legend.appendChild(legendList);
 
 
+let stateFilter = {
+  Opened: true,
+  Closed: true,
+  InProgress: true,
+  Late: true,
+  Unscheduled: true
+}; 
+let stateFilterContainer = document.createElement('div');
+stateFilterContainer.className = 'state-filter';
+
+// Parcourir chaque état dans le filtre
+for (let state in stateFilter) {
+  let stateDiv = document.createElement('div');
+  stateDiv.className = 'state-filter-' + state.toLowerCase().replace(' ', '-');
+
+  // Créer une checkbox
+  let stateCheckbox = document.createElement('input');
+  stateCheckbox.type = 'checkbox';
+  stateCheckbox.id = state;
+  stateCheckbox.checked = stateFilter[state];
+  stateCheckbox.className = 'state-checkbox';
+
+  // Ajouter un gestionnaire d'événements pour mettre à jour le filtre lorsque la checkbox est modifiée
+  stateCheckbox.onchange = function() {
+    stateFilter[state] = stateCheckbox.checked;
+    gantt.refreshData();
+  };
+
+  // Créer un label pour la checkbox
+  let stateLabel = document.createElement('label');
+  stateLabel.htmlFor = state;
+  stateLabel.textContent = state;
+
+  // Ajouter la checkbox et le label à 'controlsDiv'
+  stateDiv.appendChild(stateCheckbox);
+  stateDiv.appendChild(stateLabel);
+
+  stateFilterContainer.appendChild(stateDiv);
+}
+controlsDiv.appendChild(stateFilterContainer);
+
 
 var daysStyle = function(date){
     var dateToStr = gantt.date.date_to_str("%D");
@@ -231,13 +272,22 @@ export default {
         if (task.name.toLowerCase().indexOf(filterValue.toLowerCase()) > -1) {
             match = true;
         }
+
+        //check state
+        for (let state in stateFilter) {
+            if (stateFilter[state] && task.state === state) {
+                match = true;
+            }
+            else if (!stateFilter[state] && task.state === state) {
+                match = false;
+            }
+        }
+
+
         return match;
     }
 
     gantt.attachEvent("onBeforeTaskDisplay", function (id, task) {
-        if (!filterValue) {
-            return true;
-        }
         return filterLogic(task);
     });
   
@@ -377,5 +427,19 @@ export default {
 		flex-shrink: 0;
 		margin:0 5px;
 	}
+  .state-filter {
+  display: flex;
+  flex-direction: row;
+  margin-top: 1rem;
+  }
+
+  .state-checkbox {
+  margin: 0 5px 0 10px ;
+  vertical-align: middle;
+}
+.state-checkbox + label {
+  font-size: 14px;
+  vertical-align: middle;
+}
 
 </style>
