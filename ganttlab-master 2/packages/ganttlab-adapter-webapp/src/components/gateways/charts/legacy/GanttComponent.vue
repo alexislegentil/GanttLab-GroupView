@@ -260,34 +260,39 @@ export default {
     let filterValue = "";
 
     function filterLogic(task, match) {
-        match = match || false;
-        // check children
-        gantt.eachTask(function (child) {
-            if (filterLogic(child)) {
-                match = true;
-            }
-        }, task.id);
-
-        // check task
-        if (task.name.toLowerCase().indexOf(filterValue.toLowerCase()) > -1) {
+    match = match || false;
+    // check children
+    gantt.eachTask(function (child) {
+        if (filterLogic(child)) {
             match = true;
         }
+    }, task.id);
 
-        //check state
-        for (let state in stateFilter) {
-            if (stateFilter[state] && task.state === state) {
-                match = true;
-            }
-            else if (!stateFilter[state] && task.state === state) {
-                match = false;
-            }
-        }
-
-
-        return match;
+    // check task
+    if (task.name.toLowerCase().indexOf(filterValue.toLowerCase()) > -1) {
+        match = true;
     }
 
+    // check state
+    if (stateFilter[task.state] === false) {
+        match = false;
+    }
+
+    return match;
+}
+
     gantt.attachEvent("onBeforeTaskDisplay", function (id, task) {
+      let thereIsAlmostOneFilterFalse = false;
+      for (let state in stateFilter) {
+        if (!stateFilter[state]) {
+          thereIsAlmostOneFilterFalse = true;
+          break;
+        }
+      }
+
+      if (!filterValue && !thereIsAlmostOneFilterFalse) {
+        return true;
+    }
         return filterLogic(task);
     });
   
