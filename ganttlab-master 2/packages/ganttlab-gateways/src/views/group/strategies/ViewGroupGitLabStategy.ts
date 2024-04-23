@@ -57,9 +57,6 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                 method: 'GET',
                 url: `/groups/${encodedGroup}/epics`,
                 params: {
-                    page: configuration.group.page,
-                    // eslint-disable-next-line @typescript-eslint/camelcase
-                    per_page: configuration.group.pageSize,
                     state: stateFilter? stateFilter : 'all',
                     scope : 'all',
                 },
@@ -76,16 +73,13 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                  method: 'GET',
                  url: `/groups/${encodedGroup}/epics/${epic.iid}/issues`,
                  params: {
-                      page: configuration.tasks.page,
-                      // eslint-disable-next-line @typescript-eslint/camelcase
-                      per_page: configuration.tasks.pageSize,
                       state: stateFilter? stateFilter : 'all',
                       scope : 'all',
                  },
                 });
                 const epicPagination = getPaginationFromGitLabHeaders(headers);
                 for (const gitlabIssue of data) {
-
+                    console.log(gitlabIssue);
                     const task = getTaskFromGitLabIssue(gitlabIssue);
                     task.addState(gitlabIssue.state);
                     if (gitlabIssue.assignees) {
@@ -101,7 +95,7 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                         if (link.link_type === 'is_blocked_by') {
                         task.addBlockedBy(link.title);
                         }
-                        console.log(gitlabIssue.title, "linked to", link);
+
                     }
                     tasksListByEpic.push(task);
                 }
@@ -200,7 +194,7 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                                 task.addBlockedBy(link.title);
                                 }
 
-                                console.log(gitlabIssue.title, "linked to", link);
+
                                 
                             }
                             activeTaskList.push(task);
@@ -257,11 +251,7 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                 for (const link of blockedBy.data) {
                     if (link.link_type === 'is_blocked_by') {
                     task.addBlockedBy(link.title);
-                    }
-                    
-                        console.log(gitlabIssue.title, "linked to", link);
-
-                    
+                    }                    
                 }
                 allTasksList.push(task);
             }

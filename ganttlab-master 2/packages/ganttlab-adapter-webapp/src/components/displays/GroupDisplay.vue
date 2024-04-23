@@ -1,19 +1,6 @@
 <template>
     <div>
-        <template>
-        <!-- ... -->
-            <div class="flex items-center justify-center">
-                <input
-                type="checkbox"
-                id="groupView"
-                v-model="groupView"
-                />
-                <label for="groupView">Group view in different timeline</label>
-            </div>
-        <!-- ... -->
-        </template>
-
-        <div v-if="groupView == false">
+        <div v-if="group">
             
             <div
             v-if="group.tasks.previousPage || group.tasks.nextPage"
@@ -27,45 +14,12 @@
             @set-page="setTasksPage($event)"
             />
         </div>
-        <!-- <TasksChartMediator :group="group" :chart="chart" /> -->
-        <!-- <TasksDisplay
-                    :paginatedTasks="group.tasks"
-                    @set-tasks-page="setTasksPage($event)"
-                    /> -->
-            <div class="gantt-controls"></div>
             <GroupChartMediator
             :group="group"
             />
 
         </div>
-
-        <div v-else>
             
-
-
-        <div v-if="group.epics && group.epics.length > 0">
-            <div v-for="(project, index) in group.epics" :key="index">
-                
-                <div class="flex items" >
-                    <TasksDisplay
-                    :paginatedTasks="project.Tasks"
-                    @set-tasks-page="setTasksPage($event)"
-                    />
-                </div>
-            </div>
-        </div>
-       
-
-        <div v-else-if="group.projects && group.projects.length> 0" class="flex items-center justify-center">
-            <div v-for="(project, index) in group.projects" :key="index">
-                <div class="flex items" >
-                    <TasksDisplay
-                    :paginatedTasks="project.tasks"
-                    @set-tasks-page="setTasksPage($event)"
-                    />
-                </div>
-            </div>
-        </div>
     <div v-else>
         <NoData
         :project="project"
@@ -73,7 +27,7 @@
         :viewGateway="viewGateway"
         />
     </div>
-        </div>
+
     </div>
   </template>
   
@@ -119,7 +73,6 @@ import { Task } from 'ganttlab-entities';
 
     data() {
         return {
-        groupView: false,
         };
     }
   

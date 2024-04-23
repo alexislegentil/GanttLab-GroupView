@@ -207,7 +207,6 @@ export default {
     gantt.init(this.$refs.ganttContainer);
     gantt.parse(this.$props.tasks);
 
-
     gantt.attachEvent("onDataRender", function () {
     const filterEl = document.querySelector("#filter")
     filterEl.addEventListener('input', function (e) {
@@ -241,11 +240,10 @@ export default {
         }
         return filterLogic(task);
     });
+  
 
     gantt.$root.appendChild(controlsDiv);
     gantt.$root.appendChild(legend);
-
-
 
   }
 
@@ -307,7 +305,7 @@ export default {
     background-color: #4f4e4e;
 }
 
-.gantt_row.gantt_row_project{
+.gantt_row.gantt_row_project, .gantt_row.odd.gantt_row_project{
    background-color:#bbbbbb;
    font-weight: bold;
 }
