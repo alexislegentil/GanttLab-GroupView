@@ -353,7 +353,7 @@ export default class Home extends Vue {
       }
       if (data instanceof Group) {
         this.group = data;
-        console.log(this.group);
+       // console.log(this.group);
       }
       trackVirtualpageView(
         `${this.sourceGateway.name} - ${view.name}`,

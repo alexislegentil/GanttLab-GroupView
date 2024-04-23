@@ -15,7 +15,16 @@ export interface FilterGateway {
 }
 
 export const ImplementedFiltersGateways: Array<FilterGateway> = [
-
+  {
+    slug: 'allIssues',
+    icon: '',
+    name: 'All Issues',
+    shortDescription: 'Show all issues, included closed ones',
+    instance: new IssuesStateFilter('allIssues'), // Add the 'instance' property with a value of null
+    //instance: new IssuesStateFilter('closed'),
+    //instance: new FilterRepository(),
+    defaultConfiguration: {},
+  },
   {
     slug: 'openedIssues',
     name: 'Opened Issues',
@@ -34,16 +43,6 @@ export const ImplementedFiltersGateways: Array<FilterGateway> = [
     name: 'Closed Issues',
     shortDescription: 'Show only closed issues',
     instance: new IssuesStateFilter(false), // Add the 'instance' property with a value of null
-    //instance: new IssuesStateFilter('closed'),
-    //instance: new FilterRepository(),
-    defaultConfiguration: {},
-  },
-  {
-    slug: 'allIssues',
-    icon: '',
-    name: 'all Issues',
-    shortDescription: 'Show all issues, included closed ones',
-    instance: new IssuesStateFilter('allIssues'), // Add the 'instance' property with a value of null
     //instance: new IssuesStateFilter('closed'),
     //instance: new FilterRepository(),
     defaultConfiguration: {},

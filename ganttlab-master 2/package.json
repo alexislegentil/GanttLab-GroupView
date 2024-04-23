@@ -49,6 +49,15 @@
     ]
   },
   "dependencies": {
+    "@fortawesome/fontawesome-free": "^6.5.2",
+    "@fortawesome/fontawesome-svg-core": "^6.5.2",
+    "@fortawesome/free-brands-svg-icons": "^6.5.2",
+    "@fortawesome/free-regular-svg-icons": "^6.5.2",
+    "@fortawesome/free-solid-svg-icons": "^6.5.2",
+    "@fortawesome/vue-fontawesome": "^2.0.10",
+    "dhtmlx-gantt": "^8.0.6",
+    "gantt-elastic": "^1.0.12",
+    "postcss": "^8.4.38",
     "vue-property-decorator": "^9.1.2"
   }
 }

@@ -60,7 +60,8 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                     page: configuration.group.page,
                     // eslint-disable-next-line @typescript-eslint/camelcase
                     per_page: configuration.group.pageSize,
-                    state: stateFilter? stateFilter : 'opened',
+                    state: stateFilter? stateFilter : 'all',
+                    scope : 'all',
                 },
             });
             const epicsList: Array<Epic> = [];
@@ -78,13 +79,30 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                       page: configuration.tasks.page,
                       // eslint-disable-next-line @typescript-eslint/camelcase
                       per_page: configuration.tasks.pageSize,
-                      state: stateFilter? stateFilter : 'opened',
+                      state: stateFilter? stateFilter : 'all',
+                      scope : 'all',
                  },
                 });
                 const epicPagination = getPaginationFromGitLabHeaders(headers);
                 for (const gitlabIssue of data) {
-                    console.log(gitlabIssue);
+
                     const task = getTaskFromGitLabIssue(gitlabIssue);
+                    task.addState(gitlabIssue.state);
+                    if (gitlabIssue.assignees) {
+                        for (const user of gitlabIssue.assignees) {
+                            task.addUser(user.username);
+                        }
+                    } 
+                    const blockedBy = await source.safeAxiosRequest<Array<any>>({
+                        method: 'GET',
+                        url: `/projects/${gitlabIssue.project_id}/issues/${gitlabIssue.iid}/links`,
+                    });
+                    for (const link of blockedBy.data) {
+                        if (link.link_type === 'is_blocked_by') {
+                        task.addBlockedBy(link.title);
+                        }
+                        console.log(gitlabIssue.title, "linked to", link);
+                    }
                     tasksListByEpic.push(task);
                 }
 
@@ -122,7 +140,8 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                     page: configuration.group.page,
                     // eslint-disable-next-line @typescript-eslint/camelcase
                     per_page: configuration.group.pageSize,
-             // state: stateFilter? stateFilter : 'opened',
+                    state: stateFilter? stateFilter : 'opened',
+                    scope : 'all',
                  //   archived: false,
                 },
             });
@@ -158,6 +177,7 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                                 // eslint-disable-next-line @typescript-eslint/camelcase
                                 per_page: configuration.tasks.pageSize,
                                 state: stateFilter? stateFilter : 'opened',
+                                scope : 'all',
                             //  group: gitlabProject.name,
                             },
                         });
@@ -165,6 +185,24 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                         for (const gitlabIssue of data) {
                             const task = getTaskFromGitLabIssue(gitlabIssue);
                             tasksList.push(task);
+                            task.addState(gitlabIssue.state);
+                            if (gitlabIssue.assignees) {
+                                for (const user of gitlabIssue.assignees) {
+                                    task.addUser(user.username);
+                                }
+                            } 
+                            const blockedBy = await source.safeAxiosRequest<Array<any>>({
+                                method: 'GET',
+                                url: `/projects/${gitlabIssue.project_id}/issues/${gitlabIssue.iid}/links`,
+                            });
+                            for (const link of blockedBy.data) {
+                                if (link.link_type === 'is_blocked_by') {
+                                task.addBlockedBy(link.title);
+                                }
+
+                                console.log(gitlabIssue.title, "linked to", link);
+                                
+                            }
                             activeTaskList.push(task);
                         }   
                         
@@ -186,7 +224,10 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                         });
                         project.addTasks(tasksForActiveProject);
                 }
-            
+            }
+
+            // in every case, get all tasks
+              
             const {data, headers} = await source.safeAxiosRequest<Array<GitLabIssue>>({
                 method: 'GET',
                 url: `/groups/${encodedGroup}/issues`,
@@ -194,12 +235,34 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                     page: configuration.tasks.page,
                     // eslint-disable-next-line @typescript-eslint/camelcase
                     per_page: configuration.tasks.pageSize,
-                    state: stateFilter? stateFilter : 'opened',
+                    state: stateFilter? stateFilter : 'all',
+                    epic_id: 'none',
+                    scope : 'all',
                 },
             });
             const pagination = getPaginationFromGitLabHeaders(headers);
             for (const gitlabIssue of data) {
+
                 const task = getTaskFromGitLabIssue(gitlabIssue);
+                task.addState(gitlabIssue.state);
+                if (gitlabIssue.assignees) {
+                    for (const user of gitlabIssue.assignees) {
+                        task.addUser(user.username);
+                    }
+                } 
+                const blockedBy = await source.safeAxiosRequest<Array<any>>({
+                    method: 'GET',
+                    url: `/projects/${gitlabIssue.project_id}/issues/${gitlabIssue.iid}/links`,
+                });
+                for (const link of blockedBy.data) {
+                    if (link.link_type === 'is_blocked_by') {
+                    task.addBlockedBy(link.title);
+                    }
+                    
+                        console.log(gitlabIssue.title, "linked to", link);
+
+                    
+                }
                 allTasksList.push(task);
             }
 
@@ -223,8 +286,6 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
             activeGroup.addTasks(allTasksPaginated);
 
             console.log(activeGroup);
-
-            }
 
             
             return activeGroup;

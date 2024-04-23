@@ -14,6 +14,7 @@
   "dependencies": {
     "core-js": "^3.6.4",
     "d3-v3": "npm:d3@^3.5.17",
+    "dhtmlx-gantt": "^8.0.6",
     "ganttlab-entities": "0.1.1",
     "ganttlab-gateways": "0.2.1",
     "ganttlab-use-cases": "0.1.1",

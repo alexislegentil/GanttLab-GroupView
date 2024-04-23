@@ -1,10 +1,13 @@
 <template>
   <div class="w-full">
     <component
-      v-if="chart && tasks.length"
+      v-if="chart && tasks && tasks.length"
       :is="chartComponent"
       :tasks="tasks"
     />
+    <div v-else>
+      <NoData />
+    </div>
   </div>
 </template>
 
@@ -19,7 +22,7 @@ import { Task } from 'ganttlab-entities';
   },
 })
 export default class TasksChartMediator extends Vue {
-  @Prop() readonly tasks!: Array<Task>;
+  @Prop() readonly tasks?: Array<Task> | null;
   @Prop() readonly chart!: string;
 
   get chartComponent() {

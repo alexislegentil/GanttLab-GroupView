@@ -7,4 +7,8 @@ export interface GitLabIssue {
   description: string;
   due_date: string;
   milestone: GitLabMilestone | null;
+  state: string;
+  assignees: Array<any> | null;
+  iid?: number;
+  project_id?: number;
 }

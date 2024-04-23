@@ -16,6 +16,10 @@ export class Task {
    * @param due - A due date (if start set, defaults to start + 1 day)
    * @param predecessor - The parent of this task, which might be used to override the start date
    */
+  public state: string | null = null;
+  public users: Array<string> = [];
+  public blockedBy: Array<string> = [];
+
   constructor(
     public title: string,
     public url: string,
@@ -32,5 +36,17 @@ export class Task {
       calculatedDue.setDate(calculatedDue.getDate() + 1);
       this.due = calculatedDue;
     }
+  }
+
+  public addState(state: string): void {
+    this.state = state;
+  }
+
+  public addUser(user: string): void {
+    this.users.push(user);
+  }
+
+  public addBlockedBy(blockedBy: string): void {
+    this.blockedBy.push(blockedBy);
   }
 }

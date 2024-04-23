@@ -124,6 +124,8 @@ export default {
             }
           }
 
+
+
           // parse data text strings to JavaScript date stamps
           const parseDate = d3.time.format('%Y-%m-%d');
           const parseDateTime = d3.time.format('%Y-%m-%d %H:%M:%S');
@@ -637,7 +639,7 @@ export default {
 
       const chart = this.visavailChart().width(document.body.clientWidth - 290);
 
-      d3.select('#legacyChart').datum(this.convertedTasks).call(chart);
+      d3.select('#legacyChart').datum(this.convertedTasks).call(chart) ;
     },
     pad: function (number) {
       let r = String(number);
