@@ -109,7 +109,9 @@ export default {
                   <div class="state-filter-late"><input type="checkbox" id="Late" class="state-checkbox" checked=${stateFilter["Late"]} onChange="stateCheckboxOnChange('Late')"><label for="Late">Late</label></div>
                   <div class="state-filter-unscheduled"><input type="checkbox" id="Unscheduled" class="state-checkbox" checked=${stateFilter["Unscheduled"]} onChange="stateCheckboxOnChange('Unscheduled')"><label for="Unscheduled">Unscheduled</label></div>
                 </div>
+                <div class='searchEl'><label for="searchFilter">Search task :</label><input id='searchFilter' style='width: 120px;' type='text' placeholder='Search tasks...'></div>
               </div>
+              
               `, css:"gantt-controls", height: 40
             },
             { resizer: true, width: 1 },
@@ -147,7 +149,7 @@ export default {
     gantt.config.fit_tasks = true;
 
     gantt.config.columns = [
-      {name: "name", label: "<div class='searchEl'>Task name <input id='filter' style='width: 120px;' type='text'"+"placeholder='Search tasks...'></div>", tree: true, width: 170, tree : true, resize: true },
+      {name: "name", label: "Task name", tree: true, width: 170, tree : true, resize: true },
       {name: "start_date", label: "Start time", align: "center", width: 150 , resize: true, editor: dateEditor},
       {name: "duration", label: "Duration", align: "center", width: 50, editor: durationEditor},
       {name: "user", label: "User", align: "center", width: 100},
@@ -249,7 +251,7 @@ export default {
      
 
     gantt.attachEvent("onDataRender", function () {
-    const filterEl = document.querySelector("#filter")
+    const filterEl = document.querySelector("#searchFilter")
     filterEl.addEventListener('input', function (e) {
         filterValue = filterEl.value;
         gantt.refreshData();
@@ -372,6 +374,7 @@ export default {
     flex-direction: row;
     align-items: center;
     height: 100%;
+    padding: 5px;
 }
 
 .gantt-controls button {
@@ -406,6 +409,7 @@ export default {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  margin-left: 2rem;
   }
 
 .state-checkbox + label {
@@ -414,6 +418,29 @@ export default {
   background-color: #f2f2f2;
   border-radius: 5px;
   cursor: pointer;
+  user-select: none;
+}
+.searchEl {
+  display: flex;
+  align-items: center;
+  margin-left: 2rem;
+}
+
+.searchEl label {
+  margin-right: 10px;
+  font-weight: bold;
+}
+
+.searchEl #searchFilter {
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 120px;
+  transition: border .3s ease;
+}
+
+.searchEl #searchFilter:focus {
+  border-color: #007BFF;
 }
 
 .gantt-legend {
