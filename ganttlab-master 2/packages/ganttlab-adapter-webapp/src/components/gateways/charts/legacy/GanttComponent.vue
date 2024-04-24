@@ -18,26 +18,6 @@ var stateEditor = {type: "select", options: [
         {key: "Unscheduled", label: "Unscheduled"}
     ], map_to: "state"};
 
-let undoBtn = document.createElement('button');
-undoBtn.className = 'gantt-undo';
-undoBtn.textContent = 'Undo';
-undoBtn.onclick = function(){
-    gantt.undo();
-};
-
-let redoBtn = document.createElement('button');
-redoBtn.className = 'gantt-redo';
-redoBtn.textContent = 'Redo';
-redoBtn.onclick = function(){
-    gantt.redo();
-};
-
-let controlsDiv = document.createElement('div');
-controlsDiv.className = 'gantt-controls';
-controlsDiv.appendChild(undoBtn);
-controlsDiv.appendChild(redoBtn);
-
-
 let legend = document.createElement('div');
 legend.className = 'gantt-legend';
 legend.id = 'gantt-legend';
@@ -82,40 +62,6 @@ let stateFilter = {
   Late: true,
   Unscheduled: true
 }; 
-let stateFilterContainer = document.createElement('div');
-stateFilterContainer.className = 'state-filter';
-
-// Parcourir chaque état dans le filtre
-for (let state in stateFilter) {
-  let stateDiv = document.createElement('div');
-  stateDiv.className = 'state-filter-' + state.toLowerCase().replace(' ', '-');
-
-  // Créer une checkbox
-  let stateCheckbox = document.createElement('input');
-  stateCheckbox.type = 'checkbox';
-  stateCheckbox.id = state;
-  stateCheckbox.checked = stateFilter[state];
-  stateCheckbox.className = 'state-checkbox';
-
-  // Ajouter un gestionnaire d'événements pour mettre à jour le filtre lorsque la checkbox est modifiée
-  stateCheckbox.onchange = function() {
-    stateFilter[state] = stateCheckbox.checked;
-    gantt.refreshData();
-  };
-
-  // Créer un label pour la checkbox
-  let stateLabel = document.createElement('label');
-  stateLabel.htmlFor = state;
-  stateLabel.textContent = state;
-
-  // Ajouter la checkbox et le label à 'controlsDiv'
-  stateDiv.appendChild(stateCheckbox);
-  stateDiv.appendChild(stateLabel);
-
-  stateFilterContainer.appendChild(stateDiv);
-}
-controlsDiv.appendChild(stateFilterContainer);
-
 
 var daysStyle = function(date){
     var dateToStr = gantt.date.date_to_str("%D");
@@ -147,6 +93,52 @@ export default {
     gantt.config.redo = true;
 
     gantt.config.date_format = "%Y-%m-%d";
+
+    gantt.config.layout = {
+    css: "gantt_container",
+      rows:[
+            {
+              html: `
+              <div class="gantt-controls">
+                  <button class="gantt-undo" onclick="gantt.undo()">Undo</button>
+                  <button class="gantt-redo" onclick="gantt.redo()">Redo</button>
+                <div class="state-filter">
+                  <div class="state-filter-opened"><input type="checkbox" id="Opened" class="state-checkbox" checked=${stateFilter["Opened"]} onChange="stateCheckboxOnChange('Opened')"><label for="Opened">Opened</label></div>
+                  <div class="state-filter-closed"><input type="checkbox" id="Closed" class="state-checkbox" checked=${stateFilter["Closed"]} onChange="stateCheckboxOnChange('Closed')"><label for="Closed">Closed</label></div>
+                  <div class="state-filter-inprogress"><input type="checkbox" id="InProgress" class="state-checkbox" checked=${stateFilter["InProgress"]} onChange="stateCheckboxOnChange('InProgress')"><label for="InProgress">InProgress</label></div>
+                  <div class="state-filter-late"><input type="checkbox" id="Late" class="state-checkbox" checked=${stateFilter["Late"]} onChange="stateCheckboxOnChange('Late')"><label for="Late">Late</label></div>
+                  <div class="state-filter-unscheduled"><input type="checkbox" id="Unscheduled" class="state-checkbox" checked=${stateFilter["Unscheduled"]} onChange="stateCheckboxOnChange('Unscheduled')"><label for="Unscheduled">Unscheduled</label></div>
+                </div>
+              </div>
+              `, css:"gantt-controls", height: 40
+            },
+            { resizer: true, width: 1 },
+          {
+            cols: [
+              {
+                // the default grid view  
+                view: "grid",  
+                scrollX:"scrollHor", 
+                scrollY:"scrollVer"
+              },
+              { resizer: true, width: 1 },
+              {
+                // the default timeline view
+                view: "timeline", 
+                scrollX:"scrollHor", 
+                scrollY:"scrollVer"
+              },
+              {
+                view: "scrollbar", 
+                id:"scrollVer"
+              }
+          ]},
+          {
+              view: "scrollbar", 
+              id:"scrollHor"
+          }
+      ]
+    };
 
     gantt.config.scales = [
       {unit: "month", step: 1, format: "%F, %Y"},
@@ -248,6 +240,14 @@ export default {
     gantt.init(this.$refs.ganttContainer);
     gantt.parse(this.$props.tasks);
 
+    document.querySelectorAll(".state-checkbox").forEach(function(checkbox) {
+        checkbox.onchange = function(e) {
+          stateFilter[e.target.id] = !stateFilter[e.target.id];
+          gantt.refreshData();
+        };
+    });
+     
+
     gantt.attachEvent("onDataRender", function () {
     const filterEl = document.querySelector("#filter")
     filterEl.addEventListener('input', function (e) {
@@ -296,8 +296,6 @@ export default {
         return filterLogic(task);
     });
   
-
-    gantt.$root.appendChild(controlsDiv);
     gantt.$root.appendChild(legend);
 
   }
@@ -327,7 +325,6 @@ export default {
     overflow:hidden;
     text-overflow: ellipsis;
 }
-
 /* .gantt_tree_icon.gantt_folder_open {
     background-image: url("../../../generic/icons/Folder\ Minus\ Classic.svg")!important;
 }
@@ -371,10 +368,10 @@ export default {
 }
 
 .gantt-controls {
-    position: absolute;
-    bottom: 2rem;
-    left: 2rem;
-    font-family: Arial, Helvetica, sans-serif;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 100%;
 }
 
 .gantt-controls button {
@@ -385,6 +382,38 @@ export default {
     border: none;
     border-radius: 4px;
     cursor: pointer;
+}
+.state-checkbox {
+    display: flex;
+    justify-content: space-between;
+
+  vertical-align: middle;
+  }
+  
+  input[type="checkbox"].state-checkbox   {
+    display: none;
+  }
+
+  
+  .state-filter input[type="checkbox"]:checked + label {
+    background-color: #4caf50;
+    color: white;
+  }
+
+  .state-filter {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  }
+
+.state-checkbox + label {
+  vertical-align: middle;
+  padding: 5px 10px;
+  background-color: #f2f2f2;
+  border-radius: 5px;
+  cursor: pointer;
 }
 
 .gantt-legend {
@@ -432,19 +461,5 @@ export default {
 		flex-shrink: 0;
 		margin:0 5px;
 	}
-  .state-filter {
-  display: flex;
-  flex-direction: row;
-  margin-top: 1rem;
-  }
-
-  .state-checkbox {
-  margin: 0 5px 0 10px ;
-  vertical-align: middle;
-}
-.state-checkbox + label {
-  font-size: 14px;
-  vertical-align: middle;
-}
 
 </style>
