@@ -2,18 +2,6 @@
     <div>
         <div v-if="group">
             
-            <div
-            v-if="group.tasks.previousPage || group.tasks.nextPage"
-            class="w-full flex items-center justify-center -mb-10 text-gray-600"
-        >
-            <Paginator
-            :previousPage="group.tasks.previousPage"
-            :currentPage="group.tasks.currentPage"
-            :nextPage="group.tasks.nextPage"
-            :lastPage="group.tasks.lastPage"
-            @set-page="setTasksPage($event)"
-            />
-        </div>
             <GroupChartMediator
             :group="group"
             />

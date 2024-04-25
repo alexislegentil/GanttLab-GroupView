@@ -111,11 +111,17 @@
                 </div>
                 <div class="h-full w-48 p-3 border-l border-lead-500">
                   <p class="pb-2 text-xs tracking-wider text-lead-300">FILTER</p>
-                  <!-- <div class="flex items-center px-2 text-lead-100">
-                    <p class="flex-grow text-lg text-lead-300">Opened issues</p>
-                  </div> -->
-                  <FilterSelector 
-                  @set-filter="setFilter($event)"/>
+
+                  <div v-if="viewGateway && viewGateway.slug !== 'group'">
+                      <FilterSelector 
+                      @set-filter="setFilter($event)"/>
+                  </div>
+                  
+                  <div v-else>
+                    <div class="flex items-center px-2 text-lead-100">
+                      <p class="flex-grow text-lg text-lead-300">All Issues</p>
+                    </div> 
+                  </div>
                 </div>
                 <div class="h-full w-48 p-3 border-l border-lead-500">
                   <p class="pb-2 text-xs tracking-wider text-lead-300">CHART</p>
@@ -321,6 +327,7 @@ export default class Home extends Vue {
   }
 
   async setFilter(filter: FilterGateway) {
+    console.log(filter);
     console.log(`Selected filter: ${filter.name}`);
     mainState.setFilterGateway(filter);
     this.viewGateway ? this.setView(this.viewGateway) : null;
@@ -335,7 +342,10 @@ export default class Home extends Vue {
     this.paginatedTasks = null;
     this.paginatedMilestones = null;
     this.group = null;
-    const filter = mainState.filterGateway ? mainState.filterGateway.instance : null;
+    let filter = mainState.filterGateway ? mainState.filterGateway.instance : null;
+    if (this.viewGateway?.slug === 'group') {
+      filter = null;
+    }
     
     // get the view data
     try {

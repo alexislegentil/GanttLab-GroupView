@@ -63,6 +63,8 @@ let stateFilter = {
   Unscheduled: true
 }; 
 
+let standaloneFilter = true;
+
 var daysStyle = function(date){
     var dateToStr = gantt.date.date_to_str("%D");
     if (dateToStr(date) == "Sun"||dateToStr(date) == "Sat")  return "weekend";
@@ -82,6 +84,14 @@ export default {
  
   mounted: function () {
 
+    let isThereStandaloneTasks = false;
+    for (const task of this.$props.tasks.data) {
+      if (task.type !== 'project' && task.parent == 0) {
+        isThereStandaloneTasks = true;
+        break;
+      }
+    }
+
     gantt.plugins({ 
         marker: true,
         multiselect: true ,
@@ -98,24 +108,25 @@ export default {
     css: "gantt_container",
       rows:[
             {
-              html: `
-              <div class="gantt-controls">
-                  <button class="gantt-undo" onclick="gantt.undo()">Undo</button>
-                  <button class="gantt-redo" onclick="gantt.redo()">Redo</button>
-                <div class="state-filter">
-                  <div class="state-filter-opened"><input type="checkbox" id="Opened" class="state-checkbox" checked=${stateFilter["Opened"]} onChange="stateCheckboxOnChange('Opened')"><label for="Opened">Opened</label></div>
-                  <div class="state-filter-closed"><input type="checkbox" id="Closed" class="state-checkbox" checked=${stateFilter["Closed"]} onChange="stateCheckboxOnChange('Closed')"><label for="Closed">Closed</label></div>
-                  <div class="state-filter-inprogress"><input type="checkbox" id="InProgress" class="state-checkbox" checked=${stateFilter["InProgress"]} onChange="stateCheckboxOnChange('InProgress')"><label for="InProgress">InProgress</label></div>
-                  <div class="state-filter-late"><input type="checkbox" id="Late" class="state-checkbox" checked=${stateFilter["Late"]} onChange="stateCheckboxOnChange('Late')"><label for="Late">Late</label></div>
-                  <div class="state-filter-unscheduled"><input type="checkbox" id="Unscheduled" class="state-checkbox" checked=${stateFilter["Unscheduled"]} onChange="stateCheckboxOnChange('Unscheduled')"><label for="Unscheduled">Unscheduled</label></div>
-                </div>
-                <div class='searchEl'><label for="searchFilter">Search task :</label><input id='searchFilter' style='width: 120px;' type='text' placeholder='Search tasks...'></div>
-              </div>
-              
-              `, css:"gantt-controls", height: 40
-            },
-            { resizer: true, width: 1 },
-          {
+                  html: `
+                  <div class="gantt-controls">
+                      <button class="gantt-undo" onclick="gantt.undo()">Undo</button>
+                      <button class="gantt-redo" onclick="gantt.redo()">Redo</button>
+                    <div class="state-filter">
+                      <div class="state-filter-opened"><input type="checkbox" id="Opened" class="state-checkbox" checked=${stateFilter["Opened"]} onChange="stateCheckboxOnChange('Opened')"><label for="Opened">Opened</label></div>
+                      <div class="state-filter-closed"><input type="checkbox" id="Closed" class="state-checkbox" checked=${stateFilter["Closed"]} onChange="stateCheckboxOnChange('Closed')"><label for="Closed">Closed</label></div>
+                      <div class="state-filter-inprogress"><input type="checkbox" id="InProgress" class="state-checkbox" checked=${stateFilter["InProgress"]} onChange="stateCheckboxOnChange('InProgress')"><label for="InProgress">InProgress</label></div>
+                      <div class="state-filter-late"><input type="checkbox" id="Late" class="state-checkbox" checked=${stateFilter["Late"]} onChange="stateCheckboxOnChange('Late')"><label for="Late">Late</label></div>
+                      <div class="state-filter-unscheduled"><input type="checkbox" id="Unscheduled" class="state-checkbox" checked=${stateFilter["Unscheduled"]} onChange="stateCheckboxOnChange('Unscheduled')"><label for="Unscheduled">Unscheduled</label></div>
+                    </div>
+                    <div class='searchEl'><label for="searchFilter">Search task :</label><input id='searchFilter' style='width: 120px;' type='text' placeholder='Search tasks...'></div>
+                    ${isThereStandaloneTasks ? `<div class='standaloneFilter'><label for="standaloneFilter">Standalone tasks :</label><input id='standaloneFilter' type='checkbox' checked=${standaloneFilter}></div>` : ''}
+                    </div>`
+                  
+                  , css:"gantt-controls", height: 40
+                },
+                { resizer: true, width: 1 },
+              {
             cols: [
               {
                 // the default grid view  
@@ -151,7 +162,7 @@ export default {
     gantt.config.columns = [
       {name: "name", label: "Task name", tree: true, width: 170, tree : true, resize: true },
       {name: "start_date", label: "Start time", align: "center", width: 150 , resize: true, editor: dateEditor},
-      {name: "duration", label: "Duration", align: "center", width: 50, editor: durationEditor},
+      {name: "duration", label: "Duration", align: "center", width: 60, editor: durationEditor},
       {name: "user", label: "User", align: "center", width: 100},
       {name: "state", label: "State", align: "center", width: 100, editor: stateEditor}
     ];
@@ -242,6 +253,13 @@ export default {
     gantt.init(this.$refs.ganttContainer);
     gantt.parse(this.$props.tasks);
 
+    if (isThereStandaloneTasks) {
+      document.getElementById('standaloneFilter').addEventListener('change', function(e) {
+        standaloneFilter = e.target.checked;
+        gantt.refreshData();
+      });
+    }
+    
     document.querySelectorAll(".state-checkbox").forEach(function(checkbox) {
         checkbox.onchange = function(e) {
           stateFilter[e.target.id] = !stateFilter[e.target.id];
@@ -261,27 +279,34 @@ export default {
 
     let filterValue = "";
 
+
+
     function filterLogic(task, match) {
-    match = match || false;
-    // check children
-    gantt.eachTask(function (child) {
-        if (filterLogic(child)) {
-            match = true;
-        }
-    }, task.id);
+      match = match || false;
+      // check children
+      gantt.eachTask(function (child) {
+          if (filterLogic(child)) {
+              match = true;
+          }
+      }, task.id);
 
-    // check task
-    if (task.name.toLowerCase().indexOf(filterValue.toLowerCase()) > -1) {
-        match = true;
-    }
+      // check task
+      if (task.name.toLowerCase().indexOf(filterValue.toLowerCase()) > -1) {
+          match = true;
+      }
 
-    // check state
-    if (stateFilter[task.state] === false) {
+      // check state
+      if (stateFilter[task.state] === false) {
+          match = false;
+      }
+
+      // check standalone
+      if (!standaloneFilter && !gantt.hasChild(task.id) && task.type !== "project" && task.parent == 0 ) {
         match = false;
-    }
+      }
 
-    return match;
-}
+      return match;
+    }
 
     gantt.attachEvent("onBeforeTaskDisplay", function (id, task) {
       let thereIsAlmostOneFilterFalse = false;
@@ -292,7 +317,7 @@ export default {
         }
       }
 
-      if (!filterValue && !thereIsAlmostOneFilterFalse) {
+      if (!filterValue && !thereIsAlmostOneFilterFalse && standaloneFilter) {
         return true;
     }
         return filterLogic(task);
@@ -441,6 +466,13 @@ export default {
 
 .searchEl #searchFilter:focus {
   border-color: #007BFF;
+}
+
+.standaloneFilter {
+  display: flex;
+  align-items: center;
+  margin-left: 2rem;
+  gap: 10px;
 }
 
 .gantt-legend {

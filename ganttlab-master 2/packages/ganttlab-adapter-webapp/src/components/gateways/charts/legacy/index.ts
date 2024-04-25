@@ -180,19 +180,7 @@ if (group.projects && group.projects.length > 0) {
 }
 
 if (group.tasks && group.tasks.list && group.tasks.list.length > 0) {
-  const taskAloneRow : LegacyDhtmlXgantt = {
-    id: taskID,
-    name: "Standalone tasks",
-    start_date: null,
-    duration: null,
-    parent: 0,
-    type: "project",
-    progress: 0,
-    color:"#4f4e4e",
-    row_height: 25
-  };
-  taskID++;
-  data.push(taskAloneRow);
+  
   // Add standalone tasks
   for (const task of group.tasks.list) {
     let taskState: TaskState | null = getStateFromGitLabState(task);
@@ -206,7 +194,7 @@ if (group.tasks && group.tasks.list && group.tasks.list.length > 0) {
       name: task.title,
       start_date: moment(task.start).format('YYYY-MM-DD HH:mm:ss'),
       duration: moment(task.due).diff(moment(task.start), 'days'),
-      parent: taskAloneRow.id,
+      parent: 0,
       progress: 0,
       state: taskState ? taskState : null,
       user: userString,
