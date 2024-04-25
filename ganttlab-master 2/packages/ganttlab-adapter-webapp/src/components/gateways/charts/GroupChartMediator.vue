@@ -1,6 +1,6 @@
 <template>
   <div class="ganttContainer w-full">
-    <GanttComponent class="left-ganttContainer" :tasks="tasks"></GanttComponent>
+    <GanttComponent class="left-ganttContainer" :tasks="tasks"/>
   </div>
 </template>
  

@@ -163,7 +163,7 @@
         this.groups = null;
         this.loading = false;
         addDisplaybleError(
-          new DisplayableError(error, 'Error while searching for that'),
+          new DisplayableError(error as Error, 'Error while searching for that'),
         );
       }
     }

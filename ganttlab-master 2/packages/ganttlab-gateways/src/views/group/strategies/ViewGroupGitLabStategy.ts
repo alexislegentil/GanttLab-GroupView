@@ -15,8 +15,6 @@ import {
         getTaskFromGitLabIssue,
         getPaginationFromGitLabHeaders,
     } from '../../../sources/gitlab/helpers';
-
-    import { IssuesStateFilter } from '../../../filters/IssuesStateFilter';
 import { GitLabProject } from '../../../sources/gitlab/types/GitLabProject';
 import { Epic } from 'ganttlab-entities/dist/core/Epic';
     
@@ -27,10 +25,6 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
             configuration: Configuration,
             filter: Filter | null,
         ): Promise<Group> {
-            let stateFilter = null;
-            if (filter instanceof IssuesStateFilter)  {
-                stateFilter = filter.requestGitLabArgs();
-            }
 
             const encodedGroup = encodeURIComponent(
                 configuration.group.path as string,
@@ -57,7 +51,7 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                 method: 'GET',
                 url: `/groups/${encodedGroup}/epics`,
                 params: {
-                    state: stateFilter? stateFilter : 'all',
+                    state: 'all',
                     scope : 'all',
                 },
             });
@@ -73,7 +67,7 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                  method: 'GET',
                  url: `/groups/${encodedGroup}/epics/${epic.iid}/issues`,
                  params: {
-                      state: stateFilter? stateFilter : 'all',
+                      state: 'all',
                       scope : 'all',
                  },
                 });
@@ -120,6 +114,56 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                 newEpic.addTasks(tasksForEpics);
                activeGroup.addEpic(newEpic);
             }
+
+            const {data, headers} = await source.safeAxiosRequest<Array<GitLabIssue>>({
+                method: 'GET',
+                url: `/groups/${encodedGroup}/issues`,
+                params: {
+                    state: 'all',
+                    epic_id: 'none',
+                    scope : 'all',
+                },
+            });
+            const pagination = getPaginationFromGitLabHeaders(headers);
+            for (const gitlabIssue of data) {
+
+                const task = getTaskFromGitLabIssue(gitlabIssue);
+                task.addState(gitlabIssue.state);
+                if (gitlabIssue.assignees) {
+                    for (const user of gitlabIssue.assignees) {
+                        task.addUser(user.username);
+                    }
+                } 
+                const blockedBy = await source.safeAxiosRequest<Array<any>>({
+                    method: 'GET',
+                    url: `/projects/${gitlabIssue.project_id}/issues/${gitlabIssue.iid}/links`,
+                });
+                for (const link of blockedBy.data) {
+                    if (link.link_type === 'is_blocked_by') {
+                    task.addBlockedBy(link.title);
+                    }                    
+                }
+                allTasksList.push(task);
+            }
+
+            allTasksList.sort((a: Task, b: Task) => {
+                if (a.due && b.due) {
+                    return a.due.getTime() - b.due.getTime();
+                }
+                return 0;
+            });
+
+            allTasksPaginated = new PaginatedListOfTasks(
+                allTasksList,
+                configuration.tasks.page as number,
+                configuration.tasks.pageSize as number,
+                pagination.previousPage,
+                pagination.nextPage,
+                pagination.lastPage,
+                pagination.total,
+            );
+
+            activeGroup.addTasks(allTasksPaginated);
             }
 
 
@@ -131,10 +175,7 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                 method: 'GET',
                 url: `/groups/${encodedGroup}/projects`,
                 params: {
-                    page: configuration.group.page,
-                    // eslint-disable-next-line @typescript-eslint/camelcase
-                    per_page: configuration.group.pageSize,
-                    state: stateFilter? stateFilter : 'opened',
+                    state: 'all',
                     scope : 'all',
                  //   archived: false,
                 },
@@ -167,10 +208,7 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                             method: 'GET',
                             url: `/projects/${encodedProject}/issues`,
                             params: {
-                                page: configuration.tasks.page,
-                                // eslint-disable-next-line @typescript-eslint/camelcase
-                                per_page: configuration.tasks.pageSize,
-                                state: stateFilter? stateFilter : 'opened',
+                                state: 'all',
                                 scope : 'all',
                             //  group: gitlabProject.name,
                             },
@@ -221,59 +259,6 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
             }
 
             // in every case, get all tasks
-              
-            const {data, headers} = await source.safeAxiosRequest<Array<GitLabIssue>>({
-                method: 'GET',
-                url: `/groups/${encodedGroup}/issues`,
-                params: {
-                    page: configuration.tasks.page,
-                    // eslint-disable-next-line @typescript-eslint/camelcase
-                    per_page: configuration.tasks.pageSize,
-                    state: stateFilter? stateFilter : 'all',
-                    epic_id: 'none',
-                    scope : 'all',
-                },
-            });
-            const pagination = getPaginationFromGitLabHeaders(headers);
-            for (const gitlabIssue of data) {
-
-                const task = getTaskFromGitLabIssue(gitlabIssue);
-                task.addState(gitlabIssue.state);
-                if (gitlabIssue.assignees) {
-                    for (const user of gitlabIssue.assignees) {
-                        task.addUser(user.username);
-                    }
-                } 
-                const blockedBy = await source.safeAxiosRequest<Array<any>>({
-                    method: 'GET',
-                    url: `/projects/${gitlabIssue.project_id}/issues/${gitlabIssue.iid}/links`,
-                });
-                for (const link of blockedBy.data) {
-                    if (link.link_type === 'is_blocked_by') {
-                    task.addBlockedBy(link.title);
-                    }                    
-                }
-                allTasksList.push(task);
-            }
-
-            allTasksList.sort((a: Task, b: Task) => {
-                if (a.due && b.due) {
-                    return a.due.getTime() - b.due.getTime();
-                }
-                return 0;
-            });
-
-            allTasksPaginated = new PaginatedListOfTasks(
-                allTasksList,
-                configuration.tasks.page as number,
-                configuration.tasks.pageSize as number,
-                pagination.previousPage,
-                pagination.nextPage,
-                pagination.lastPage,
-                pagination.total,
-            );
-
-            activeGroup.addTasks(allTasksPaginated);
 
             console.log(activeGroup);
 
