@@ -4,4 +4,5 @@ export interface GitLabMilestone {
   start_date?: string;
   due_date?: string;
   created_at: string;
+  iid?: number;
 }

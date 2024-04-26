@@ -142,7 +142,8 @@ export default class GroupChartMediator extends Vue {
   }
   .left-ganttContainer {
     overflow: hidden;
-    position: relative;
+    position: absolute;
+    width: 100%;
     height: 100%;
     z-index: 1;
   }
@@ -154,6 +155,7 @@ export default class GroupChartMediator extends Vue {
     box-shadow: 0 0 5px 2px #aaa;
     position: relative;
     z-index:2;
+    background-color: #f9f9f9;
   }
   .gantt-messages {
     list-style-type: none;
@@ -163,6 +165,14 @@ export default class GroupChartMediator extends Vue {
     overflow-y: auto;
     padding-left: 5px;
   }
+
+  .gantt-messages > h2 {
+    font-weight: bold;
+    text-align: center;
+    font-size: larger;
+    border-bottom: 1px solid #cecece;
+  }
+
   .gantt-messages > .gantt-message {
     background-color: #f4f4f4;
     box-shadow:inset 5px 0 #d69000;
@@ -185,7 +195,7 @@ export default class GroupChartMediator extends Vue {
     border-bottom: 1px solid #cecece;
     font-weight: bold;
     margin-bottom: 1em;
-
+    padding: 10px;
   }
 
   .gantt-selected-info span {

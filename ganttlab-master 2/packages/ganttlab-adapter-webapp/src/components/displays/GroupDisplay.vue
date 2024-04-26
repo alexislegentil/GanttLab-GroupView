@@ -49,7 +49,7 @@ import { Task } from 'ganttlab-entities';
     },
   })
   export default class GroupDisplay extends Vue {
-    @Prop() private group!: Group;
+    @Prop() public group!: Group;
     @Prop() readonly project!: Project | null;
     @Prop() readonly sourceUrl!: string | null;
     @Prop() readonly viewGateway!: SourceVisitor<unknown> | null;

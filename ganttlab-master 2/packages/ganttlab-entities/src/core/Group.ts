@@ -1,5 +1,6 @@
 import { PaginatedListOfTasks } from '../pagination/PaginatedListOfTasks';
 import { Epic } from './Epic';
+import { Milestone } from './Milestone';
 import { Project } from './Project';
 
 /**
@@ -23,6 +24,7 @@ export class Group {
 
   public epics: Array<Epic> = [];
   public tasks: PaginatedListOfTasks | null = null;
+  public milestones: Array<Milestone> = [];
   
   constructor(
     public name: string,
@@ -47,6 +49,10 @@ export class Group {
 
   public addProjects(projects: Array<Project>) {
     this.projects = projects;
+  }
+
+  public addMilestones(milestones: Array<Milestone>) {
+    this.milestones = milestones;
   }
 
 }

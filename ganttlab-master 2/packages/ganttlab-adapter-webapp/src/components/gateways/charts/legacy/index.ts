@@ -7,6 +7,7 @@ interface LegacyTask {
   data: [[string, number, string]] | null;
 }
 
+
 interface LegacyDhtmlXgantt {
   id: number;
   name: string;
@@ -21,7 +22,7 @@ interface LegacyDhtmlXgantt {
   row_height?: number;
 }
 
-interface dhtmlxLink {
+interface DhtmlxLink {
   id: number;
   source: number;
   target: number;
@@ -36,7 +37,44 @@ export enum TaskState {
   Unscheduled = 'Unscheduled'
 }
 
+function getStateFromGitLabState(task: Task): TaskState{
+  let taskState: TaskState | null = null;
 
+        if (task.due) {
+          switch (task.state) {
+            case 'closed':
+              taskState = TaskState.Closed;
+              break;
+            case 'opened':
+              taskState = task.users && task.users.length > 0 ? TaskState.InProgress : TaskState.Opened;
+              if (task.due < new Date()) {
+                taskState = TaskState.Late;
+              }
+              break;
+            default:
+              taskState = TaskState.Unscheduled;
+              break;
+          }
+        } else {
+          taskState = TaskState.Unscheduled;
+        }
+    return taskState;
+}
+
+function getTaskIdFromTitle(convertedGroup: Array<LegacyDhtmlXgantt>, title: string): number {
+  let id = 0;
+  for (const task of convertedGroup) {
+    if (task.name === title) {
+      id = task.id;
+      break;
+    }
+  }
+  return id;
+}
+
+
+/* eslint-disable @typescript-eslint/camelcase */
+/* eslint-disable @typescript-eslint/class-name-casing */
 export function getConvertedTasks(tasks: Array<Task>): Array<LegacyTask> {
   const convertedTasks: Array<LegacyTask> = [];
   for (const aTask of tasks) {
@@ -116,7 +154,7 @@ if (group.epics && group.epics.length > 0) {
 
     if (epic.Tasks && epic.Tasks.list) {
       for (const task of epic.Tasks.list) {
-        let taskState: TaskState | null = getStateFromGitLabState(task);
+        const taskState: TaskState | null = getStateFromGitLabState(task);
         let userString = "";
           if (task.users && task.users.length > 0) {
             userString = task.users.join(", ");
@@ -157,7 +195,7 @@ if (group.projects && group.projects.length > 0) {
     data.push(projectRow);
     if (project.tasks && project.tasks.list) {
       for (const task of project.tasks.list) {
-        let taskState: TaskState | null = getStateFromGitLabState(task);
+        const taskState: TaskState | null = getStateFromGitLabState(task);
         let userString = "";
           if (task.users && task.users.length > 0) {
             userString = task.users.join(", ");
@@ -179,11 +217,52 @@ if (group.projects && group.projects.length > 0) {
   }
 }
 
+if (group.milestones && group.milestones.length > 0) {
+  // Convert milestones
+  for (const milestone of group.milestones) {
+    console.log(milestone);
+    const milestoneRow : LegacyDhtmlXgantt = {
+      id: taskID,
+      name: milestone.name,
+      start_date: milestone.start ? moment(milestone.start).format('YYYY-MM-DD HH:mm:ss') : null,
+      duration: moment(milestone.due).diff(moment(milestone.start), 'days'),
+      parent: 0,
+      progress: 0,
+      type: "project",
+      color:"#4f4e4e",
+      row_height: 25
+    };
+    taskID++;
+    data.push(milestoneRow);
+    if (milestone.tasks && milestone.tasks.list) {
+      for (const task of milestone.tasks.list) {
+        const taskState: TaskState | null = getStateFromGitLabState(task);
+        let userString = "";
+          if (task.users && task.users.length > 0) {
+            userString = task.users.join(", ");
+          }
+        const taskRow : LegacyDhtmlXgantt = {
+          id: taskID,
+          name: task.title,
+          start_date: moment(task.start).format('YYYY-MM-DD HH:mm:ss'),
+          duration: moment(task.due).diff(moment(task.start), 'days'),
+          parent: milestoneRow.id,
+          progress: 0,
+          state: taskState ? taskState : null,
+          user: userString,
+        };
+        data.push(taskRow);
+        taskID++;
+      }
+    }
+  }
+}
+
 if (group.tasks && group.tasks.list && group.tasks.list.length > 0) {
   
   // Add standalone tasks
   for (const task of group.tasks.list) {
-    let taskState: TaskState | null = getStateFromGitLabState(task);
+    const taskState: TaskState | null = getStateFromGitLabState(task);
     let userString = "";
       if (task.users && task.users.length > 0) {
         userString = task.users.join(", ");
@@ -206,8 +285,8 @@ if (group.tasks && group.tasks.list && group.tasks.list.length > 0) {
   return  data ;
 }
 
-export function getLinksFromGroup(group: Group, convertedGroup: Array<LegacyDhtmlXgantt>): Array<dhtmlxLink> {
-  const links: Array<dhtmlxLink> = [];
+export function getLinksFromGroup(group: Group, convertedGroup: Array<LegacyDhtmlXgantt>): Array<DhtmlxLink> {
+  const links: Array<DhtmlxLink> = [];
   let linkID = 1;
 
   // Convert epics
@@ -217,7 +296,7 @@ export function getLinksFromGroup(group: Group, convertedGroup: Array<LegacyDhtm
         for (const task of epic.Tasks.list) {
           if (task.blockedBy && task.blockedBy.length > 0) {
             for (const blockedBy of task.blockedBy) {
-              const link : dhtmlxLink = {
+              const link : DhtmlxLink = {
                 id: linkID,
                 source: getTaskIdFromTitle(convertedGroup, blockedBy),
                 target: getTaskIdFromTitle(convertedGroup, task.title),
@@ -239,7 +318,7 @@ export function getLinksFromGroup(group: Group, convertedGroup: Array<LegacyDhtm
         for (const task of project.tasks.list) {
           if (task.blockedBy && task.blockedBy.length > 0) {
             for (const blockedBy of task.blockedBy) {
-              const link : dhtmlxLink = {
+              const link : DhtmlxLink = {
                 id: linkID,
                 source: getTaskIdFromTitle(convertedGroup, blockedBy),
                 target: getTaskIdFromTitle(convertedGroup, task.title),
@@ -259,7 +338,7 @@ export function getLinksFromGroup(group: Group, convertedGroup: Array<LegacyDhtm
     for (const task of group.tasks.list) {
       if (task.blockedBy && task.blockedBy.length > 0) {
         for (const blockedBy of task.blockedBy) {
-          const link : dhtmlxLink = {
+          const link : DhtmlxLink = {
             id: linkID,
             source: getTaskIdFromTitle(convertedGroup, blockedBy),
             target: getTaskIdFromTitle(convertedGroup, task.title),
@@ -274,39 +353,7 @@ export function getLinksFromGroup(group: Group, convertedGroup: Array<LegacyDhtm
   return links;
 }
 
-function getTaskIdFromTitle(convertedGroup: Array<LegacyDhtmlXgantt>, title: string): number {
-  let id = 0;
-  for (const task of convertedGroup) {
-    if (task.name === title) {
-      id = task.id;
-      break;
-    }
-  }
-  return id;
-}
 
-function getStateFromGitLabState(task: Task): TaskState{
-  let taskState: TaskState | null = null;
 
-        if (task.due) {
-          switch (task.state) {
-            case 'closed':
-              taskState = TaskState.Closed;
-              break;
-            case 'opened':
-              taskState = task.users && task.users.length > 0 ? TaskState.InProgress : TaskState.Opened;
-              if (task.due < new Date()) {
-                taskState = TaskState.Late;
-              }
-              break;
-            default:
-              taskState = TaskState.Unscheduled;
-              break;
-          }
-        } else {
-          taskState = TaskState.Unscheduled;
-        }
-    return taskState;
-}
 
 

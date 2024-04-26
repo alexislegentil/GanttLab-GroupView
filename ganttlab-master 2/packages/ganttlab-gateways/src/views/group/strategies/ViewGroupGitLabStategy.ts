@@ -8,15 +8,18 @@ import {
         Group,
         PaginatedList,
         PaginatedListOfProjects,
+        Milestone,
     } from 'ganttlab-entities';
     import { GitLabGateway } from '../../../sources/gitlab/GitLabGateway';
     import { GitLabIssue } from '../../../sources/gitlab/types/GitLabIssue';
     import {
         getTaskFromGitLabIssue,
         getPaginationFromGitLabHeaders,
+        getMilestoneFromGitLabMilestone,
     } from '../../../sources/gitlab/helpers';
 import { GitLabProject } from '../../../sources/gitlab/types/GitLabProject';
 import { Epic } from 'ganttlab-entities/dist/core/Epic';
+import { GitLabMilestone } from '../../../sources/gitlab/types/GitLabMilestone';
     
     export class ViewGroupGitLabStrategy
         implements ViewSourceStrategy<Group> {
@@ -44,7 +47,7 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
 
 
 
-            //does the group have epics?
+
             if (configuration.sortBy === 'epic') {
             
             const epicsResponse = await source.safeAxiosRequest<Array<Epic>>({
@@ -258,7 +261,126 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
                 }
             }
 
-            // in every case, get all tasks
+            else if (configuration.sortBy === 'milestones') {
+                const milestonesResponse = await source.safeAxiosRequest<
+                    Array<GitLabMilestone>
+                    >({
+                    method: 'GET',
+                    url: `/groups/${encodedGroup}/milestones`,
+                    params: {
+                        state: 'all',
+                    },
+                    });
+                const milestonesList: Array<Milestone> = [];
+                for (const gitlabMilestone of milestonesResponse.data) {
+          
+                    const milestone = getMilestoneFromGitLabMilestone(gitlabMilestone);
+                    milestonesList.push(milestone);
+                    console.log(milestone);
+                    let tasksForMilestones: PaginatedListOfTasks | null = null;
+                    let tasksListByMilestone: Array<Task> = [];
+            
+                    const { data, headers } = await source.safeAxiosRequest<Array<GitLabIssue>>({
+                        method: 'GET',
+                        url: `/groups/${encodedGroup}/issues`,
+                        params: {
+                            milestone: milestone.name,
+                        },
+                    });
+                    console.log(data);
+                    const milestonePagination = getPaginationFromGitLabHeaders(headers);
+                    for (const gitlabIssue of data) {
+                        const task = getTaskFromGitLabIssue(gitlabIssue);
+                        task.addState(gitlabIssue.state);
+                        if (gitlabIssue.assignees) {
+                            for (const user of gitlabIssue.assignees) {
+                                task.addUser(user.username);
+                            }
+                        } 
+                        const blockedBy = await source.safeAxiosRequest<Array<any>>({
+                            method: 'GET',
+                            url: `/projects/${gitlabIssue.project_id}/issues/${gitlabIssue.iid}/links`,
+                        });
+                        for (const link of blockedBy.data) {
+                            if (link.link_type === 'is_blocked_by') {
+                                task.addBlockedBy(link.title);
+                            }
+                        }
+                        console.log(task);
+                        tasksListByMilestone.push(task);
+                    }
+            
+                    tasksForMilestones = new PaginatedListOfTasks(
+                        tasksListByMilestone,
+                        configuration.tasks.page as number,
+                        configuration.tasks.pageSize as number,
+                        milestonePagination.previousPage,
+                        milestonePagination.nextPage,
+                        milestonePagination.lastPage,
+                        milestonePagination.total,
+                    );
+            
+                    tasksListByMilestone.sort((a: Task, b: Task) => {
+                        if (a.due && b.due) {
+                            return a.due.getTime() - b.due.getTime();
+                        }
+                        return 0;
+                    });
+            
+                    milestone.addTasks(tasksForMilestones);
+                }
+                activeGroup.addMilestones(milestonesList);
+            
+                const {data, headers} = await source.safeAxiosRequest<Array<GitLabIssue>>({
+                    method: 'GET',
+                    url: `/groups/${encodedGroup}/issues`,
+                    params: {
+                        state: 'all',
+                        milestone: 'none',
+                    },
+                });
+                const pagination = getPaginationFromGitLabHeaders(headers);
+                for (const gitlabIssue of data) {
+                    const task = getTaskFromGitLabIssue(gitlabIssue);
+                    task.addState(gitlabIssue.state);
+                    if (gitlabIssue.assignees) {
+                        for (const user of gitlabIssue.assignees) {
+                            task.addUser(user.username);
+                        }
+                    } 
+                    const blockedBy = await source.safeAxiosRequest<Array<any>>({
+                        method: 'GET',
+                        url: `/projects/${gitlabIssue.project_id}/issues/${gitlabIssue.iid}/links`,
+                    });
+                    for (const link of blockedBy.data) {
+                        if (link.link_type === 'is_blocked_by') {
+                            task.addBlockedBy(link.title);
+                        }                    
+                    }
+                    allTasksList.push(task);
+                }
+            
+                allTasksList.sort((a: Task, b: Task) => {
+                    if (a.due && b.due) {
+                        return a.due.getTime() - b.due.getTime();
+                    }
+                    return 0;
+                });
+            
+                allTasksPaginated = new PaginatedListOfTasks(
+                    allTasksList,
+                    configuration.tasks.page as number,
+                    configuration.tasks.pageSize as number,
+                    pagination.previousPage,
+                    pagination.nextPage,
+                    pagination.lastPage,
+                    pagination.total,
+                );
+            
+                activeGroup.addTasks(allTasksPaginated);
+            }
+
+
 
             console.log(activeGroup);
 
@@ -266,5 +388,9 @@ import { Epic } from 'ganttlab-entities/dist/core/Epic';
             return activeGroup;
           //  return tasksForAllProjects as PaginatedListOfTasks;
         }
+
+        //post
+        
+
     }
   

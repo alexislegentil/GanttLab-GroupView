@@ -23,4 +23,8 @@ export class Milestone {
     public start?: Date,
     public due?: Date,
   ) {}
+
+  public addTasks(tasks: PaginatedListOfTasks) {
+    this.tasks = tasks;
+  }
 }

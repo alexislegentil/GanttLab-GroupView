@@ -112,6 +112,14 @@
         v-model="sortBy"
       />
       <label for="sortByProjects">Sort by Projects</label>
+
+      <input
+        type="radio"
+        id="sortByMilestones"
+        value="milestones"
+        v-model="sortBy"
+      />
+      <label for="sortByMilestones">Sort by Milestones</label>
     </div>
     <!-- ... -->
   
@@ -140,7 +148,7 @@
     public loading = false;
     public groups: Array<GitLabGroup> | null = null;
     public group: GitLabGroup | null = null;
-    public sortBy = 'epic'; // 'projects' or 'epic'
+    public sortBy = 'epic'; // 'projects', 'epic' or 'milestones'
   
     @Prop({ required: true }) readonly sourceGateway!: GitLabGateway;
   

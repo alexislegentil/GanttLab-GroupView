@@ -364,11 +364,6 @@ export default {
     });
   
     gantt.$root.appendChild(legend);
-
-      gantt.createDataProcessor((entity, action, data, id) => {
-        this.$emit(`${entity}-updated`, id, action, data);
-      });
-
   }
 
   
