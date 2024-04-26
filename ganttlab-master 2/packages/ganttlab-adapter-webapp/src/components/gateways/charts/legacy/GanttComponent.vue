@@ -3,14 +3,15 @@
 </template>
  
 <script>
+/* eslint-disable @typescript-eslint/camelcase */
 import {gantt} from 'dhtmlx-gantt';
 
-var dateToStr = gantt.date.date_to_str(gantt.config.task_date);
+const dateToStr = gantt.date.date_to_str(gantt.config.task_date);
 
-var dateEditor = {type: "date", map_to: "start_date"};
-var durationEditor = {type: "number", map_to: "duration", min:0, max: 100};
+const dateEditor = {type: "date", map_to: "start_date"};
+const durationEditor = {type: "number", map_to: "duration", min:0, max: 100};
 
-var stateEditor = {type: "select", options: [
+const stateEditor = {type: "select", options: [
         {key: "Opened", label: "Opened"},
         {key: "Closed", label: "Closed"},
         {key: "InProgress", label: "In progress"},
@@ -18,33 +19,33 @@ var stateEditor = {type: "select", options: [
         {key: "Unscheduled", label: "Unscheduled"}
     ], map_to: "state"};
 
-let legend = document.createElement('div');
+const legend = document.createElement('div');
 legend.className = 'gantt-legend';
 legend.id = 'gantt-legend';
 
-let header = document.createElement('header');
+const header = document.createElement('header');
 header.className = 'legend-head';
 
-let h3 = document.createElement('h3');
+const h3 = document.createElement('h3');
 h3.textContent = 'Legend';
 
 header.appendChild(h3);
 legend.appendChild(header);
 
-let legendList = document.createElement('div');
+const legendList = document.createElement('div');
 legendList.className = 'legend-list';
 
-let states = ['Opened', 'Closed', 'In progress', 'Late', 'Unscheduled', 'folder'];
-let descriptions = ['Opened issues', 'Closed issues', 'In progress', 'Late issues', 'Unscheduled', 'Parent'];
+const states = ['Opened', 'Closed', 'In progress', 'Late', 'Unscheduled', 'folder'];
+const descriptions = ['Opened issues', 'Closed issues', 'In progress', 'Late issues', 'Unscheduled', 'Parent'];
 
 for (let i = 0; i < states.length; i++) {
-  let row = document.createElement('div');
+  const row = document.createElement('div');
   row.className = 'legend-row';
 
-  let label = document.createElement('div');
+  const label = document.createElement('div');
   label.className = 'legend-label ' + states[i].toLowerCase().replace(' ', '-');
 
-  let description = document.createElement('div');
+  const description = document.createElement('div');
   description.textContent = descriptions[i];
 
   row.appendChild(label);
@@ -55,7 +56,7 @@ for (let i = 0; i < states.length; i++) {
 legend.appendChild(legendList);
 
 
-let stateFilter = {
+const stateFilter = {
   Opened: true,
   Closed: true,
   InProgress: true,
@@ -65,8 +66,8 @@ let stateFilter = {
 
 let standaloneFilter = true;
 
-var daysStyle = function(date){
-    var dateToStr = gantt.date.date_to_str("%D");
+const daysStyle = function(date){
+    const dateToStr = gantt.date.date_to_str("%D");
     if (dateToStr(date) == "Sun"||dateToStr(date) == "Sat")  return "weekend";
  
     return "";
@@ -81,8 +82,36 @@ export default {
       }
     }
   },
+
+  methods: {
+    $_initGanttEvents: function() {
+      if (!gantt.$_eventsInitialized) {
+        gantt.attachEvent('onTaskSelected', (id) => {
+          const task = gantt.getTask(id);
+          this.$emit('task-selected', task);
+        });
+        gantt.attachEvent('onTaskIdChange', (id, new_id) => {
+          if (gantt.getSelectedId() == new_id) {
+            const task = gantt.getTask(new_id);
+            this.$emit('task-selected', task);
+          }
+        });
+        gantt.$_eventsInitialized = true;
+      }
+    },
+    $_initDataProcessor: function() {
+      if (!gantt.$_dataProcessorInitialized) {
+        gantt.createDataProcessor((entity, action, data, id) => {
+          this.$emit(`${entity}-updated`, id, action, data);
+        });
+        gantt.$_dataProcessorInitialized = true;
+      }
+    },
+  },
  
   mounted: function () {
+
+    this.$_initGanttEvents();
 
     let isThereStandaloneTasks = false;
     for (const task of this.$props.tasks.data) {
@@ -157,10 +186,11 @@ export default {
       {unit: "month", step: 1, format: "%F, %Y"},
       {unit: "day", step: 1, format: "%j, %D",  css:daysStyle}  
     ];
+    
     gantt.config.fit_tasks = true;
 
     gantt.config.columns = [
-      {name: "name", label: "Task name", tree: true, width: 170, tree : true, resize: true },
+      {name: "name", label: "Task name", tree: true, width: 170, resize: true },
       {name: "start_date", label: "Start time", align: "center", width: 150 , resize: true, editor: dateEditor},
       {name: "duration", label: "Duration", align: "center", width: 60, editor: durationEditor},
       {name: "user", label: "User", align: "center", width: 100},
@@ -186,7 +216,7 @@ export default {
     gantt.config.lightbox.project_sections.allow_root = false;
 
     gantt.attachEvent("onBeforeLightbox", function(id) {
-    var task = gantt.getTask(id);
+    const task = gantt.getTask(id);
     task.my_template = "<span id='lightbox_users'>Assign to: </span>"+ task.user
     +"<br>  <span id='lightbox_progress'>Progress: </span>"+ task.progress*100 +" %";
     return true;
@@ -209,7 +239,7 @@ export default {
     };
 
     gantt.templates.task_class = function(start, end, task){
-      var css = "";
+      let css = "";
 
       switch(task.state){
           case "Opened":
@@ -248,10 +278,23 @@ export default {
     if (this.$props.tasks.data.length < 50) {
       gantt.config.open_tree_initially = true;   //if more than 50 tasks, tasks will be closed by default
     }
+
+    gantt.attachEvent('onTaskSelected', (id) => {
+      const task = gantt.getTask(id);
+      this.$emit('task-selected', task);
+});
+ 
+    gantt.attachEvent('onTaskIdChange', (id, new_id) => {
+       if (gantt.getSelectedId() == new_id) {
+         const task = gantt.getTask(new_id);
+         this.$emit('task-selected', task);
+        }
+     });
     
 
     gantt.init(this.$refs.ganttContainer);
     gantt.parse(this.$props.tasks);
+    this.$_initDataProcessor();
 
     if (isThereStandaloneTasks) {
       document.getElementById('standaloneFilter').addEventListener('change', function(e) {
@@ -268,6 +311,8 @@ export default {
     });
      
 
+    let filterValue = "";
+
     gantt.attachEvent("onDataRender", function () {
     const filterEl = document.querySelector("#searchFilter")
     filterEl.addEventListener('input', function (e) {
@@ -275,11 +320,6 @@ export default {
         gantt.refreshData();
     });
     });
-
-
-    let filterValue = "";
-
-
 
     function filterLogic(task, match) {
       match = match || false;
@@ -310,7 +350,7 @@ export default {
 
     gantt.attachEvent("onBeforeTaskDisplay", function (id, task) {
       let thereIsAlmostOneFilterFalse = false;
-      for (let state in stateFilter) {
+      for (const state in stateFilter) {
         if (!stateFilter[state]) {
           thereIsAlmostOneFilterFalse = true;
           break;
@@ -324,6 +364,10 @@ export default {
     });
   
     gantt.$root.appendChild(legend);
+
+      gantt.createDataProcessor((entity, action, data, id) => {
+        this.$emit(`${entity}-updated`, id, action, data);
+      });
 
   }
 
