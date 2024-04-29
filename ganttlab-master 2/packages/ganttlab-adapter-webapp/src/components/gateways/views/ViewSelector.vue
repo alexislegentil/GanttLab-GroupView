@@ -58,7 +58,7 @@
         class="flex items-center cursor-pointer text-lead-100 px-2 rounded border border-lead-600 hover:border-lead-500 transition duration-125 ease-in"
         @click="pickANewView"
       >
-        <p class="flex-grow text-lg">
+        <p v-if="!littleHeader" class="flex-grow text-lg">
           <span v-if="viewGateway">{{ viewGateway.name }}</span>
           <span v-else>...</span>
         </p>
@@ -101,6 +101,7 @@ export default class ViewSelector extends Vue {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public configurator: any | null = null;
 
+  @Prop({ required: true }) readonly littleHeader!: boolean;
   @Prop({ required: true }) readonly sourceGateway!: Source;
 
   // view gateway is stored in vuex store

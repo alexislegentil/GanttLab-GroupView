@@ -1,6 +1,6 @@
 <template>
   <div class="w-full">
-    <div class="mb-12 p-4 bg-gray-200">
+    <div v-if="!littleHeader" class="mb-12 p-4 bg-gray-200">
       <div class="flex items-center text-gray-600">
         <a
           class="w-64 flex justify-start items-center"
@@ -134,6 +134,92 @@
         </div>
       </div>
     </div>
+            <div v-else class="mb-6 p-2 bg-gray-200">
+              <div class="flex items-center text-gray-600 space-between">
+                <a
+                  class="w-32 flex justify-start items-center"
+                  href="https://www.ganttlab.com/"
+                  target="_blank"
+                  rel="noopener"
+                  @click="goToWebsite"
+                >
+                  <Icon class="text-gray-400" size="20" name="logo-ganttlab" />
+                  <h1 class="text-gray-800 text-xl leading-none font-lead ml-2">
+                    GanttLab
+                  </h1>
+                </a>
+
+                <div class="flex-grow flex items-center justify-center">
+                  <a
+                    class="flex items-center"
+                    :href="sourceUrl"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    @click="goToSource"
+                  >
+                    <div class="mr-2">
+                      <Icon size="16" :name="sourceLogoIcon" />
+                    </div>
+                    <p>{{ sourceUrl }}</p>
+                  </a>
+                </div>
+
+                <div class="flex justify-center mt-2 w-32">
+                  <div
+                    class="cursor-default flex items-center content-center justify-center h-10 bg-lead-600 rounded-lg shadow-md"
+                  >
+                    <div 
+                    class="h-full w-24 p-1"
+                    :class="{'flex justify-center items-baseline': littleHeader}">
+                      <p class="pb-1 text-xs tracking-wider text-lead-300">VIEW</p>
+                      <ViewSelector
+                        :littleHeader=littleHeader
+                        :sourceGateway="sourceGateway"
+                        @set-view="setView($event)"
+                      />
+                    </div>
+                  </div>
+                  </div>
+
+                <div class="w-32 flex items-center justify-end">
+                  <a
+                    class="mr-6 flex items-center img-reset-opacity"
+                    :href="user.url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    @click="goToUser"
+                  >
+                    <p>{{ user.username }}</p>
+                    <img
+                      :src="user.avatarUrl"
+                      :alt="user.username"
+                      class="w-4 ml-2 inline-block rounded-full shadow-inner"
+                    />
+                  </a>
+                  <div
+                    class="cursor-pointer transition duration-200 ease-in hover:text-yellow-700"
+                    @click="refresh"
+                  >
+                    <Icon size="16" name="refresh-circle-outline" />
+                  </div>
+                  <a
+                    href="https://gitlab.com/ganttlab/ganttlab/-/blob/master/README.md#how-it-works"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="ml-2 transition duration-200 ease-in hover:text-lead-700"
+                    @click="goToHelp"
+                  >
+                    <Icon size="16" name="help-circle-outline" />
+                  </a>
+                  <div
+                    class="cursor-pointer ml-2 transition duration-200 ease-in hover:text-red-700"
+                    @click="logout"
+                  >
+                    <Icon size="16" name="close-circle-outline" />
+                  </div>
+                </div>
+              </div>
+            </div>
     <div class="p-2">
       <transition name="component-fade" mode="out-in">
         <div
@@ -230,6 +316,7 @@ export default class Home extends Vue {
   public paginatedTasks: PaginatedListOfTasks | null = null;
   public paginatedMilestones: PaginatedListOfMilestones | null = null;
   public group: Group | null = null;
+  public littleHeader = false;
 
   setTasksPage(page: number) {
     mainState.setViewGatewayTasksPage(page);
@@ -344,7 +431,11 @@ export default class Home extends Vue {
     this.group = null;
     let filter = mainState.filterGateway ? mainState.filterGateway.instance : null;
     if (this.viewGateway?.slug === 'group') {
+      this.littleHeader = true;
       filter = null;
+    }
+    else {
+      this.littleHeader = false;
     }
     
     // get the view data
