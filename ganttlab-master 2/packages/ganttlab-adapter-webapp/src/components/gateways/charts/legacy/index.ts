@@ -11,10 +11,10 @@ interface LegacyTask {
 interface LegacyDhtmlXgantt {
   id: number;
   name: string;
-  start_date: string | null;
-  duration: number | null;
+  start_date?: string | null;
+  end_date?: string | null;
+  duration?: number | null;
   parent: number;
-  type?: string;
   progress: number;
   state?: TaskState | null;
   user?: string | null;
@@ -141,10 +141,9 @@ if (group.epics && group.epics.length > 0) {
     const epicRow : LegacyDhtmlXgantt = {
       id: taskID,
       name: epic.title,
-      start_date: moment(epic.start_date).format('YYYY-MM-DD HH:mm:ss'),
-      duration: moment(epic.due_date).diff(moment(epic.start_date), 'days'),
+      start_date: epic.start_date ?  moment(epic.start_date).format('YYYY-MM-DD HH:mm:ss') : null,
+      end_date: epic.due_date ?  moment(epic.due_date).format('YYYY-MM-DD HH:mm:ss') : null,
       parent: 0,
-      type: "project",
       progress: 0,
       color:"#4f4e4e",
       row_height: 25
@@ -163,7 +162,7 @@ if (group.epics && group.epics.length > 0) {
         const taskRow : LegacyDhtmlXgantt = {
           id: taskID,
           name: task.title,
-          start_date: moment(task.start).format('YYYY-MM-DD HH:mm:ss'),
+          start_date: epicRow.start_date,
           duration: moment(task.due).diff(moment(task.start), 'days'),
           parent: epicRow.id,
           progress: 0,
@@ -187,7 +186,6 @@ if (group.projects && group.projects.length > 0) {
       duration: null,
       parent: 0,
       progress: 0,
-      type: "project",
       color:"#4f4e4e",
       row_height: 25
     };
@@ -220,15 +218,14 @@ if (group.projects && group.projects.length > 0) {
 if (group.milestones && group.milestones.length > 0) {
   // Convert milestones
   for (const milestone of group.milestones) {
-    console.log(milestone);
+    console.log(moment(milestone.due).format('YYYY-MM-DD HH:mm:ss'));
     const milestoneRow : LegacyDhtmlXgantt = {
       id: taskID,
       name: milestone.name,
-      start_date: milestone.start ? moment(milestone.start).format('YYYY-MM-DD HH:mm:ss') : null,
-      duration: moment(milestone.due).diff(moment(milestone.start), 'days'),
+      end_date: milestone.due? moment(milestone.due).format('YYYY-MM-DD HH:mm:ss') : null,
+      start_date: milestone.start? moment(milestone.start).format('YYYY-MM-DD HH:mm:ss') : null,
       parent: 0,
       progress: 0,
-      type: "project",
       color:"#4f4e4e",
       row_height: 25
     };

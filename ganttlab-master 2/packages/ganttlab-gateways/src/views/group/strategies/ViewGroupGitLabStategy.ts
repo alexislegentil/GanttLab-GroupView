@@ -287,7 +287,6 @@ import { GitLabMilestone } from '../../../sources/gitlab/types/GitLabMilestone';
                             milestone: milestone.name,
                         },
                     });
-                    console.log(data);
                     const milestonePagination = getPaginationFromGitLabHeaders(headers);
                     for (const gitlabIssue of data) {
                         const task = getTaskFromGitLabIssue(gitlabIssue);
@@ -306,7 +305,6 @@ import { GitLabMilestone } from '../../../sources/gitlab/types/GitLabMilestone';
                                 task.addBlockedBy(link.title);
                             }
                         }
-                        console.log(task);
                         tasksListByMilestone.push(task);
                     }
             

@@ -257,11 +257,19 @@ export default {
           case "Unscheduled":
               css = "unscheduled";
               break;
+          case gantt.hasChild(task.id):
+              css = "folder";
+              break;
           default:
               css = "";
       }
       return css;
     };
+
+    gantt.templates.grid_row_class = function(start, end, task){
+      console.log(gantt.hasChild(task.id));
+        return gantt.hasChild(task.id) ? "gantt_row_project" : "";
+    };  
 
 
     gantt.config.columns_resizable = true;
@@ -364,7 +372,7 @@ export default {
     });
   
     gantt.$root.appendChild(legend);
-  }
+  },
 
   
 }
