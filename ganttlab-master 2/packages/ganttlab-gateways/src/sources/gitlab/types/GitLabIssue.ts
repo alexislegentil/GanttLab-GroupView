@@ -11,4 +11,5 @@ export interface GitLabIssue {
   assignees: Array<any> | null;
   iid?: number;
   project_id?: number;
+  labels?: Array<string>;
 }

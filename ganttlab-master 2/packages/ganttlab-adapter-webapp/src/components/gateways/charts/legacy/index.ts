@@ -18,6 +18,7 @@ interface LegacyDhtmlXgantt {
   progress: number;
   state?: TaskState | null;
   user?: string | null;
+  labels?: any[];
   color?: string;
   row_height?: number;
 }
@@ -158,6 +159,10 @@ if (group.epics && group.epics.length > 0) {
           if (task.users && task.users.length > 0) {
             userString = task.users.join(", ");
           }
+          let labels: any[] = [];
+          if (task.labels && task.labels.length > 0) {
+            labels = task.labels;
+          }
           
         const taskRow : LegacyDhtmlXgantt = {
           id: taskID,
@@ -168,6 +173,7 @@ if (group.epics && group.epics.length > 0) {
           progress: 0,
           state: taskState ? taskState : null,
           user: userString,
+          labels: labels
         };
         data.push(taskRow);
         taskID++;
@@ -198,6 +204,10 @@ if (group.projects && group.projects.length > 0) {
           if (task.users && task.users.length > 0) {
             userString = task.users.join(", ");
           }
+          let labels: any[] = [];
+          if (task.labels && task.labels.length > 0) {
+            labels = task.labels;
+          }
         const taskRow : LegacyDhtmlXgantt = {
           id: taskID,
           name: task.title,
@@ -207,6 +217,7 @@ if (group.projects && group.projects.length > 0) {
           progress: 0,
           state: taskState ? taskState : null,
           user: userString,
+          labels: labels
         };
         data.push(taskRow);
         taskID++;
@@ -238,6 +249,10 @@ if (group.milestones && group.milestones.length > 0) {
           if (task.users && task.users.length > 0) {
             userString = task.users.join(", ");
           }
+          let labels: any[] = [];
+          if (task.labels && task.labels.length > 0) {
+            labels = task.labels;
+          }
         const taskRow : LegacyDhtmlXgantt = {
           id: taskID,
           name: task.title,
@@ -247,6 +262,7 @@ if (group.milestones && group.milestones.length > 0) {
           progress: 0,
           state: taskState ? taskState : null,
           user: userString,
+          labels: labels
         };
         data.push(taskRow);
         taskID++;
@@ -264,6 +280,10 @@ if (group.tasks && group.tasks.list && group.tasks.list.length > 0) {
       if (task.users && task.users.length > 0) {
         userString = task.users.join(", ");
       }
+      let labels: any[] = [];
+          if (task.labels && task.labels.length > 0) {
+            labels = task.labels;
+          }
 
     const taskRow : LegacyDhtmlXgantt = {
       id: taskID,
@@ -274,6 +294,7 @@ if (group.tasks && group.tasks.list && group.tasks.list.length > 0) {
       progress: 0,
       state: taskState ? taskState : null,
       user: userString,
+      labels: labels
     };
     data.push(taskRow);
     taskID++;

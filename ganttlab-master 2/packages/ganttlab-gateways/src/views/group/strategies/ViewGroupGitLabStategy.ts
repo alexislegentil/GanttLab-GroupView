@@ -84,6 +84,15 @@ import { GitLabMilestone } from '../../../sources/gitlab/types/GitLabMilestone';
                             task.addUser(user.username);
                         }
                     } 
+                    if (gitlabIssue.labels) {
+                        for (const labelName of gitlabIssue.labels) {
+                            const label = await source.safeAxiosRequest<any>({
+                                method: 'GET',
+                                url: `/projects/${gitlabIssue.project_id}/labels/${labelName}`,
+                            });
+                            task.addLabel(labelName, label.data.color);
+                        }
+                    }
                     const blockedBy = await source.safeAxiosRequest<Array<any>>({
                         method: 'GET',
                         url: `/projects/${gitlabIssue.project_id}/issues/${gitlabIssue.iid}/links`,
@@ -226,6 +235,15 @@ import { GitLabMilestone } from '../../../sources/gitlab/types/GitLabMilestone';
                                     task.addUser(user.username);
                                 }
                             } 
+                            if (gitlabIssue.labels) {
+                                for (const labelName of gitlabIssue.labels) {
+                                    const label = await source.safeAxiosRequest<any>({
+                                        method: 'GET',
+                                        url: `/projects/${gitlabIssue.project_id}/labels/${labelName}`,
+                                    });
+                                    task.addLabel(labelName, label.data.color);
+                                }
+                            }
                             const blockedBy = await source.safeAxiosRequest<Array<any>>({
                                 method: 'GET',
                                 url: `/projects/${gitlabIssue.project_id}/issues/${gitlabIssue.iid}/links`,
@@ -234,9 +252,6 @@ import { GitLabMilestone } from '../../../sources/gitlab/types/GitLabMilestone';
                                 if (link.link_type === 'is_blocked_by') {
                                 task.addBlockedBy(link.title);
                                 }
-
-
-                                
                             }
                             activeTaskList.push(task);
                         }   
@@ -296,6 +311,15 @@ import { GitLabMilestone } from '../../../sources/gitlab/types/GitLabMilestone';
                                 task.addUser(user.username);
                             }
                         } 
+                        if (gitlabIssue.labels) {
+                            for (const labelName of gitlabIssue.labels) {
+                                const label = await source.safeAxiosRequest<any>({
+                                    method: 'GET',
+                                    url: `/projects/${gitlabIssue.project_id}/labels/${labelName}`,
+                                });
+                                task.addLabel(labelName, label.data.color);
+                            }
+                        }
                         const blockedBy = await source.safeAxiosRequest<Array<any>>({
                             method: 'GET',
                             url: `/projects/${gitlabIssue.project_id}/issues/${gitlabIssue.iid}/links`,
@@ -346,6 +370,15 @@ import { GitLabMilestone } from '../../../sources/gitlab/types/GitLabMilestone';
                             task.addUser(user.username);
                         }
                     } 
+                    if (gitlabIssue.labels) {
+                        for (const labelName of gitlabIssue.labels) {
+                            const label = await source.safeAxiosRequest<any>({
+                                method: 'GET',
+                                url: `/projects/${gitlabIssue.project_id}/labels/${labelName}`,
+                            });
+                            task.addLabel(labelName, label.data.color);
+                        }
+                    }
                     const blockedBy = await source.safeAxiosRequest<Array<any>>({
                         method: 'GET',
                         url: `/projects/${gitlabIssue.project_id}/issues/${gitlabIssue.iid}/links`,

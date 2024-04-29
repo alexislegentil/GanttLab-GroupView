@@ -4,7 +4,10 @@
  
 <script>
 /* eslint-disable @typescript-eslint/camelcase */
-import {gantt} from 'dhtmlx-gantt';
+import {gantt, Gantt} from 'dhtmlx-gantt';
+
+
+gantt.clearAll();
 
 const dateToStr = gantt.date.date_to_str(gantt.config.task_date);
 
@@ -200,7 +203,7 @@ export default {
     gantt.config.lightbox.sections = [
       {name: "name", label: "Name", height:30, map_to:"name", type:"textarea", focus:true},
       {name:"state",    height:22, map_to:"state", type:"select", options: stateEditor.options},
-      {name:"template", height:37, type:"template", map_to:"my_template"}, 
+      {name:"template", height:64, type:"template", map_to:"my_template"}, 
       {name: "time", height:72, map_to:"auto", type:"duration"}
     ];
 
@@ -218,7 +221,8 @@ export default {
     gantt.attachEvent("onBeforeLightbox", function(id) {
     const task = gantt.getTask(id);
     task.my_template = "<span id='lightbox_users'>Assign to: </span>"+ task.user
-    +"<br>  <span id='lightbox_progress'>Progress: </span>"+ task.progress*100 +" %";
+    +"<br>  <span id='lightbox_progress'>Progress: </span>"+ task.progress*100 +" %"
+    +`<br>  <div class='lightbox_labels'>${task.labels.map(label => `<span style="padding: 3px;color: white;background-color:${label.color};border-radius:5px">${label.name}</span>`).join('')}</div>`;
     return true;
 });
 
@@ -267,7 +271,6 @@ export default {
     };
 
     gantt.templates.grid_row_class = function(start, end, task){
-      console.log(gantt.hasChild(task.id));
         return gantt.hasChild(task.id) ? "gantt_row_project" : "";
     };  
 
@@ -522,6 +525,11 @@ export default {
   gap: 10px;
 }
 
+
+.lightbox_labels {
+  display: flex;
+  gap: 5px;
+}
 .gantt-legend {
 		position: absolute;
 		right: 2rem;

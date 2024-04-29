@@ -3,6 +3,13 @@ import { TimeEstimate } from './TimeEstimate';
 /**
  * The main unit of a Gantt chart
  */
+class Label {
+  constructor(
+    public name: string,
+    public color: string,
+  ) {}
+}
+
 export class Task {
   /**
    * The TimeEstimate (in days) attached to this task
@@ -19,6 +26,7 @@ export class Task {
   public state: string | null = null;
   public users: Array<string> = [];
   public blockedBy: Array<string> = [];
+  public labels: Array<Label> = [];
 
   constructor(
     public title: string,
@@ -48,5 +56,10 @@ export class Task {
 
   public addBlockedBy(blockedBy: string): void {
     this.blockedBy.push(blockedBy);
+  }
+
+  public addLabel(labelName: string, labelColor: string): void {
+    const label = new Label(labelName, labelColor);
+    this.labels.push(label);
   }
 }
