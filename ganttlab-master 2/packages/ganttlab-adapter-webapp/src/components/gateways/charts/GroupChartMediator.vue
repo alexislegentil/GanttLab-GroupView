@@ -141,7 +141,7 @@ export default class GroupChartMediator extends Vue {
     width: 100%;
   }
   .left-ganttContainer {
-    overflow: hidden;
+    overflow: scroll;
     position: absolute;
     width: 100%;
     height: 100%;

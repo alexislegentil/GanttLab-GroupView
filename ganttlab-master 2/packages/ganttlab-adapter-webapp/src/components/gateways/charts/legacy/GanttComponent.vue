@@ -1,5 +1,5 @@
 <template>
-  <div ref="ganttContainer" style="height: 90vh;"></div>
+  <div ref="ganttContainer" style="height: 90vh; max-width: 99vw;"></div>
 </template>
  
 <script>
@@ -130,7 +130,10 @@ export default {
         marker: true,
         multiselect: true ,
         tooltip: true ,
-        undo: true
+        undo: true,
+        drag_timeline: true,
+        fullscreen: true,
+        keyboard_navigation: true
     }); 
 
     gantt.config.undo = true;

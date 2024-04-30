@@ -6,6 +6,7 @@ export * from './sources/gitlab/GitLabGateway';
 export * from './sources/gitlab/types/GitLabGroup';
 export * from './sources/gitlab/types/GitLabIssue';
 export * from './sources/gitlab/types/GitLabProject';
+export * from './sources/gitlab/types/GitLabIteration';
 export * from './sources/gitlab/types/GitLabUser';
 export * from './views/mine/ViewMine';
 export * from './views/project/ViewProject';

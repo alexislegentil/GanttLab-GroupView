@@ -15,6 +15,7 @@ interface LegacyDhtmlXgantt {
   end_date?: string | null;
   duration?: number | null;
   parent: number;
+  type?: string;
   progress: number;
   state?: TaskState | null;
   user?: string | null;
@@ -145,6 +146,7 @@ if (group.epics && group.epics.length > 0) {
       start_date: epic.start_date ?  moment(epic.start_date).format('YYYY-MM-DD HH:mm:ss') : null,
       end_date: epic.due_date ?  moment(epic.due_date).format('YYYY-MM-DD HH:mm:ss') : null,
       parent: 0,
+      type: "project",
       progress: 0,
       color:"#4f4e4e",
       row_height: 25
@@ -192,6 +194,7 @@ if (group.projects && group.projects.length > 0) {
       duration: null,
       parent: 0,
       progress: 0,
+      type: "project",
       color:"#4f4e4e",
       row_height: 25
     };
@@ -237,6 +240,7 @@ if (group.milestones && group.milestones.length > 0) {
       start_date: milestone.start? moment(milestone.start).format('YYYY-MM-DD HH:mm:ss') : null,
       parent: 0,
       progress: 0,
+      type: "project",
       color:"#4f4e4e",
       row_height: 25
     };
@@ -259,6 +263,51 @@ if (group.milestones && group.milestones.length > 0) {
           start_date: moment(task.start).format('YYYY-MM-DD HH:mm:ss'),
           duration: moment(task.due).diff(moment(task.start), 'days'),
           parent: milestoneRow.id,
+          progress: 0,
+          state: taskState ? taskState : null,
+          user: userString,
+          labels: labels
+        };
+        data.push(taskRow);
+        taskID++;
+      }
+    }
+  }
+}
+
+if (group.iterations && group.iterations.length > 0) {
+  // Convert iterations
+  for (const iteration of group.iterations) {
+    const iterationRow : LegacyDhtmlXgantt = {
+      id: taskID,
+      name: iteration.name,
+      end_date: iteration.due? moment(iteration.due).format('YYYY-MM-DD HH:mm:ss') : null,
+      start_date: iteration.start? moment(iteration.start).format('YYYY-MM-DD HH:mm:ss') : null,
+      parent: 0,
+      progress: 0,
+      type: "project",
+      color:"#4f4e4e",
+      row_height: 25
+    };
+    taskID++;
+    data.push(iterationRow);
+    if (iteration.tasks && iteration.tasks.list) {
+      for (const task of iteration.tasks.list) {
+        const taskState: TaskState | null = getStateFromGitLabState(task);
+        let userString = "";
+          if (task.users && task.users.length > 0) {
+            userString = task.users.join(", ");
+          }
+          let labels: any[] = [];
+          if (task.labels && task.labels.length > 0) {
+            labels = task.labels;
+          }
+        const taskRow : LegacyDhtmlXgantt = {
+          id: taskID,
+          name: task.title,
+          start_date: moment(task.start).format('YYYY-MM-DD HH:mm:ss'),
+          duration: moment(task.due).diff(moment(task.start), 'days'),
+          parent: iterationRow.id,
           progress: 0,
           state: taskState ? taskState : null,
           user: userString,

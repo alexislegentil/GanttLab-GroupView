@@ -9,6 +9,7 @@ import {
         PaginatedList,
         PaginatedListOfProjects,
         Milestone,
+        Iteration,
     } from 'ganttlab-entities';
     import { GitLabGateway } from '../../../sources/gitlab/GitLabGateway';
     import { GitLabIssue } from '../../../sources/gitlab/types/GitLabIssue';
@@ -16,10 +17,12 @@ import {
         getTaskFromGitLabIssue,
         getPaginationFromGitLabHeaders,
         getMilestoneFromGitLabMilestone,
+        getIterationFromGitLabIteration,
     } from '../../../sources/gitlab/helpers';
 import { GitLabProject } from '../../../sources/gitlab/types/GitLabProject';
 import { Epic } from 'ganttlab-entities/dist/core/Epic';
 import { GitLabMilestone } from '../../../sources/gitlab/types/GitLabMilestone';
+import { GitLabIteration } from '../../../sources/gitlab/types/GitLabIteration';
     
     export class ViewGroupGitLabStrategy
         implements ViewSourceStrategy<Group> {
@@ -359,6 +362,114 @@ import { GitLabMilestone } from '../../../sources/gitlab/types/GitLabMilestone';
                     params: {
                         state: 'all',
                         milestone: 'none',
+                    },
+                });
+                const pagination = getPaginationFromGitLabHeaders(headers);
+                for (const gitlabIssue of data) {
+                    const task = getTaskFromGitLabIssue(gitlabIssue);
+                    task.addState(gitlabIssue.state);
+                    if (gitlabIssue.assignees) {
+                        for (const user of gitlabIssue.assignees) {
+                            task.addUser(user.username);
+                        }
+                    } 
+                    if (gitlabIssue.labels) {
+                        for (const labelName of gitlabIssue.labels) {
+                            const label = await source.safeAxiosRequest<any>({
+                                method: 'GET',
+                                url: `/projects/${gitlabIssue.project_id}/labels/${labelName}`,
+                            });
+                            task.addLabel(labelName, label.data.color);
+                        }
+                    }
+                    const blockedBy = await source.safeAxiosRequest<Array<any>>({
+                        method: 'GET',
+                        url: `/projects/${gitlabIssue.project_id}/issues/${gitlabIssue.iid}/links`,
+                    });
+                    for (const link of blockedBy.data) {
+                        if (link.link_type === 'is_blocked_by') {
+                            task.addBlockedBy(link.title);
+                        }                    
+                    }
+                    allTasksList.push(task);
+                }
+            
+                allTasksList.sort((a: Task, b: Task) => {
+                    if (a.due && b.due) {
+                        return a.due.getTime() - b.due.getTime();
+                    }
+                    return 0;
+                });
+            
+                allTasksPaginated = new PaginatedListOfTasks(
+                    allTasksList,
+                    configuration.tasks.page as number,
+                    configuration.tasks.pageSize as number,
+                    pagination.previousPage,
+                    pagination.nextPage,
+                    pagination.lastPage,
+                    pagination.total,
+                );
+            
+                activeGroup.addTasks(allTasksPaginated);
+            }
+
+
+            else if (configuration.sortBy === 'iterations') {
+                const iterationsResponse = await source.safeAxiosRequest<Array<GitLabIteration>>({
+                    method: 'GET',
+                    url: `/groups/${encodedGroup}/iterations`,
+                });
+                const iterationsList: Array<Iteration> = [];
+                for (const gitlabIteration of iterationsResponse.data) {
+                    console.log(gitlabIteration);
+                    const iteration = getIterationFromGitLabIteration(gitlabIteration);
+                    iterationsList.push(iteration);
+                    let tasksForIterations: PaginatedListOfTasks | null = null;
+                    let tasksListByIteration: Array<Task> = [];
+            
+                    const { data, headers } = await source.safeAxiosRequest<Array<GitLabIssue>>({
+                        method: 'GET',
+                        url: `/groups/${encodedGroup}/issues`,
+                        params: {
+                            iteration_id: gitlabIteration.iid,
+                        },
+                    });
+                    const iterationPagination = getPaginationFromGitLabHeaders(headers);
+                    for (const gitlabIssue of data) {
+                        console.log(gitlabIssue);
+                        const task = getTaskFromGitLabIssue(gitlabIssue);
+                        // ... (traitement des problèmes comme dans le cas 'milestones')
+                        tasksListByIteration.push(task);
+                    }
+            
+                    tasksForIterations = new PaginatedListOfTasks(
+                        tasksListByIteration,
+                        configuration.tasks.page as number,
+                        configuration.tasks.pageSize as number,
+                        iterationPagination.previousPage,
+                        iterationPagination.nextPage,
+                        iterationPagination.lastPage,
+                        iterationPagination.total,
+                    );
+            
+                    tasksListByIteration.sort((a: Task, b: Task) => {
+                        if (a.due && b.due) {
+                            return a.due.getTime() - b.due.getTime();
+                        }
+                        return 0;
+                    });
+            
+                    iteration.addTasks(tasksForIterations);
+                }
+                activeGroup.addIterations(iterationsList);
+            
+                const {data, headers} = await source.safeAxiosRequest<Array<GitLabIssue>>({
+                    method: 'GET',
+                    url: `/groups/${encodedGroup}/issues`,
+                    params: {
+                        state: 'all',
+                        iteration_id: 'none',
                     },
                 });
                 const pagination = getPaginationFromGitLabHeaders(headers);

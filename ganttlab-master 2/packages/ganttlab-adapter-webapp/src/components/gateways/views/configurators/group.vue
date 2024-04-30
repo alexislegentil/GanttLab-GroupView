@@ -120,6 +120,14 @@
         v-model="sortBy"
       />
       <label for="sortByMilestones">Sort by Milestones</label>
+
+      <input
+        type="radio"
+        id="sortByIteration"
+        value="iterations"
+        v-model="sortBy"
+      />
+      <label for="sortByIteration">Sort by Iteration</label>
     </div>
     <!-- ... -->
   
@@ -226,6 +234,7 @@
     display: flex;
     justify-content: space-between;
     margin-bottom: 20px;
+    gap: 1em;
   }
   
   .radio-group input[type="radio"] {
@@ -233,7 +242,8 @@
   }
   
   .radio-group label {
-    padding: 10px 20px;
+    text-align: center;
+    padding: 5px 10px;
     background-color: #f2f2f2;
     border-radius: 5px;
     cursor: pointer;

@@ -1,0 +1,31 @@
+import { PaginatedListOfTasks } from '../pagination/PaginatedListOfTasks';
+
+/**
+ * A way to group {@link Task}s
+ */
+export class Iteration {
+  /**
+   * The paginated list of {@link Task}s in the milestone
+   */
+  public tasks: PaginatedListOfTasks | null = null;
+
+  /**
+   * @param name - The milestone name
+   * @param url - The URL to this milestone (directly usable in an `<a>` href)
+   * @param description - The milestone description
+   * @param start - A start date for the milestone
+   * @param due - A due date for the milestone
+   */
+  constructor(
+    public name: string,
+    public url?: string,
+    public state?: number,
+    public description?: string,
+    public start?: Date,
+    public due?: Date,
+  ) {}
+
+  public addTasks(tasks: PaginatedListOfTasks) {
+    this.tasks = tasks;
+  }
+}
