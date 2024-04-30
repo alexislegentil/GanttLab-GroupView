@@ -38,7 +38,6 @@ export class ViewMineGitLabStrategy
     );
     const tasksList: Array<Task> = [];
     for (const gitlabIssue of data) {
-      console.log(gitlabIssue);
       const task = getTaskFromGitLabIssue(gitlabIssue);
       tasksList.push(task);
     }

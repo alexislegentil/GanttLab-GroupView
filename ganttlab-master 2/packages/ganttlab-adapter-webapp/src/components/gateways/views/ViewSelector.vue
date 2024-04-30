@@ -62,8 +62,9 @@
           <span v-if="viewGateway">{{ viewGateway.name }}</span>
           <span v-else>...</span>
         </p>
-        <div class="text-lead-500">
-          <Icon size="18" name="search-outline" />
+        <div class="text-lead-300">
+          <Icon v-if="!littleHeader" size="18" name="search-outline" />
+          <font-awesome-icon v-else style="transform: scaleY(-1);" :icon="['fas', 'caret-up']" />
         </div>
       </div>
     </transition>
@@ -73,6 +74,9 @@
 <script lang="ts">
 import { Component, Vue, Prop, Emit } from 'vue-property-decorator';
 import Icon from '../../generic/Icon.vue';
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { fas } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import Modal from '../../generic/Modal.vue';
 import { getModule } from 'vuex-module-decorators';
 import MainModule from '../../../store/modules/MainModule';
@@ -88,9 +92,12 @@ import { trackInteractionEvent } from '../../../helpers/GTM';
 
 const mainState = getModule(MainModule);
 
+library.add(fas);
+
 @Component({
   components: {
     Icon,
+    FontAwesomeIcon,
     Modal,
   },
 })
@@ -101,7 +108,7 @@ export default class ViewSelector extends Vue {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public configurator: any | null = null;
 
-  @Prop({ required: true }) readonly littleHeader!: boolean;
+  @Prop({ required: false }) readonly littleHeader!: boolean;
   @Prop({ required: true }) readonly sourceGateway!: Source;
 
   // view gateway is stored in vuex store

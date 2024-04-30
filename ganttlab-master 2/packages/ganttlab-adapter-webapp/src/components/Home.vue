@@ -134,7 +134,7 @@
         </div>
       </div>
     </div>
-            <div v-else class="mb-6 p-2 bg-gray-200">
+            <div v-else class="mb-2 p-2 bg-gray-200">
               <div class="flex items-center text-gray-600 space-between">
                 <a
                   class="w-32 flex justify-start items-center"
@@ -164,14 +164,12 @@
                   </a>
                 </div>
 
-                <div class="flex justify-center mt-2 w-32">
+                <div class="flex-grow flex justify-center mt-2 w-32">
                   <div
                     class="cursor-default flex items-center content-center justify-center h-10 bg-lead-600 rounded-lg shadow-md"
                   >
-                    <div 
-                    class="h-full w-24 p-1"
-                    :class="{'flex justify-center items-baseline': littleHeader}">
-                      <p class="pb-1 text-xs tracking-wider text-lead-300">VIEW</p>
+                    <div class="h-full p-2 flex justify-center items-center">
+                      <p class="pb-1 text-xs tracking-wider text-lead-200">GROUP VIEW</p>
                       <ViewSelector
                         :littleHeader=littleHeader
                         :sourceGateway="sourceGateway"
@@ -316,7 +314,7 @@ export default class Home extends Vue {
   public paginatedTasks: PaginatedListOfTasks | null = null;
   public paginatedMilestones: PaginatedListOfMilestones | null = null;
   public group: Group | null = null;
-  public littleHeader = false;
+  public littleHeader= false;
 
   setTasksPage(page: number) {
     mainState.setViewGatewayTasksPage(page);
@@ -430,13 +428,13 @@ export default class Home extends Vue {
     this.paginatedMilestones = null;
     this.group = null;
     let filter = mainState.filterGateway ? mainState.filterGateway.instance : null;
-    if (this.viewGateway?.slug === 'group') {
-      this.littleHeader = true;
-      filter = null;
-    }
-    else {
-      this.littleHeader = false;
-    }
+    // if (view.slug === 'group') {
+    //   this.littleHeader = true;
+    //   filter = null;
+    // }
+    // else {
+    //   this.littleHeader = false;
+    // }
     
     // get the view data
     try {
@@ -455,6 +453,7 @@ export default class Home extends Vue {
       if (data instanceof Group) {
         this.group = data;
        // console.log(this.group);
+       
       }
       trackVirtualpageView(
         `${this.sourceGateway.name} - ${view.name}`,
@@ -478,6 +477,14 @@ export default class Home extends Vue {
         configuration: view.configuration,
       };
       LocalForage.setItem('viewsBySource', viewsBySource);
+    }
+
+    if (view.slug === 'group') {
+      this.littleHeader = true;
+      filter = null;
+    }
+    else {
+      this.littleHeader = false;
     }
   }
 

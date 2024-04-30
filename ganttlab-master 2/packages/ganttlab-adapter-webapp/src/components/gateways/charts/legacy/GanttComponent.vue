@@ -1,5 +1,5 @@
 <template>
-  <div ref="ganttContainer" style="height: 80vh;"></div>
+  <div ref="ganttContainer" style="height: 90vh;"></div>
 </template>
  
 <script>
@@ -68,6 +68,8 @@ const stateFilter = {
 }; 
 
 let standaloneFilter = true;
+
+let selectedScale = "day";
 
 const daysStyle = function(date){
     const dateToStr = gantt.date.date_to_str("%D");
@@ -153,6 +155,11 @@ export default {
                     </div>
                     <div class='searchEl'><label for="searchFilter">Search task :</label><input id='searchFilter' style='width: 120px;' type='text' placeholder='Search tasks...'></div>
                     ${isThereStandaloneTasks ? `<div class='standaloneFilter'><label for="standaloneFilter">Standalone tasks :</label><input id='standaloneFilter' type='checkbox' checked=${standaloneFilter}></div>` : ''}
+                    <select v-model="${selectedScale}" class="selectScale">
+                      <option value="day">Jour</option>
+                      <option value="2days">2 Jours</option>
+                      <option value="week">Semaines</option>
+                    </select>
                     </div>`
                   
                   , css:"gantt-controls", height: 40
@@ -319,6 +326,34 @@ export default {
           stateFilter[e.target.id] = !stateFilter[e.target.id];
           gantt.refreshData();
         };
+    });
+
+    document.querySelector(".selectScale").addEventListener('change', function(e) {
+      selectedScale = e.target.value;
+  
+      switch (selectedScale) {
+        case 'day':
+          gantt.config.scales = [
+            {unit: "month", step: 1, format: "%F, %Y"},
+            {unit: "day", step: 1, format: "%j, %D", css: daysStyle}
+          ];
+          break;
+        case '2days':
+          gantt.config.scales = [
+            {unit: "month", step: 1, format: "%F, %Y"},
+            {unit: "day", step: 2, format: "%j, %D", css: daysStyle}
+          ];
+          break;
+        case 'week':
+          gantt.config.scales = [
+            {unit: "month", step: 1, format: "%F, %Y"},
+            {unit: "week", step: 1, format: "%j, %D", css: daysStyle}
+          ];
+          break;
+      }
+      console.log(gantt.config.scales);
+      gantt.render(); // re-rendre le diagramme de Gantt avec la nouvelle configuration
+      console.log('updateGanttScale');
     });
      
 
@@ -523,6 +558,14 @@ export default {
   align-items: center;
   margin-left: 2rem;
   gap: 10px;
+}
+
+.selectScale {
+  margin-left: 3rem;
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
 }
 
 
