@@ -42,6 +42,7 @@
       @task-updated="logTaskUpdate"
       @link-updated="logLinkUpdate"
       @task-selected="selectTask"
+      @upload-tasks="uploadTasks"
     ></GanttComponent>
   </div>
 </template>
@@ -52,6 +53,7 @@ import GanttComponent from './legacy/GanttComponent.vue';
 import { getConvertedGroup } from './legacy/index';
 import { getLinksFromGroup } from './legacy/index';
 import { Group } from 'ganttlab-entities';
+import { gantt } from 'dhtmlx-gantt';
 
 @Component({
   components: {
@@ -92,7 +94,7 @@ export default class GroupChartMediator extends Vue {
       const text = (task && task.name ? ` (${task.name})`: '');
       const message = `Task ${mode}: ${id} ${text}`;
       this.addMessage(message);
-      this.convertToRequest(id, mode, task);
+      this.convertToRequest(task);
   }
 
   logLinkUpdate (id: number, mode: string, link:any) {
@@ -103,13 +105,48 @@ export default class GroupChartMediator extends Vue {
     this.addMessage(message)
   }
 
-  convertToRequest (id: number, mode: string, task:any) {
+  convertToRequest (task:any) {
     const request = {
-      id,
-      mode,
-      task
+      id: task.id,
+      name: task.name,
+      start_date: task.start_date,
+      end_date: task.end_date,
+      progress: task.progress,
+      user: task.user,
+      state: task.state
     }
-    console.log(request);
+    if (this.requestsQueue.some(req => req.id === request.id)) {
+      const oldtask = gantt.getTask(request.id);
+      
+      for (const attr in request) {
+        if (request.hasOwnProperty(attr) && oldtask.hasOwnProperty(attr) && request[attr as keyof typeof request] !== oldtask[attr as keyof typeof oldtask]) {
+          switch (attr) {
+            case 'name':
+            case 'start_date':
+            case 'end_date':
+            case 'progress':
+            case 'state':
+            case 'user':
+
+              const reqToUpdate = this.requestsQueue.find(req => req.id === request.id);
+              if (reqToUpdate) {
+                reqToUpdate[attr] = request[attr];
+              }
+              break;
+          }
+        }
+      }
+      return;
+    }
+    else {
+      this.requestsQueue.push(request)
+    }
+  }
+
+  uploadTasks () {
+    console.log('uploading tasks');
+    console.log(this.requestsQueue);
+    this.requestsQueue = [];
   }
   
 
