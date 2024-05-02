@@ -428,15 +428,7 @@ export default class Home extends Vue {
     this.paginatedMilestones = null;
     this.group = null;
     let filter = mainState.filterGateway ? mainState.filterGateway.instance : null;
-    // if (view.slug === 'group') {
-    //   this.littleHeader = true;
-    //   filter = null;
-    // }
-    // else {
-    //   this.littleHeader = false;
-    // }
-    
-    // get the view data
+  
     try {
       const data = await this.sourceGateway.getDataFor(view, filter);
      // console.log(data);
@@ -452,9 +444,8 @@ export default class Home extends Vue {
       }
       if (data instanceof Group) {
         this.group = data;
-       // console.log(this.group);
-       
       }
+      
       trackVirtualpageView(
         `${this.sourceGateway.name} - ${view.name}`,
         `/${this.sourceGateway.slug}/${view.slug}`,

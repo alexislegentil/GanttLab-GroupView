@@ -419,9 +419,6 @@ import { GitLabMilestone } from '../../../sources/gitlab/types/GitLabMilestone';
             return activeGroup;
           //  return tasksForAllProjects as PaginatedListOfTasks;
         }
-
-        //post
         
-
     }
   

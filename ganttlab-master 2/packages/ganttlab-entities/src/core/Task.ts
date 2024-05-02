@@ -29,6 +29,8 @@ export class Task {
   public labels: Array<Label> = [];
 
   constructor(
+    public iid: number,
+    public project_id: number | string,
     public title: string,
     public url: string,
     public start?: Date,

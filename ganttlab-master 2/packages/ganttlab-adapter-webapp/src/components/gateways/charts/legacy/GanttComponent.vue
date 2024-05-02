@@ -1,5 +1,5 @@
 <template>
-  <div ref="ganttContainer" style="height: 90vh;"></div>
+  <div ref="ganttContainer" style="height: 90vh; width: 99vw;"></div>
 </template>
  
 <script>
@@ -77,6 +77,7 @@ const daysStyle = function(date){
  
     return "";
 };
+
 
 export default {
   props: {

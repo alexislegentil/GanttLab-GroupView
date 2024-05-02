@@ -67,6 +67,7 @@ export default class GroupChartMediator extends Vue {
   public messages: Array<string> = [];
   public selectedTask: any = null;
   public rightContainerVisible = false;
+  public requestsQueue: Array<any> = [];
 
   selectTask(task:any){
       this.selectedTask = task
@@ -88,9 +89,10 @@ export default class GroupChartMediator extends Vue {
   }
 
   logTaskUpdate (id: number, mode: string, task:any) {
-      const text = (task && task.name ? ` (${task.name})`: '')
-      const message = `Task ${mode}: ${id} ${text}`
-      this.addMessage(message)
+      const text = (task && task.name ? ` (${task.name})`: '');
+      const message = `Task ${mode}: ${id} ${text}`;
+      this.addMessage(message);
+      this.convertToRequest(id, mode, task);
   }
 
   logLinkUpdate (id: number, mode: string, link:any) {
@@ -100,6 +102,16 @@ export default class GroupChartMediator extends Vue {
     }
     this.addMessage(message)
   }
+
+  convertToRequest (id: number, mode: string, task:any) {
+    const request = {
+      id,
+      mode,
+      task
+    }
+    console.log(request);
+  }
+  
 
   toggleRightContainer() {
     this.rightContainerVisible = !this.rightContainerVisible;

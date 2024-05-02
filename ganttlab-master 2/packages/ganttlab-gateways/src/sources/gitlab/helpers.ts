@@ -11,6 +11,8 @@ export function getTaskFromGitLabIssue(gitlabIssue: GitLabIssue): Task {
     gitlabIssue.description,
   );
   return new Task(
+    gitlabIssue.iid,
+    gitlabIssue.project_id,
     gitlabIssue.title,
     gitlabIssue.web_url,
     startDate

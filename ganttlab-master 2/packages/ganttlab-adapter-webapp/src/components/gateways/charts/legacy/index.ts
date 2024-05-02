@@ -10,6 +10,10 @@ interface LegacyTask {
 
 interface LegacyDhtmlXgantt {
   id: number;
+  task_iid?: number;
+  epics_id?: number;
+  project_id?: number | string;
+  milestone_id?: number;
   name: string;
   start_date?: string | null;
   end_date?: string | null;
@@ -17,6 +21,7 @@ interface LegacyDhtmlXgantt {
   parent: number;
   progress: number;
   state?: TaskState | null;
+  type?: string;
   user?: string | null;
   labels?: any[];
   color?: string;
@@ -141,11 +146,13 @@ if (group.epics && group.epics.length > 0) {
   for (const epic of group.epics) {
     const epicRow : LegacyDhtmlXgantt = {
       id: taskID,
+      epics_id: epic.iid,
       name: epic.title,
       start_date: epic.start_date ?  moment(epic.start_date).format('YYYY-MM-DD HH:mm:ss') : null,
       end_date: epic.due_date ?  moment(epic.due_date).format('YYYY-MM-DD HH:mm:ss') : null,
       parent: 0,
       progress: 0,
+      type: "project",
       color:"#4f4e4e",
       row_height: 25
     };
@@ -166,9 +173,12 @@ if (group.epics && group.epics.length > 0) {
           
         const taskRow : LegacyDhtmlXgantt = {
           id: taskID,
+          project_id: task.project_id,
+          task_iid: task.iid,
           name: task.title,
-          start_date: epicRow.start_date,
-          duration: moment(task.due).diff(moment(task.start), 'days'),
+          start_date: task.start ? moment(task.start).format('YYYY-MM-DD HH:mm:ss') : epicRow.start_date,
+          end_date: task.due ? moment(task.due).format('YYYY-MM-DD HH:mm:ss') : null,
+          duration: task.due ? null : moment(task.start).diff(moment(epicRow.start_date), 'days'),
           parent: epicRow.id,
           progress: 0,
           state: taskState ? taskState : null,
@@ -192,6 +202,7 @@ if (group.projects && group.projects.length > 0) {
       duration: null,
       parent: 0,
       progress: 0,
+      type: "project",
       color:"#4f4e4e",
       row_height: 25
     };
@@ -208,17 +219,20 @@ if (group.projects && group.projects.length > 0) {
           if (task.labels && task.labels.length > 0) {
             labels = task.labels;
           }
-        const taskRow : LegacyDhtmlXgantt = {
-          id: taskID,
-          name: task.title,
-          start_date: moment(task.start).format('YYYY-MM-DD HH:mm:ss'),
-          duration: moment(task.due).diff(moment(task.start), 'days'),
-          parent: projectRow.id,
-          progress: 0,
-          state: taskState ? taskState : null,
-          user: userString,
-          labels: labels
-        };
+          const taskRow : LegacyDhtmlXgantt = {
+            id: taskID,
+            project_id: task.project_id,
+            task_iid: task.iid,
+            name: task.title,
+            start_date: task.start ? moment(task.start).format('YYYY-MM-DD HH:mm:ss') : projectRow.start_date,
+            end_date: task.due ? moment(task.due).format('YYYY-MM-DD HH:mm:ss') : null,
+            duration: task.due ? null : moment(task.start).diff(moment(projectRow.start_date), 'days'),
+            parent: projectRow.id,
+            progress: 0,
+            state: taskState ? taskState : null,
+            user: userString,
+            labels: labels
+          };
         data.push(taskRow);
         taskID++;
       }
@@ -237,6 +251,7 @@ if (group.milestones && group.milestones.length > 0) {
       start_date: milestone.start? moment(milestone.start).format('YYYY-MM-DD HH:mm:ss') : null,
       parent: 0,
       progress: 0,
+      type: "project",
       color:"#4f4e4e",
       row_height: 25
     };
@@ -255,9 +270,12 @@ if (group.milestones && group.milestones.length > 0) {
           }
         const taskRow : LegacyDhtmlXgantt = {
           id: taskID,
+          project_id: task.project_id,
+          task_iid: task.iid,
           name: task.title,
-          start_date: moment(task.start).format('YYYY-MM-DD HH:mm:ss'),
-          duration: moment(task.due).diff(moment(task.start), 'days'),
+          start_date: task.start ? moment(task.start).format('YYYY-MM-DD HH:mm:ss') : milestoneRow.start_date,
+          end_date: task.due ? moment(task.due).format('YYYY-MM-DD HH:mm:ss') : null,
+          duration: task.due ? null : moment(task.start).diff(moment(milestoneRow.start_date), 'days'),
           parent: milestoneRow.id,
           progress: 0,
           state: taskState ? taskState : null,
@@ -287,6 +305,8 @@ if (group.tasks && group.tasks.list && group.tasks.list.length > 0) {
 
     const taskRow : LegacyDhtmlXgantt = {
       id: taskID,
+      project_id: task.project_id,
+      task_iid: task.iid,
       name: task.title,
       start_date: moment(task.start).format('YYYY-MM-DD HH:mm:ss'),
       duration: moment(task.due).diff(moment(task.start), 'days'),
