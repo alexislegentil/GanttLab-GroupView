@@ -28,10 +28,13 @@ export abstract class Source {
         `The '${visitor.name}' view does not support '${this.name}' as a source`,
       );
     }
+    console.log(this);
     return visitor.getDataFrom(this, filter);
   }
 
-  public uploadTasks<T>(tasks: Array<any>, source: Source, view: SourceVisitor<T>): void{
-    view.uploadTasks(tasks, source, view);
+  public uploadTasks<T>(tasks: Array<any>, view: SourceVisitor<T>): void{
+    console.log(this);
+    view.uploadTasks(tasks, this);
+    // view.uploadTasks(tasks, view);
   };
 }

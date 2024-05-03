@@ -9,6 +9,7 @@ import {
         PaginatedList,
         PaginatedListOfProjects,
         Milestone,
+        Source,
     } from 'ganttlab-entities';
     import { GitLabGateway } from '../../../sources/gitlab/GitLabGateway';
     import { GitLabIssue } from '../../../sources/gitlab/types/GitLabIssue';
@@ -418,6 +419,30 @@ import { GitLabMilestone } from '../../../sources/gitlab/types/GitLabMilestone';
             
             return activeGroup;
           //  return tasksForAllProjects as PaginatedListOfTasks;
+        }
+
+        async uploadTasks(source: GitLabGateway, configuration: Configuration, tasks: Array<any>): Promise<void> {
+            console.log('Uploading tasks to GitLab', tasks);
+            console.log(configuration);
+            console.log(source);
+        
+            for (const task of tasks) {
+                const data = {
+                    start_date: task.start_date,
+                    due_date: task.end_date
+                };
+        
+                try {
+                    await source.safeAxiosRequest({
+                        method: 'PUT',
+                        url: `/projects/${task.project_id}/issues/${task.task_iid}`,
+                        data: data
+                    });
+                    console.log(`Task ${task.id} updated successfully.`);
+                } catch (error) {
+                    console.error(`Failed to update task ${task.id}: ${error.message}`);
+                }
+            }
         }
         
     }

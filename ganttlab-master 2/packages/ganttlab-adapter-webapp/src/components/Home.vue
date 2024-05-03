@@ -481,9 +481,9 @@ export default class Home extends Vue {
   async uploadTasks(tasks: Array<any>) {
     console.log(this.sourceGateway);
     console.log(this.viewGateway);
-    if (this.sourceGateway) {
+    if (this.sourceGateway && this.viewGateway) {
       try {
-        await this.sourceGateway.uploadTasks(tasks);
+        await this.sourceGateway.uploadTasks(tasks, this.viewGateway);
         // this.refresh(false);
         trackInteractionEvent('Tasks', 'Uploaded');
       } catch (error) {
