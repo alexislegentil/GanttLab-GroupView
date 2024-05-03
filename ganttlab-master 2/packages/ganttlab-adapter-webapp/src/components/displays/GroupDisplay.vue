@@ -66,8 +66,8 @@ import { AnyKindOfDictionary } from 'lodash';
         };
     }
 
-    uploadTasks(tasks: Array<any>) {
-      this.$emit('upload-tasks', tasks);
+    async uploadTasks(tasks: Array<any>) {
+      await this.$emit('upload-tasks', tasks);
     }
   
     get previousPage(): number | null {

@@ -148,10 +148,15 @@ export default class GroupChartMediator extends Vue {
     }
   }
 
-  uploadTasks () {
-    this.$emit('upload-tasks', this.requestsQueue);
+async uploadTasks () {
+  try {
+    await this.$emit('upload-tasks', this.requestsQueue);
+  } catch (error) {
+    console.error("Une erreur s'est produite lors de l'envoi des tâches :", error);
+  } finally {
     this.requestsQueue = [];
   }
+}
   
 
   toggleRightContainer() {

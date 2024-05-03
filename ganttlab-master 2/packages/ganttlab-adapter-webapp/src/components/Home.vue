@@ -481,16 +481,20 @@ export default class Home extends Vue {
   async uploadTasks(tasks: Array<any>) {
     console.log(this.sourceGateway);
     console.log(this.viewGateway);
-    if (this.sourceGateway && this.viewGateway) {
+    if (this.sourceGateway && this.viewGateway && tasks.length > 0) {
       try {
         await this.sourceGateway.uploadTasks(tasks, this.viewGateway);
-        // this.refresh(false);
         trackInteractionEvent('Tasks', 'Uploaded');
       } catch (error) {
         addDisplaybleError(
           new DisplayableError(error as Error, 'Error while uploading tasks'),
         );
       }
+    }
+    else if (tasks.length === 0) {
+      addDisplaybleError(
+        new DisplayableError('No tasks to upload', 'Error while uploading tasks'),
+      );
     }
   }
 

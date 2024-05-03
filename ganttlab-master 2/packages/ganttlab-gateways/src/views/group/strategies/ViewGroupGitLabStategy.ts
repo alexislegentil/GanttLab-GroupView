@@ -423,12 +423,11 @@ import { GitLabMilestone } from '../../../sources/gitlab/types/GitLabMilestone';
 
         async uploadTasks(source: GitLabGateway, configuration: Configuration, tasks: Array<any>): Promise<void> {
             console.log('Uploading tasks to GitLab', tasks);
-            console.log(configuration);
-            console.log(source);
         
             for (const task of tasks) {
                 const data = {
-                    start_date: task.start_date,
+                    title: task.name,
+                    description: `GanttStart: ${task.start_date}`,
                     due_date: task.end_date
                 };
         
@@ -440,7 +439,7 @@ import { GitLabMilestone } from '../../../sources/gitlab/types/GitLabMilestone';
                     });
                     console.log(`Task ${task.id} updated successfully.`);
                 } catch (error) {
-                    console.error(`Failed to update task ${task.id}: ${error.message}`);
+                    console.error(`Failed to update task ${task.id}: ${error}`);
                 }
             }
         }
