@@ -251,7 +251,9 @@
           :group="group"
           :project="project"
           :sourceUrl="sourceUrl"
-          :viewGateway="viewGateway" />
+          :viewGateway="viewGateway"
+          @upload-tasks="uploadTasks"
+           />
         </div>
         <div v-else class="w-full p-16">
           <NoData
@@ -412,8 +414,6 @@ export default class Home extends Vue {
   }
 
   async setFilter(filter: FilterGateway) {
-    console.log(filter);
-    console.log(`Selected filter: ${filter.name}`);
     mainState.setFilterGateway(filter);
     this.viewGateway ? this.setView(this.viewGateway) : null;
     trackInteractionEvent('Filter', 'Changed', `${filter}` );
@@ -431,7 +431,6 @@ export default class Home extends Vue {
   
     try {
       const data = await this.sourceGateway.getDataFor(view, filter);
-     // console.log(data);
       if (data instanceof PaginatedListOfTasks) {
         this.paginatedTasks = data;
       }
@@ -445,7 +444,7 @@ export default class Home extends Vue {
       if (data instanceof Group) {
         this.group = data;
       }
-      
+
       trackVirtualpageView(
         `${this.sourceGateway.name} - ${view.name}`,
         `/${this.sourceGateway.slug}/${view.slug}`,
@@ -476,6 +475,22 @@ export default class Home extends Vue {
     }
     else {
       this.littleHeader = false;
+    }
+  }
+
+  async uploadTasks(tasks: Array<any>) {
+    console.log(this.sourceGateway);
+    console.log(this.viewGateway);
+    if (this.sourceGateway) {
+      try {
+        await this.sourceGateway.uploadTasks(tasks);
+        // this.refresh(false);
+        trackInteractionEvent('Tasks', 'Uploaded');
+      } catch (error) {
+        addDisplaybleError(
+          new DisplayableError(error as Error, 'Error while uploading tasks'),
+        );
+      }
     }
   }
 

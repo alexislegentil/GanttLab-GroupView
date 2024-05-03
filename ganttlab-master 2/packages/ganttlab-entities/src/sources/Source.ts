@@ -30,4 +30,8 @@ export abstract class Source {
     }
     return visitor.getDataFrom(this, filter);
   }
+
+  public uploadTasks<T>(tasks: Array<any>, source: Source, view: SourceVisitor<T>): void{
+    view.uploadTasks(tasks, source, view);
+  };
 }

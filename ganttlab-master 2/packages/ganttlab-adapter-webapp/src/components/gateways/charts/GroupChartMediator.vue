@@ -39,6 +39,7 @@
     <GanttComponent
       class="left-ganttContainer"
       :tasks="tasks"
+      :requests-queue="requestsQueue"
       @task-updated="logTaskUpdate"
       @link-updated="logLinkUpdate"
       @task-selected="selectTask"
@@ -48,6 +49,7 @@
 </template>
  
 <script lang="ts">
+/* eslint-disable @typescript-eslint/camelcase */
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import GanttComponent from './legacy/GanttComponent.vue';
 import { getConvertedGroup } from './legacy/index';
@@ -119,6 +121,7 @@ export default class GroupChartMediator extends Vue {
       const oldtask = gantt.getTask(request.id);
       
       for (const attr in request) {
+        // eslint-disable-next-line no-prototype-builtins
         if (request.hasOwnProperty(attr) && oldtask.hasOwnProperty(attr) && request[attr as keyof typeof request] !== oldtask[attr as keyof typeof oldtask]) {
           switch (attr) {
             case 'name':
@@ -126,13 +129,13 @@ export default class GroupChartMediator extends Vue {
             case 'end_date':
             case 'progress':
             case 'state':
-            case 'user':
-
+            case 'user': {
               const reqToUpdate = this.requestsQueue.find(req => req.id === request.id);
               if (reqToUpdate) {
                 reqToUpdate[attr] = request[attr];
               }
               break;
+            }
           }
         }
       }
@@ -144,8 +147,7 @@ export default class GroupChartMediator extends Vue {
   }
 
   uploadTasks () {
-    console.log('uploading tasks');
-    console.log(this.requestsQueue);
+    this.$emit('upload-tasks', this.requestsQueue);
     this.requestsQueue = [];
   }
   

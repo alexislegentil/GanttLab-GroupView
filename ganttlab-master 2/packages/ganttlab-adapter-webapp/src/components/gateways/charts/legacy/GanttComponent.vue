@@ -86,6 +86,10 @@ export default {
       default () {
         return {data: [], links: []}
       }
+    },
+    requestsQueue: {
+      type: Array,
+      required: true
     }
   },
 
@@ -162,8 +166,9 @@ export default {
                       <option value="week">Semaines</option>
                     </select>
                     <div class="upload-logo-container" title="push all changes to GitLab">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--!Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path fill="#28bf2d" d="M246.6 9.4c-12.5-12.5-32.8-12.5-45.3 0l-128 128c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 109.3 192 320c0 17.7 14.3 32 32 32s32-14.3 32-32l0-210.7 73.4 73.4c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3l-128-128zM64 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64c0 53 43 96 96 96l256 0c53 0 96-43 96-96l0-64c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64c0 17.7-14.3 32-32 32L96 448c-17.7 0-32-14.3-32-32l0-64z"/></svg>
+                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--!Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path fill="#28bf2d" d="M246.6 9.4c-12.5-12.5-32.8-12.5-45.3 0l-128 128c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 109.3 192 320c0 17.7 14.3 32 32 32s32-14.3 32-32l0-210.7 73.4 73.4c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3l-128-128zM64 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64c0 53 43 96 96 96l256 0c53 0 96-43 96-96l0-64c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64c0 17.7-14.3 32-32 32L96 448c-17.7 0-32-14.3-32-32l0-64z"/></svg>
                     </div>
+                          
                     </div>`
                   
                   , css:"gantt-controls", height: 40
@@ -301,19 +306,6 @@ export default {
       gantt.config.open_tree_initially = true;   //if more than 50 tasks, tasks will be closed by default
     }
 
-    gantt.attachEvent('onTaskSelected', (id) => {
-      const task = gantt.getTask(id);
-      this.$emit('task-selected', task);
-});
- 
-    gantt.attachEvent('onTaskIdChange', (id, new_id) => {
-       if (gantt.getSelectedId() == new_id) {
-         const task = gantt.getTask(new_id);
-         this.$emit('task-selected', task);
-        }
-     });
-    
-
     gantt.init(this.$refs.ganttContainer);
     gantt.parse(this.$props.tasks);
     this.$_initDataProcessor();
@@ -355,9 +347,7 @@ export default {
           ];
           break;
       }
-      console.log(gantt.config.scales);
       gantt.render(); // re-rendre le diagramme de Gantt avec la nouvelle configuration
-      console.log('updateGanttScale');
     });
 
     document.querySelector(".upload-logo-container").addEventListener('click', () => {

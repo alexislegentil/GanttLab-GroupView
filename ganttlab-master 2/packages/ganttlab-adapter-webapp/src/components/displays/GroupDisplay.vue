@@ -4,6 +4,7 @@
             
             <GroupChartMediator
             :group="group"
+            @upload-tasks="uploadTasks"
             />
 
         </div>
@@ -34,6 +35,7 @@ import { SourceVisitor } from 'ganttlab-entities';
 import NoData from '../generic/illustrations/NoData.vue';
 import Gantt from "./components/Gantt.vue";
 import { Task } from 'ganttlab-entities';
+import { AnyKindOfDictionary } from 'lodash';
   
   const mainState = getModule(MainModule);
   const defaultChart = 'legacy';
@@ -62,6 +64,10 @@ import { Task } from 'ganttlab-entities';
     data() {
         return {
         };
+    }
+
+    uploadTasks(tasks: Array<any>) {
+      this.$emit('upload-tasks', tasks);
     }
   
     get previousPage(): number | null {
