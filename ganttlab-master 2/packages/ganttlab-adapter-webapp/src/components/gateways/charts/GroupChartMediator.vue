@@ -92,6 +92,10 @@ export default class GroupChartMediator extends Vue {
       }
   }
 
+  mounted() {
+    this.$on('task-updated', this.logTaskUpdate);
+  }
+
   logTaskUpdate (id: number, mode: string, task:any) {
       const text = (task && task.name ? ` (${task.name})`: '');
       const message = `Task ${mode}: ${id} ${text}`;

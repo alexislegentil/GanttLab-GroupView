@@ -47,8 +47,6 @@ export abstract class SourceVisitor<T> extends View {
 
     // because that's the only implemented way to upload tasks
     if (source.slug === 'gitlab' && this.slug === 'group') { 
-      console.log('Uploading tasks from source', source.slug, 'to view', this.slug);
-      console.log('Tasks:', tasks);
       this.slugStrategies[source.slug].uploadTasks(source, this.configuration, tasks);
     }
 

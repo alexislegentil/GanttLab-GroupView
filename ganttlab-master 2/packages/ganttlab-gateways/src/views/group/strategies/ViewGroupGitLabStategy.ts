@@ -422,7 +422,6 @@ import { GitLabMilestone } from '../../../sources/gitlab/types/GitLabMilestone';
         }
 
         async uploadTasks(source: GitLabGateway, configuration: Configuration, tasks: Array<any>): Promise<void> {
-            console.log('Uploading tasks to GitLab', tasks);
         
             for (const task of tasks) {
                 const data = {

@@ -28,7 +28,6 @@ export abstract class Source {
         `The '${visitor.name}' view does not support '${this.name}' as a source`,
       );
     }
-    console.log(this);
     return visitor.getDataFrom(this, filter);
   }
 

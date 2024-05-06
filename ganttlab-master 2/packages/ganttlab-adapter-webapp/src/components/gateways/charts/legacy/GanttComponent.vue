@@ -7,7 +7,7 @@
 import {gantt, Gantt} from 'dhtmlx-gantt';
 
 
-gantt.clearAll();
+
 
 const dateToStr = gantt.date.date_to_str(gantt.config.task_date);
 
@@ -111,7 +111,7 @@ export default {
     },
     $_initDataProcessor: function() {
       if (!gantt.$_dataProcessorInitialized) {
-        gantt.createDataProcessor((entity, action, data, id) => {
+        this.dp = gantt.createDataProcessor((entity, action, data, id) => {
           this.$emit(`${entity}-updated`, id, action, data);
         });
         gantt.$_dataProcessorInitialized = true;
@@ -120,6 +120,8 @@ export default {
   },
  
   mounted: function () {
+
+    console.log('component mounted');
 
     this.$_initGanttEvents();
 
@@ -308,7 +310,7 @@ export default {
 
     gantt.init(this.$refs.ganttContainer);
     gantt.parse(this.$props.tasks);
-    this.$_initDataProcessor();
+    
 
     if (isThereStandaloneTasks) {
       document.getElementById('standaloneFilter').addEventListener('change', function(e) {
@@ -407,9 +409,20 @@ export default {
     });
   
     gantt.$root.appendChild(legend);
+    this.$_initDataProcessor();
+
+    console.log(gantt);
   },
 
-  
+  beforeDestroy: function() {
+    gantt.clearAll();
+    gantt.detachAllEvents();
+    this.dp.destructor();
+    gantt.$dataProcessor = null;
+    gantt.$_eventsInitialized = false;
+    gantt.$_dataProcessorInitialized = false;  
+  }
+
 }
 </script>
  
