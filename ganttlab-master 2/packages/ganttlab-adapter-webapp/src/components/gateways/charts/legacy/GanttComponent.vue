@@ -6,9 +6,6 @@
 /* eslint-disable @typescript-eslint/camelcase */
 import {gantt, Gantt} from 'dhtmlx-gantt';
 
-
-
-
 const dateToStr = gantt.date.date_to_str(gantt.config.task_date);
 
 const dateEditor = {type: "date", map_to: "start_date"};
@@ -58,6 +55,41 @@ for (let i = 0; i < states.length; i++) {
 
 legend.appendChild(legendList);
 
+// Créer la modal et ses éléments
+const modal = document.createElement('div');
+const content = document.createElement('div');
+const closeButton = document.createElement('span');
+const text = document.createElement('p');
+const okButton = document.createElement('button');
+const cancelButton = document.createElement('button');
+
+// Ajouter du texte aux éléments
+closeButton.textContent = '×';
+text.textContent = 'Send all changes to GitLab ?';
+okButton.textContent = 'OK';
+okButton.style.backgroundColor = '#4caf50';
+cancelButton.textContent = 'Cancel';
+cancelButton.style.backgroundColor = '#bbbbbb';
+
+// Ajouter des classes aux éléments pour le style
+modal.classList.add('modal');
+content.classList.add('modal-content');
+closeButton.classList.add('close-button');
+
+// Ajouter des événements aux boutons
+closeButton.addEventListener('click', () => modal.style.display = 'none');
+cancelButton.addEventListener('click', () => modal.style.display = 'none');
+
+// Ajouter les éléments à la modal
+content.appendChild(closeButton);
+content.appendChild(text);
+content.appendChild(okButton);
+content.appendChild(cancelButton);
+modal.appendChild(content);
+
+// Ajouter la modal au document
+document.body.appendChild(modal);
+
 
 const stateFilter = {
   Opened: true,
@@ -79,6 +111,7 @@ const daysStyle = function(date){
 };
 
 
+
 export default {
   props: {
     tasks: {
@@ -90,6 +123,25 @@ export default {
     requestsQueue: {
       type: Array,
       required: true
+    }
+  },
+  
+  watch: {
+    requestsQueue: {
+      handler: function (requestsQueue) {
+        const uploadButtonDiv = document.querySelector(".upload-logo-container");
+        if (requestsQueue.length > 0) {
+          if (uploadButtonDiv) {
+            uploadButtonDiv.style.display = 'block';
+          }
+        }
+        else {
+          if (uploadButtonDiv) {
+            uploadButtonDiv.style.display = 'none';
+          }
+        }
+      },
+      deep: true
     }
   },
 
@@ -113,6 +165,17 @@ export default {
       if (!gantt.$_dataProcessorInitialized) {
         this.dp = gantt.createDataProcessor((entity, action, data, id) => {
           this.$emit(`${entity}-updated`, id, action, data);
+        });
+        this.dp.attachEvent("onBeforeUpdate", function (id, status, data) {
+            if (!data.name) {
+                gantt.message("The task's name can't be empty!");
+                return false;
+            }
+            if (!data.start_date || !data.end_date || data.start_date > data.end_date) {
+                gantt.message("Task's dates are invalid!");
+                return false;
+            }
+            return true;
         });
         gantt.$_dataProcessorInitialized = true;
       }
@@ -167,10 +230,14 @@ export default {
                       <option value="2days">2 Jours</option>
                       <option value="week">Semaines</option>
                     </select>
-                    <div class="upload-logo-container" title="push all changes to GitLab">
-                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--!Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path fill="#28bf2d" d="M246.6 9.4c-12.5-12.5-32.8-12.5-45.3 0l-128 128c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 109.3 192 320c0 17.7 14.3 32 32 32s32-14.3 32-32l0-210.7 73.4 73.4c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3l-128-128zM64 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64c0 53 43 96 96 96l256 0c53 0 96-43 96-96l0-64c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64c0 17.7-14.3 32-32 32L96 448c-17.7 0-32-14.3-32-32l0-64z"/></svg>
+                    <div class="upload-logo-container" title="push all changes to GitLab" style="display: none">
+                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+                        <!--
+                          <!Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.>
+                        -->
+                       <path fill="#28bf2d" d="M246.6 9.4c-12.5-12.5-32.8-12.5-45.3 0l-128 128c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 109.3 192 320c0 17.7 14.3 32 32 32s32-14.3 32-32l0-210.7 73.4 73.4c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3l-128-128zM64 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64c0 53 43 96 96 96l256 0c53 0 96-43 96-96l0-64c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64c0 17.7-14.3 32-32 32L96 448c-17.7 0-32-14.3-32-32l0-64z"/>
+                       </svg>
                     </div>
-                          
                     </div>`
                   
                   , css:"gantt-controls", height: 40
@@ -353,7 +420,12 @@ export default {
     });
 
     document.querySelector(".upload-logo-container").addEventListener('click', () => {
+      modal.style.display = 'block';
+    });
+
+    okButton.addEventListener('click', () => {
       this.$emit('upload-tasks');
+      modal.style.display = 'none';
     });
 
     let filterValue = "";
@@ -407,20 +479,29 @@ export default {
     }
         return filterLogic(task);
     });
+
+    gantt.attachEvent("onLightboxSave", function(id, item){
+        if(!item.name){
+            gantt.message({type:"error", text:"Enter task name!"});
+            return false;
+        }
+        if (!item.start_date || !item.end_date || item.start_date > item.end_date) {
+                gantt.message("Task's dates are invalid!");
+                return false;
+            }
+        return true;
+    });
   
     gantt.$root.appendChild(legend);
     this.$_initDataProcessor();
-
-    console.log(gantt);
   },
 
   beforeDestroy: function() {
     gantt.clearAll();
     gantt.detachAllEvents();
-    this.dp.destructor();
-    gantt.$dataProcessor = null;
-    gantt.$_eventsInitialized = false;
-    gantt.$_dataProcessorInitialized = false;  
+    this.dp ? this.dp.destructor() : null;
+    this.$_eventsInitialized = false;
+    this.$_dataProcessorInitialized = false;  
   }
 
 }
@@ -477,6 +558,51 @@ export default {
 
 .folder {
     background-color: #4f4e4e;
+}
+
+.modal {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0,0,0); /* Fallback color */
+  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 15% auto; /* 15% from the top and centered */
+  padding: 20px;
+  border: 1px solid #888;
+  width: 30%; /* Could be more or less, depending on screen size */
+}
+
+.modal-content button {
+  background-color: #168af0;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 5px 10px;
+  margin: 0 10px;
+}
+
+.close-button {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close-button:hover,
+.close-button:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
 }
 
 .gantt_row.gantt_row_project, .gantt_row.odd.gantt_row_project{

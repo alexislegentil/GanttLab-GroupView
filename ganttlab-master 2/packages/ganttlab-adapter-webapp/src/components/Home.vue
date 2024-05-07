@@ -292,11 +292,12 @@ Group,
 } from 'ganttlab-entities';
 import { ImplementedSourcesGateways } from '../helpers/ImplementedSourcesGateways';
 import { DisplayableError } from '../helpers/DisplayableError';
-import { addDisplaybleError } from '../helpers';
+import { addDisplaybleError, addDisplaybleSuccess } from '../helpers';
 import { TasksAndMilestones } from 'ganttlab-use-cases';
 import LocalForage, { getRememberedViews } from '../helpers/LocalForage';
 import { trackVirtualpageView, trackInteractionEvent } from '../helpers/GTM';
 import { FilterGateway } from '@/helpers/ImplementedFiltersGateways';
+import { DisplayableSuccess } from '@/helpers/DisplayableSuccess';
 
 const mainState = getModule(MainModule);
 
@@ -451,7 +452,7 @@ export default class Home extends Vue {
       );
     } catch (error) {
       addDisplaybleError(
-        new DisplayableError(error, 'Unable to get view data'),
+        new DisplayableError(error as string, 'Unable to get view data'),
       );
       trackInteractionEvent('View', 'Error', view.slug);
       this.paginatedTasks = new PaginatedListOfTasks([], 1, 0);
@@ -483,6 +484,9 @@ export default class Home extends Vue {
       try {
         await this.sourceGateway.uploadTasks(tasks, this.viewGateway);
         trackInteractionEvent('Tasks', 'Uploaded');
+        addDisplaybleSuccess(
+          new DisplayableSuccess('Tasks uploaded successfully', 'Tasks uploaded'),
+        )
       } catch (error) {
         addDisplaybleError(
           new DisplayableError(error as Error, 'Error while uploading tasks'),

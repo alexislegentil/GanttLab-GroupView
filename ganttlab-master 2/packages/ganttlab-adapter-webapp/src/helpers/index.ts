@@ -1,6 +1,7 @@
 import { getModule } from 'vuex-module-decorators';
 import MainModule from '../store/modules/MainModule';
 import { DisplayableError } from './DisplayableError';
+import { DisplayableSuccess } from './DisplayableSuccess';
 
 const mainState = getModule(MainModule);
 
@@ -18,4 +19,8 @@ export function hashCode(value: string) {
 
 export function addDisplaybleError(error: DisplayableError) {
   mainState.addError(error);
+}
+
+export function addDisplaybleSuccess(Success: DisplayableSuccess) {
+  mainState.addSuccess(Success);
 }

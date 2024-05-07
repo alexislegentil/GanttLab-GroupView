@@ -58,6 +58,7 @@
     "dhtmlx-gantt": "^8.0.6",
     "gantt-elastic": "^1.0.12",
     "postcss": "^8.4.38",
+    "vue-js-modal": "^2.0.1",
     "vue-property-decorator": "^9.1.2"
   }
 }

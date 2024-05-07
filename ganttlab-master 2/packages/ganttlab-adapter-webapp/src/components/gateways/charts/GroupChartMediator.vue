@@ -136,9 +136,10 @@ export default class GroupChartMediator extends Vue {
             case 'progress':
             case 'state':
             case 'user': {
-              const reqToUpdate = this.requestsQueue.find(req => req.id === request.id);
-              if (reqToUpdate) {
-                reqToUpdate[attr] = request[attr];
+              const indexToUpdate = this.requestsQueue.findIndex(req => req.id === request.id);
+              if (indexToUpdate !== -1) {
+                const updatedRequest = { ...this.requestsQueue[indexToUpdate], [attr]: request[attr] };
+                this.requestsQueue.splice(indexToUpdate, 1, updatedRequest);
               }
               break;
             }

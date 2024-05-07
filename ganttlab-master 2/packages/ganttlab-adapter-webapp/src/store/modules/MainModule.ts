@@ -10,6 +10,7 @@ import {
 } from 'ganttlab-entities';
 import { DisplayableError } from '../../helpers/DisplayableError';
 import { FilterGateway } from '@/helpers/ImplementedFiltersGateways';
+import { DisplayableSuccess } from '@/helpers/DisplayableSuccess';
 
 @Module({
   dynamic: true,
@@ -19,7 +20,8 @@ import { FilterGateway } from '@/helpers/ImplementedFiltersGateways';
 })
 export default class MainModule extends VuexModule {
   public remember = false;
-  public errors: Array<DisplayableError> = [];
+  public errors: Array<DisplayableError> = []
+  public successes: Array<DisplayableSuccess> = []
   public user: User | null = null;
   public credentialsBySource: {
     [key: string]: Credentials | null;
@@ -41,10 +43,23 @@ export default class MainModule extends VuexModule {
   }
 
   @Mutation
+  public addSuccess(success: DisplayableSuccess) {
+    this.successes.unshift(success);
+  }
+
+  @Mutation
   public clearError(error: DisplayableError) {
     this.errors = this.errors.filter(
       (anExistingError: DisplayableError) =>
         anExistingError.hash !== error.hash,
+    );
+  }
+
+  @Mutation
+  public clearSuccess(success: DisplayableSuccess) {
+    this.successes = this.successes.filter(
+      (anExistingSuccess: DisplayableSuccess) =>
+        anExistingSuccess.hash !== success.hash,
     );
   }
 
