@@ -123,6 +123,10 @@ export default {
     requestsQueue: {
       type: Array,
       required: true
+    },
+    users: {
+      type: Array,
+      required: true
     }
   },
   
@@ -281,14 +285,14 @@ export default {
       {name: "name", label: "Task name", tree: true, width: 170, resize: true },
       {name: "start_date", label: "Start time", align: "center", width: 150 , resize: true, editor: dateEditor},
       {name: "duration", label: "Duration", align: "center", width: 60, editor: durationEditor},
-      {name: "user", label: "User", align: "center", width: 100},
+      {name: "users", label: "User", align: "center", width: 100},
       {name: "state", label: "State", align: "center", width: 100, editor: stateEditor}
     ];
 
     gantt.config.lightbox.sections = [
       {name: "name", label: "Name", height:30, map_to:"name", type:"textarea", focus:true},
       {name:"state",    height:22, map_to:"state", type:"select", options: stateEditor.options},
-      {name:"template", height:64, type:"template", map_to:"my_template"}, 
+      {name:"template", height:150, type:"template", map_to:"my_template"}, 
       {name: "time", height:72, map_to:"auto", type:"duration"}
     ];
 
@@ -303,19 +307,37 @@ export default {
 
     gantt.config.lightbox.project_sections.allow_root = false;
 
-    gantt.attachEvent("onBeforeLightbox", function(id) {
-    const task = gantt.getTask(id);
-    task.my_template = "<span id='lightbox_users'>Assign to: </span>"+ task.user
-    +"<br>  <span id='lightbox_progress'>Progress: </span>"+ task.progress*100 +" %"
-    +`<br>  <div class='lightbox_labels'>${task.labels.map(label => `<span style="padding: 3px;color: white;background-color:${label.color};border-radius:5px">${label.name}</span>`).join('')}</div>`;
-    return true;
-});
+    gantt.attachEvent("onBeforeLightbox", (id) =>  {
+      const task = gantt.getTask(id);
+    
+      // Créer le bouton +
+      const addButton = "<button id='addUserAssign'>+</button>";
+
+      // const userOptions = this.$props.users.forEach(user => 
+      //   `<option value='${user.id}' ${task.users.includes(user.username) ? 'selected' : ''}>${user.username}</option>`
+      // ).join('');
+
+      // const taskUsers = task.users?.map(taskUser => taskUser + "<select id='userSelect'>" + userOptions + "</select>").join('');
+
+      task.my_template = "<span id='lightbox_users_title'>Assign to: </span><div class='lightbox_user'>" 
+      + `${task.users.map(taskUser => {
+        return `<select id='userSelect'> ${this.$props.users.map(user =>{
+          return `<option class="userOption" value='${user.id}' ${taskUser === user.username ? 'selected' : ''}>${user.username}</option>`
+        }).join('')
+        })} </select>`
+      }).join('')}`
+      + addButton + "</div>"
+      + "<br>  <span id='lightbox_progress'>Progress: </span>"+ task.progress*100 +" %"
+      + `<br>  <div class='lightbox_labels'>${task.labels.map(label => `<span style="padding: 3px;color: white;background-color:${label.color};border-radius:5px">${label.name}</span>`).join('')}</div>`;
+      
+      return true;
+    });
 
 
     gantt.config.lightbox.allow_root = false;
 
     gantt.templates.task_text = function(start, end, task) {
-      return "<b>Name:</b> " + task.name + (task.user ? ",<b> Assign to:</b> " + task.user : "");
+      return "<b>Name:</b> " + task.name ;
     };
     gantt.templates.tooltip_text = function(start, end, task) {
       // Personnalisez ici le texte du tooltip pour chaque tâche (hover)
@@ -324,7 +346,7 @@ export default {
       + "End: " + gantt.templates.tooltip_date_format(end) + "<br/>" 
       + "Duration: " + task.duration + " days" + "<br/>"
       + (task.state ? "<br/>State: " + task.state : "")
-      + (task.user ? "<br/>User: " + task.user : "");
+      + (task.users ? "<br/>" + `${task.users.map(user => user).join(', ')}` : "");
     };
 
     gantt.templates.task_class = function(start, end, task){
@@ -499,9 +521,10 @@ export default {
   beforeDestroy: function() {
     gantt.clearAll();
     gantt.detachAllEvents();
-    this.dp ? this.dp.destructor() : null;
-    this.$_eventsInitialized = false;
-    this.$_dataProcessorInitialized = false;  
+    this.dp.destructor();
+    gantt.$dataProcessor = null;
+    gantt.$_eventsInitialized = false;
+    gantt.$_dataProcessorInitialized = false;  
   }
 
 }
@@ -761,5 +784,52 @@ export default {
 		flex-shrink: 0;
 		margin:0 5px;
 	}
+
+#lightbox_users_title {
+  font-weight: bold;
+  display: block;
+}
+
+.lightbox_user {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+#userSelect {
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  max-width: 7em;
+}
+
+.userOption {
+  padding: 5px;
+}
+
+#addUserAssign {
+  background-color: #4CAF50; /* Green */
+  border: none;
+  color: white;
+  padding: 2px 7px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+#lightbox_progress {
+  font-weight: bold;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.lightbox_labels {
+  padding: 5px;
+  border-radius: 5px;
+}
 
 </style>

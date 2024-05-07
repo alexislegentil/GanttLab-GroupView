@@ -196,6 +196,7 @@
           group: new Group(
             this.group.name,
             this.group.path,
+            [],
            [],// await this.sourceGateway.getProjectsFromGitLabGroup(this.group),
             this.group.web_url,
             this.group.description,

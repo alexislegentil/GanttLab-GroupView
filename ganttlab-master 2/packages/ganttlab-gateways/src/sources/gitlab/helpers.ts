@@ -73,6 +73,7 @@ export function getGroupFromGitLabGroup(
     GitLabGroup.name,
     GitLabGroup.path,
     [],
+    [],
     GitLabGroup.avatar_url,
     GitLabGroup.web_url,
     GitLabGroup.description,

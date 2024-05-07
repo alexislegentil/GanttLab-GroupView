@@ -40,6 +40,7 @@
       class="left-ganttContainer"
       :tasks="tasks"
       :requests-queue="requestsQueue"
+      :users="users"
       @task-updated="logTaskUpdate"
       @link-updated="logLinkUpdate"
       @task-selected="selectTask"
@@ -54,7 +55,7 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 import GanttComponent from './legacy/GanttComponent.vue';
 import { getConvertedGroup } from './legacy/index';
 import { getLinksFromGroup } from './legacy/index';
-import { Group, Project } from 'ganttlab-entities';
+import { Group, Project, User } from 'ganttlab-entities';
 import { gantt } from 'dhtmlx-gantt';
 
 @Component({
@@ -72,6 +73,7 @@ export default class GroupChartMediator extends Vue {
   public selectedTask: any = null;
   public rightContainerVisible = false;
   public requestsQueue: Array<any> = [];
+  public users: Array<User> = this.group.users;
 
   selectTask(task:any){
       this.selectedTask = task

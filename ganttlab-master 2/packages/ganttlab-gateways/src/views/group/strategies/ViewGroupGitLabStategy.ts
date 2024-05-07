@@ -10,6 +10,7 @@ import {
         PaginatedListOfProjects,
         Milestone,
         Source,
+        User,
     } from 'ganttlab-entities';
     import { GitLabGateway } from '../../../sources/gitlab/GitLabGateway';
     import { GitLabIssue } from '../../../sources/gitlab/types/GitLabIssue';
@@ -21,6 +22,7 @@ import {
 import { GitLabProject } from '../../../sources/gitlab/types/GitLabProject';
 import { Epic } from 'ganttlab-entities/dist/core/Epic';
 import { GitLabMilestone } from '../../../sources/gitlab/types/GitLabMilestone';
+import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
     
     export class ViewGroupGitLabStrategy
         implements ViewSourceStrategy<Group> {
@@ -43,11 +45,25 @@ import { GitLabMilestone } from '../../../sources/gitlab/types/GitLabMilestone';
                 url: `/groups/${encodedGroup}`,
             });
 
+            const usersResponse = await source.safeAxiosRequest<Array<GitLabUser>>({
+                method: 'GET',
+                url: `/users`,
+                params: {
+                    per_page: 100,
+                  //  without_project_bots: true,
+                },
+            });
+            const users: Array<User> = [];
+            for (const gitlabUser of usersResponse.data) {
+                const user = new User(gitlabUser.email, gitlabUser.username, gitlabUser.avatar_url, gitlabUser.web_url);
+                users.push(user);
+            }
+            
+
             const gitlabGroup = groupResponse.data;
-            activeGroup = new Group(gitlabGroup.name, gitlabGroup.path, [] , gitlabGroup.avatar_url, gitlabGroup.web_url, gitlabGroup.description);
+            activeGroup = new Group(gitlabGroup.name, gitlabGroup.path, [] , users , gitlabGroup.avatar_url , gitlabGroup.web_url , gitlabGroup.description);
 
-
-
+         
 
             if (configuration.sortBy === 'epic') {
             
@@ -77,7 +93,6 @@ import { GitLabMilestone } from '../../../sources/gitlab/types/GitLabMilestone';
                 });
                 const epicPagination = getPaginationFromGitLabHeaders(headers);
                 for (const gitlabIssue of data) {
-                    console.log(gitlabIssue);
                     const task = getTaskFromGitLabIssue(gitlabIssue);
                     task.addState(gitlabIssue.state);
                     if (gitlabIssue.assignees) {
@@ -292,7 +307,6 @@ import { GitLabMilestone } from '../../../sources/gitlab/types/GitLabMilestone';
           
                     const milestone = getMilestoneFromGitLabMilestone(gitlabMilestone);
                     milestonesList.push(milestone);
-                    console.log(milestone);
                     let tasksForMilestones: PaginatedListOfTasks | null = null;
                     let tasksListByMilestone: Array<Task> = [];
             
@@ -412,11 +426,7 @@ import { GitLabMilestone } from '../../../sources/gitlab/types/GitLabMilestone';
                 activeGroup.addTasks(allTasksPaginated);
             }
 
-
-
-            console.log(activeGroup);
-
-            
+            console.log(activeGroup);            
             return activeGroup;
           //  return tasksForAllProjects as PaginatedListOfTasks;
         }

@@ -22,7 +22,7 @@ interface LegacyDhtmlXgantt {
   progress: number;
   state?: TaskState | null;
   type?: string;
-  user?: string | null;
+  users?: Array<string> | null;
   labels?: any[];
   color?: string;
   row_height?: number;
@@ -162,10 +162,6 @@ if (group.epics && group.epics.length > 0) {
     if (epic.Tasks && epic.Tasks.list) {
       for (const task of epic.Tasks.list) {
         const taskState: TaskState | null = getStateFromGitLabState(task);
-        let userString = "";
-          if (task.users && task.users.length > 0) {
-            userString = task.users.join(", ");
-          }
           let labels: any[] = [];
           if (task.labels && task.labels.length > 0) {
             labels = task.labels;
@@ -182,7 +178,7 @@ if (group.epics && group.epics.length > 0) {
           parent: epicRow.id,
           progress: 0,
           state: taskState ? taskState : null,
-          user: userString,
+          users: task.users,
           labels: labels
         };
         data.push(taskRow);
@@ -211,10 +207,6 @@ if (group.projects && group.projects.length > 0) {
     if (project.tasks && project.tasks.list) {
       for (const task of project.tasks.list) {
         const taskState: TaskState | null = getStateFromGitLabState(task);
-        let userString = "";
-          if (task.users && task.users.length > 0) {
-            userString = task.users.join(", ");
-          }
           let labels: any[] = [];
           if (task.labels && task.labels.length > 0) {
             labels = task.labels;
@@ -230,7 +222,7 @@ if (group.projects && group.projects.length > 0) {
             parent: projectRow.id,
             progress: 0,
             state: taskState ? taskState : null,
-            user: userString,
+            users: task.users,
             labels: labels
           };
         data.push(taskRow);
@@ -260,10 +252,6 @@ if (group.milestones && group.milestones.length > 0) {
     if (milestone.tasks && milestone.tasks.list) {
       for (const task of milestone.tasks.list) {
         const taskState: TaskState | null = getStateFromGitLabState(task);
-        let userString = "";
-          if (task.users && task.users.length > 0) {
-            userString = task.users.join(", ");
-          }
           let labels: any[] = [];
           if (task.labels && task.labels.length > 0) {
             labels = task.labels;
@@ -279,7 +267,7 @@ if (group.milestones && group.milestones.length > 0) {
           parent: milestoneRow.id,
           progress: 0,
           state: taskState ? taskState : null,
-          user: userString,
+          users: task.users,
           labels: labels
         };
         data.push(taskRow);
@@ -294,10 +282,6 @@ if (group.tasks && group.tasks.list && group.tasks.list.length > 0) {
   // Add standalone tasks
   for (const task of group.tasks.list) {
     const taskState: TaskState | null = getStateFromGitLabState(task);
-    let userString = "";
-      if (task.users && task.users.length > 0) {
-        userString = task.users.join(", ");
-      }
       let labels: any[] = [];
           if (task.labels && task.labels.length > 0) {
             labels = task.labels;
@@ -314,7 +298,7 @@ if (group.tasks && group.tasks.list && group.tasks.list.length > 0) {
       parent: 0,
       progress: 0,
       state: taskState ? taskState : null,
-      user: userString,
+      users: task.users,
       labels: labels
     };
     data.push(taskRow);
