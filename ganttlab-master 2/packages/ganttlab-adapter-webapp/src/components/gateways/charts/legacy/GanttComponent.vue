@@ -184,6 +184,10 @@ export default {
         gantt.$_dataProcessorInitialized = true;
       }
     },
+    addAssignUserToTask: function(id) {
+      const task = gantt.getTask(id);
+      task.users.push('');
+    }
   },
  
   mounted: function () {
@@ -311,25 +315,44 @@ export default {
       const task = gantt.getTask(id);
     
       // Créer le bouton +
-      const addButton = "<button id='addUserAssign'>+</button>";
-
+      //<!--!Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.-->
+      const addButton = `<div class='addUserAssign' ><svg xmlns="http:www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z"/></svg></div>`;
+      
       // const userOptions = this.$props.users.forEach(user => 
       //   `<option value='${user.id}' ${task.users.includes(user.username) ? 'selected' : ''}>${user.username}</option>`
       // ).join('');
 
-      // const taskUsers = task.users?.map(taskUser => taskUser + "<select id='userSelect'>" + userOptions + "</select>").join('');
+      // const taskUsers = task.users?.map(taskUser => taskUser + "<select id='userSelect'>" + userOptions + "</select>").join(s'');
 
       task.my_template = "<span id='lightbox_users_title'>Assign to: </span><div class='lightbox_user'>" 
       + `${task.users.map(taskUser => {
-        return `<select id='userSelect'> ${this.$props.users.map(user =>{
-          return `<option class="userOption" value='${user.id}' ${taskUser === user.username ? 'selected' : ''}>${user.username}</option>`
+        return `<select id='userSelect' onchange="taskUser = event.target.value"> ${this.$props.users.map(user =>{
+          return `<option class="userOption" value='${user.username}' ${taskUser === user.username ? 'selected' : ''}>${user.username}</option>`
         }).join('')
         })} </select>`
       }).join('')}`
       + addButton + "</div>"
       + "<br>  <span id='lightbox_progress'>Progress: </span>"+ task.progress*100 +" %"
       + `<br>  <div class='lightbox_labels'>${task.labels.map(label => `<span style="padding: 3px;color: white;background-color:${label.color};border-radius:5px">${label.name}</span>`).join('')}</div>`;
-      
+
+      this.$nextTick(() => {
+        const addUserAssign = document.querySelector('.addUserAssign');
+        if (addUserAssign) {
+          addUserAssign.addEventListener('click', () => {
+            this.addAssignUserToTask(id);
+            const container = document.querySelector('.lightbox_user');
+            const newUser = task.users[task.users.length - 1];
+            const newUserSelect = document.createElement('select');
+            newUserSelect.onchange = function(e) {
+              task.users[task.users.length - 1] = e.target.value;
+            };
+            newUserSelect.id = 'userSelect';
+            newUserSelect.innerHTML = this.$props.users.map(user => `<option value='${user.username}' ${newUser === user.username ? 'selected' : ''}>${user.username}</option>`).join('');
+            let lastChild = container.lastElementChild;
+            container.insertBefore(newUserSelect, lastChild);
+          });
+        }
+      });
       return true;
     });
 
@@ -503,6 +526,7 @@ export default {
     });
 
     gantt.attachEvent("onLightboxSave", function(id, item){
+      console.log(item);
         if(!item.name){
             gantt.message({type:"error", text:"Enter task name!"});
             return false;
@@ -808,17 +832,12 @@ export default {
   padding: 5px;
 }
 
-#addUserAssign {
-  background-color: #4CAF50; /* Green */
+.addUserAssign {
   border: none;
-  color: white;
-  padding: 2px 7px;
   text-align: center;
   text-decoration: none;
-  display: inline-block;
-  border-radius: 5px;
-  font-size: 16px;
   cursor: pointer;
+  width: 16px;
 }
 
 #lightbox_progress {
