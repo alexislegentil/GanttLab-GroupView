@@ -123,7 +123,7 @@ export default class GroupChartMediator extends Vue {
       start_date: task.start_date,
       end_date: task.end_date,
       progress: task.progress,
-      user: task.user,
+      user: task.users,
       state: task.state,
       type: task.type? task.type : 'task'
     }

@@ -317,16 +317,10 @@ export default {
       // Créer le bouton +
       //<!--!Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.-->
       const addButton = `<div class='addUserAssign' ><svg xmlns="http:www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z"/></svg></div>`;
-      
-      // const userOptions = this.$props.users.forEach(user => 
-      //   `<option value='${user.id}' ${task.users.includes(user.username) ? 'selected' : ''}>${user.username}</option>`
-      // ).join('');
-
-      // const taskUsers = task.users?.map(taskUser => taskUser + "<select id='userSelect'>" + userOptions + "</select>").join(s'');
 
       task.my_template = "<span id='lightbox_users_title'>Assign to: </span><div class='lightbox_user'>" 
-      + `${task.users.map(taskUser => {
-        return `<select id='userSelect' onchange="taskUser = event.target.value"> ${this.$props.users.map(user =>{
+      + `${task.users.map((taskUser, index) => {
+        return `<select id="userSelect${index}" class='userSelect'> ${this.$props.users.map(user =>{
           return `<option class="userOption" value='${user.username}' ${taskUser === user.username ? 'selected' : ''}>${user.username}</option>`
         }).join('')
         })} </select>`
@@ -335,21 +329,33 @@ export default {
       + "<br>  <span id='lightbox_progress'>Progress: </span>"+ task.progress*100 +" %"
       + `<br>  <div class='lightbox_labels'>${task.labels.map(label => `<span style="padding: 3px;color: white;background-color:${label.color};border-radius:5px">${label.name}</span>`).join('')}</div>`;
 
+
       this.$nextTick(() => {
+        const container = document.querySelector('.lightbox_user');
         const addUserAssign = document.querySelector('.addUserAssign');
+        let selects = container.querySelectorAll('select');
+        selects.forEach(select => {
+          select.onchange = function(e) {
+            task.users[parseInt(select.id.split('userSelect')[1])] = e.target.value;
+          };
+        });
         if (addUserAssign) {
           addUserAssign.addEventListener('click', () => {
             this.addAssignUserToTask(id);
-            const container = document.querySelector('.lightbox_user');
             const newUser = task.users[task.users.length - 1];
             const newUserSelect = document.createElement('select');
             newUserSelect.onchange = function(e) {
-              task.users[task.users.length - 1] = e.target.value;
+              console.log(e.target.value);
+              task.users[parseInt(newUserSelect.id.split('userSelect')[1])] = e.target.value;
             };
-            newUserSelect.id = 'userSelect';
-            newUserSelect.innerHTML = this.$props.users.map(user => `<option value='${user.username}' ${newUser === user.username ? 'selected' : ''}>${user.username}</option>`).join('');
+            newUserSelect.id = `userSelect${task.users.length - 1}`;
+            newUserSelect.className = 'userSelect';
+            newUserSelect.innerHTML = `<option value='none'>Select an user</option>` + this.$props.users.map(user => `<option value='${user.username}'>${user.username}</option>`).join('');
             let lastChild = container.lastElementChild;
             container.insertBefore(newUserSelect, lastChild);
+
+            // Mettre à jour la référence à selects
+            selects = container.querySelectorAll('select');
           });
         }
       });
@@ -821,7 +827,7 @@ export default {
   gap: 10px;
 }
 
-#userSelect {
+.userSelect {
   border: 1px solid #ddd;
   border-radius: 5px;
   margin-bottom: 10px;
