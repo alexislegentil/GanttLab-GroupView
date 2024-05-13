@@ -11,7 +11,7 @@ interface LegacyTask {
 interface LegacyDhtmlXgantt {
   id: number;
   task_iid?: number;
-  epics_id?: number;
+  epic_id?: number;
   project_id?: number | string;
   milestone_id?: number;
   name: string;
@@ -144,15 +144,16 @@ export function getConvertedGroup(group: Group): Array<LegacyDhtmlXgantt> {
   // Convert epics
 if (group.epics && group.epics.length > 0) {
   for (const epic of group.epics) {
+    console.log(epic);
     const epicRow : LegacyDhtmlXgantt = {
       id: taskID,
-      epics_id: epic.iid,
+      epic_id: epic.iid,
       name: epic.title,
       start_date: epic.start_date ?  moment(epic.start_date).format('YYYY-MM-DD HH:mm:ss') : null,
       end_date: epic.due_date ?  moment(epic.due_date).format('YYYY-MM-DD HH:mm:ss') : null,
       parent: 0,
       progress: 0,
-      type: "project",
+      type:  epic.start_date  && epic.due_date ? "task" : "project",  //like this, if there are fixed dates there are priorities, and if not the dates are the child issues ones
       color:"#4f4e4e",
       row_height: 25
     };
@@ -179,6 +180,7 @@ if (group.epics && group.epics.length > 0) {
           progress: 0,
           state: taskState ? taskState : null,
           users: task.users,
+          type: "task",
           labels: labels
         };
         data.push(taskRow);
@@ -223,6 +225,7 @@ if (group.projects && group.projects.length > 0) {
             progress: 0,
             state: taskState ? taskState : null,
             users: task.users,
+            type: "task",
             labels: labels
           };
         data.push(taskRow);
@@ -268,6 +271,7 @@ if (group.milestones && group.milestones.length > 0) {
           progress: 0,
           state: taskState ? taskState : null,
           users: task.users,
+          type: "task",
           labels: labels
         };
         data.push(taskRow);
@@ -299,6 +303,7 @@ if (group.tasks && group.tasks.list && group.tasks.list.length > 0) {
       progress: 0,
       state: taskState ? taskState : null,
       users: task.users,
+      type: "task",
       labels: labels
     };
     data.push(taskRow);

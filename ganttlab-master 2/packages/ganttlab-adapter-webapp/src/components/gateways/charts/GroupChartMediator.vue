@@ -118,12 +118,14 @@ export default class GroupChartMediator extends Vue {
       id: task.id,
       task_iid: task.task_iid,
       project_id: task.project_id,
+      epic_id: task.epic_id,
       name: task.name,
       start_date: task.start_date,
       end_date: task.end_date,
       progress: task.progress,
       user: task.user,
-      state: task.state
+      state: task.state,
+      type: task.type? task.type : 'task'
     }
     if (this.requestsQueue.some(req => req.id === request.id)) {
       const oldtask = gantt.getTask(request.id);

@@ -434,21 +434,45 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
         async uploadTasks(source: GitLabGateway, configuration: Configuration, tasks: Array<any>): Promise<void> {
         
             for (const task of tasks) {
-                const data = {
-                    title: task.name,
-                    description: `GanttStart: ${task.start_date}`,
-                    due_date: task.end_date
-                };
-        
-                try {
-                    await source.safeAxiosRequest({
-                        method: 'PUT',
-                        url: `/projects/${task.project_id}/issues/${task.task_iid}`,
-                        data: data
-                    });
-                    console.log(`Task ${task.id} updated successfully.`);
-                } catch (error) {
-                    console.error(`Failed to update task ${task.id}: ${error}`);
+               
+                if (task.type === 'task'  && task.task_iid && task.project_id) {
+                    const data = {
+                        title: task.name,
+                        description: `GanttStart: ${task.start_date}`,
+                        due_date: task.end_date
+                    };
+            
+                    try {
+                        await source.safeAxiosRequest({
+                            method: 'PUT',
+                            url: `/projects/${task.project_id}/issues/${task.task_iid}`,
+                            data: data
+                        });
+                        console.log(`Task ${task.id} updated successfully.`);
+                    } catch (error) {
+                        console.error(`Failed to update task ${task.id}: ${error}`);
+                    }
+                }
+                else if (task.type === "task" && task.epic_id) {
+                    const encodedGroup = encodeURIComponent(
+                        configuration.group.path as string,
+                    );
+                    const data = {
+                        title: task.name,
+                        start_date_fixed : task.start_date,
+                        due_date_fixed : task.end_date
+                    };
+            
+                    try {
+                        await source.safeAxiosRequest({
+                            method: 'PUT',
+                            url: `/groups/${encodedGroup}/epics/${task.epic_id}`,
+                            data: data
+                        });
+                        console.log(`Project ${task.id} updated successfully.`);
+                    } catch (error) {
+                        console.error(`Failed to update project ${task.id}: ${error}`);
+                    }
                 }
             }
         }

@@ -511,15 +511,15 @@ export default {
     }
 
     gantt.attachEvent("onBeforeTaskDisplay", function (id, task) {
-      let thereIsAlmostOneFilterFalse = false;
+      let thereIsAtLeastOneFilterToApply = false;
       for (const state in stateFilter) {
         if (!stateFilter[state]) {
-          thereIsAlmostOneFilterFalse = true;
+          thereIsAtLeastOneFilterToApply = true;
           break;
         }
       }
 
-      if (!filterValue && !thereIsAlmostOneFilterFalse && standaloneFilter) {
+      if (!filterValue && !thereIsAtLeastOneFilterToApply && standaloneFilter) {
         return true;
     }
         return filterLogic(task);
