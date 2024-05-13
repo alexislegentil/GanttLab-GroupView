@@ -289,7 +289,8 @@ export default {
       {name: "name", label: "Task name", tree: true, width: 170, resize: true },
       {name: "start_date", label: "Start time", align: "center", width: 150 , resize: true, editor: dateEditor},
       {name: "duration", label: "Duration", align: "center", width: 60, editor: durationEditor},
-      {name: "users", label: "User", align: "center", width: 100},
+      {name: "users", label: "User", align: "center", width: 100, template:function(obj){
+                                return obj.users ? obj.users.map(user => user.username).join(', ') : "";}},
       {name: "state", label: "State", align: "center", width: 100, editor: stateEditor}
     ];
 
@@ -321,7 +322,7 @@ export default {
       task.my_template = "<span id='lightbox_users_title'>Assign to: </span><div class='lightbox_user'>" 
       + `${task.users.map((taskUser, index) => {
         return `<select id="userSelect${index}" class='userSelect'> ${this.$props.users.map(user =>{
-          return `<option class="userOption" value='${user.username}' ${taskUser === user.username ? 'selected' : ''}>${user.username}</option>`
+          return `<option class="userOption" value='${JSON.stringify({ username: user.username, id: user.id })}' ${taskUser.username === user.username ? 'selected' : ''}>${user.username}</option>`
         }).join('')
         })} </select>`
       }).join('')}`
@@ -336,7 +337,7 @@ export default {
         let selects = container.querySelectorAll('select');
         selects.forEach(select => {
           select.onchange = function(e) {
-            task.users[parseInt(select.id.split('userSelect')[1])] = e.target.value;
+            task.users[parseInt(select.id.split('userSelect')[1])] = JSON.parse(e.target.value);
           };
         });
         if (addUserAssign) {
@@ -346,11 +347,11 @@ export default {
             const newUserSelect = document.createElement('select');
             newUserSelect.onchange = function(e) {
               console.log(e.target.value);
-              task.users[parseInt(newUserSelect.id.split('userSelect')[1])] = e.target.value;
+              task.users[parseInt(newUserSelect.id.split('userSelect')[1])] = JSON.parse(e.target.value);
             };
             newUserSelect.id = `userSelect${task.users.length - 1}`;
             newUserSelect.className = 'userSelect';
-            newUserSelect.innerHTML = `<option value='none'>Select an user</option>` + this.$props.users.map(user => `<option value='${user.username}'>${user.username}</option>`).join('');
+            newUserSelect.innerHTML = `<option value='none'>Select an user</option>` + this.$props.users.map(user => `<option value='${JSON.stringify({ username: user.username, id: user.id })}'>${user.username}</option>`).join('');
             let lastChild = container.lastElementChild;
             container.insertBefore(newUserSelect, lastChild);
 
@@ -375,7 +376,7 @@ export default {
       + "End: " + gantt.templates.tooltip_date_format(end) + "<br/>" 
       + "Duration: " + task.duration + " days" + "<br/>"
       + (task.state ? "<br/>State: " + task.state : "")
-      + (task.users ? "<br/>" + `${task.users.map(user => user).join(', ')}` : "");
+      + (task.users ? "<br/>" + `${task.users.map(user => user.username).join(', ')}` : "");
     };
 
     gantt.templates.task_class = function(start, end, task){

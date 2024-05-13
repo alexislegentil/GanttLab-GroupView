@@ -24,7 +24,7 @@ export class Task {
    * @param predecessor - The parent of this task, which might be used to override the start date
    */
   public state: string | null = null;
-  public users: Array<string> = [];
+  public users: Array<Object> = [];
   public blockedBy: Array<string> = [];
   public labels: Array<Label> = [];
 
@@ -52,8 +52,8 @@ export class Task {
     this.state = state;
   }
 
-  public addUser(user: string): void {
-    this.users.push(user);
+  public addUser(user: string, id: number): void {
+    this.users.push({username : user, id: id});
   }
 
   public addBlockedBy(blockedBy: string): void {

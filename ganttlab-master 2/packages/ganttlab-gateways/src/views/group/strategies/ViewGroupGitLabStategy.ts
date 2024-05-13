@@ -50,12 +50,12 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                 url: `/users`,
                 params: {
                     per_page: 100,
-                  //  without_project_bots: true,
+                    without_project_bots: true,
                 },
             });
             const users: Array<User> = [];
             for (const gitlabUser of usersResponse.data) {
-                const user = new User(gitlabUser.email, gitlabUser.username, gitlabUser.avatar_url, gitlabUser.web_url);
+                const user = new User(gitlabUser.id, gitlabUser.email, gitlabUser.username, gitlabUser.avatar_url, gitlabUser.web_url);
                 users.push(user);
             }
             
@@ -97,7 +97,7 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                     task.addState(gitlabIssue.state);
                     if (gitlabIssue.assignees) {
                         for (const user of gitlabIssue.assignees) {
-                            task.addUser(user.username);
+                            task.addUser(user.username, user.id);
                         }
                     } 
                     if (gitlabIssue.labels) {
@@ -159,7 +159,7 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                 task.addState(gitlabIssue.state);
                 if (gitlabIssue.assignees) {
                     for (const user of gitlabIssue.assignees) {
-                        task.addUser(user.username);
+                        task.addUser(user.username, user.id);
                     }
                 } 
                 const blockedBy = await source.safeAxiosRequest<Array<any>>({
@@ -248,7 +248,7 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                             task.addState(gitlabIssue.state);
                             if (gitlabIssue.assignees) {
                                 for (const user of gitlabIssue.assignees) {
-                                    task.addUser(user.username);
+                                    task.addUser(user.username, user.id);
                                 }
                             } 
                             if (gitlabIssue.labels) {
@@ -323,7 +323,7 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                         task.addState(gitlabIssue.state);
                         if (gitlabIssue.assignees) {
                             for (const user of gitlabIssue.assignees) {
-                                task.addUser(user.username);
+                                task.addUser(user.username, user.id);
                             }
                         } 
                         if (gitlabIssue.labels) {
@@ -382,7 +382,7 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                     task.addState(gitlabIssue.state);
                     if (gitlabIssue.assignees) {
                         for (const user of gitlabIssue.assignees) {
-                            task.addUser(user.username);
+                            task.addUser(user.username, user.id);
                         }
                     } 
                     if (gitlabIssue.labels) {
@@ -436,10 +436,16 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
             for (const task of tasks) {
                
                 if (task.type === 'task'  && task.task_iid && task.project_id) {
+
+                    let assignee_ids: Array<number> = [];
+                    for (const user of task.user) {
+                        assignee_ids.push(user.id);
+                    }
                     const data = {
                         title: task.name,
                         description: `GanttStart: ${task.start_date}`,
-                        due_date: task.end_date
+                        due_date: task.end_date,
+                        assignee_ids: assignee_ids,
                     };
             
                     try {

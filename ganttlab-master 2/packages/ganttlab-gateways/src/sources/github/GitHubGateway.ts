@@ -31,7 +31,7 @@ export class GitHubGateway extends AxiosBackedAuthenticatableSource {
       method: 'GET',
       url: '/user',
     });
-    return new User(data.email, data.login, data.html_url, data.avatar_url);
+    return new User(data.id, data.email, data.login, data.html_url, data.avatar_url);
   }
 
   async searchRepositories(search: string): Promise<GitHubRepository[]> {

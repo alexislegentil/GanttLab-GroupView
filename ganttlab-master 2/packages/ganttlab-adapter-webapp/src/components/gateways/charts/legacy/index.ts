@@ -22,7 +22,7 @@ interface LegacyDhtmlXgantt {
   progress: number;
   state?: TaskState | null;
   type?: string;
-  users?: Array<string> | null;
+  users?: Array<Object> | null;
   labels?: any[];
   color?: string;
   row_height?: number;
