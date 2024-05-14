@@ -451,12 +451,21 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                         // Sinon, ajoutez "GanttStart: date" au début de la description
                         description = `GanttStart: ${task.start_date}\n${description}`;
                     }
+
+                    let state_event = '';
+                    if (task.state === "Closed") {
+                        state_event = 'close';
+                    }
+                    else {
+                        state_event = 'reopen';
+                    }
                     
                     const data = {
                         title: task.name,
                         description: description,
                         due_date: task.end_date,
                         assignee_ids: assignee_ids,
+                        state_event: state_event,
                     };
             
                     try {
