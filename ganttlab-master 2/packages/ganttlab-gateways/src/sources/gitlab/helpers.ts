@@ -15,6 +15,7 @@ export function getTaskFromGitLabIssue(gitlabIssue: GitLabIssue): Task {
     gitlabIssue.project_id,
     gitlabIssue.title,
     gitlabIssue.web_url,
+    gitlabIssue.description,
     startDate
       ? startDate
       : gitlabIssue.milestone && gitlabIssue.milestone.start_date

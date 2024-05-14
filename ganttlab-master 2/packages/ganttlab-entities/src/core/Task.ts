@@ -33,6 +33,7 @@ export class Task {
     public project_id: number | string,
     public title: string,
     public url: string,
+    public description?: string,
     public start?: Date,
     public due?: Date,
     public predecessor?: Task,

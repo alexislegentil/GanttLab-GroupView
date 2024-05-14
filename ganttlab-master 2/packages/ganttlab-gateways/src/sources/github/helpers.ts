@@ -14,6 +14,7 @@ export function getTaskFromGitHubIssue(githubIssue: GitHubIssue): Task {
     githubIssue.repository_url,
     githubIssue.title,
     githubIssue.html_url,
+    githubIssue.description,
     startDate ? startDate : new Date(githubIssue.created_at),
     dueDate ? dueDate : undefined,
   );

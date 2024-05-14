@@ -15,6 +15,7 @@ interface LegacyDhtmlXgantt {
   project_id?: number | string;
   milestone_id?: number;
   name: string;
+  description?: string;
   start_date?: string | null;
   end_date?: string | null;
   duration?: number | null;
@@ -36,7 +37,7 @@ interface DhtmlxLink {
 }
 
 export enum TaskState {
-  Opened = 'Opened',
+  Unassigned = 'Unassigned',
   Closed = 'Closed',
   InProgress = 'InProgress',
   Late = 'Late',
@@ -52,7 +53,7 @@ function getStateFromGitLabState(task: Task): TaskState{
               taskState = TaskState.Closed;
               break;
             case 'opened':
-              taskState = task.users && task.users.length > 0 ? TaskState.InProgress : TaskState.Opened;
+              taskState = task.users && task.users.length > 0 ? TaskState.InProgress : TaskState.Unassigned;
               if (task.due < new Date()) {
                 taskState = TaskState.Late;
               }
@@ -144,7 +145,6 @@ export function getConvertedGroup(group: Group): Array<LegacyDhtmlXgantt> {
   // Convert epics
 if (group.epics && group.epics.length > 0) {
   for (const epic of group.epics) {
-    console.log(epic);
     const epicRow : LegacyDhtmlXgantt = {
       id: taskID,
       epic_id: epic.iid,
@@ -173,6 +173,7 @@ if (group.epics && group.epics.length > 0) {
           project_id: task.project_id,
           task_iid: task.iid,
           name: task.title,
+          description: task.description,
           start_date: task.start ? moment(task.start).format('YYYY-MM-DD HH:mm:ss') : epicRow.start_date,
           end_date: task.due ? moment(task.due).format('YYYY-MM-DD HH:mm:ss') : null,
           duration: task.due ? null : moment(task.start).diff(moment(epicRow.start_date), 'days'),
@@ -218,6 +219,7 @@ if (group.projects && group.projects.length > 0) {
             project_id: task.project_id,
             task_iid: task.iid,
             name: task.title,
+            description: task.description,
             start_date: task.start ? moment(task.start).format('YYYY-MM-DD HH:mm:ss') : projectRow.start_date,
             end_date: task.due ? moment(task.due).format('YYYY-MM-DD HH:mm:ss') : null,
             duration: task.due ? null : moment(task.start).diff(moment(projectRow.start_date), 'days'),
@@ -264,6 +266,7 @@ if (group.milestones && group.milestones.length > 0) {
           project_id: task.project_id,
           task_iid: task.iid,
           name: task.title,
+          description: task.description,
           start_date: task.start ? moment(task.start).format('YYYY-MM-DD HH:mm:ss') : milestoneRow.start_date,
           end_date: task.due ? moment(task.due).format('YYYY-MM-DD HH:mm:ss') : null,
           duration: task.due ? null : moment(task.start).diff(moment(milestoneRow.start_date), 'days'),
@@ -296,6 +299,7 @@ if (group.tasks && group.tasks.list && group.tasks.list.length > 0) {
       project_id: task.project_id,
       task_iid: task.iid,
       name: task.title,
+      description: task.description,
       start_date: task.start ? moment(task.start).format('YYYY-MM-DD HH:mm:ss') : null,
       end_date: task.due ? moment(task.due).format('YYYY-MM-DD HH:mm:ss') : null,
       duration: task.due && task.start ? moment(task.start).diff(moment(task.due), 'days') : null,

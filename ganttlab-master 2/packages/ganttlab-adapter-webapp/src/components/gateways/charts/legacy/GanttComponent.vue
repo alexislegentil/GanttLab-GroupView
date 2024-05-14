@@ -12,7 +12,7 @@ const dateEditor = {type: "date", map_to: "start_date"};
 const durationEditor = {type: "number", map_to: "duration", min:0, max: 100};
 
 const stateEditor = {type: "select", options: [
-        {key: "Opened", label: "Opened"},
+        {key: "Unassigned", label: "Unassigned"},
         {key: "Closed", label: "Closed"},
         {key: "InProgress", label: "In progress"},
         {key: "Late", label: "Late"},
@@ -35,8 +35,8 @@ legend.appendChild(header);
 const legendList = document.createElement('div');
 legendList.className = 'legend-list';
 
-const states = ['Opened', 'Closed', 'In progress', 'Late', 'Unscheduled', 'folder'];
-const descriptions = ['Opened issues', 'Closed issues', 'In progress', 'Late issues', 'Unscheduled', 'Parent'];
+const states = ['Unassigned', 'Closed', 'In progress', 'Late', 'Unscheduled', 'folder'];
+const descriptions = ['Unassigned issues', 'Closed issues', 'In progress', 'Late issues', 'Unscheduled', 'Parent'];
 
 for (let i = 0; i < states.length; i++) {
   const row = document.createElement('div');
@@ -92,7 +92,7 @@ document.body.appendChild(modal);
 
 
 const stateFilter = {
-  Opened: true,
+  Unassigned: true,
   Closed: true,
   InProgress: true,
   Late: true,
@@ -225,7 +225,7 @@ export default {
                       <button class="gantt-undo" onclick="gantt.undo()">Undo</button>
                       <button class="gantt-redo" onclick="gantt.redo()">Redo</button>
                     <div class="state-filter">
-                      <div class="state-filter-opened"><input type="checkbox" id="Opened" class="state-checkbox" checked=${stateFilter["Opened"]} onChange="stateCheckboxOnChange('Opened')"><label for="Opened">Opened</label></div>
+                      <div class="state-filter-unassigned"><input type="checkbox" id="Unassigned" class="state-checkbox" checked=${stateFilter["Unassigned"]} onChange="stateCheckboxOnChange('Unassigned')"><label for="Unassigned">Unassigned</label></div>
                       <div class="state-filter-closed"><input type="checkbox" id="Closed" class="state-checkbox" checked=${stateFilter["Closed"]} onChange="stateCheckboxOnChange('Closed')"><label for="Closed">Closed</label></div>
                       <div class="state-filter-inprogress"><input type="checkbox" id="InProgress" class="state-checkbox" checked=${stateFilter["InProgress"]} onChange="stateCheckboxOnChange('InProgress')"><label for="InProgress">InProgress</label></div>
                       <div class="state-filter-late"><input type="checkbox" id="Late" class="state-checkbox" checked=${stateFilter["Late"]} onChange="stateCheckboxOnChange('Late')"><label for="Late">Late</label></div>
@@ -296,6 +296,7 @@ export default {
 
     gantt.config.lightbox.sections = [
       {name: "name", label: "Name", height:30, map_to:"name", type:"textarea", focus:true},
+      {name:"description", label: "Description", height:72, map_to:"description", type:"textarea"},
       {name:"state",    height:22, map_to:"state", type:"select", options: stateEditor.options},
       {name:"template", height:150, type:"template", map_to:"my_template"}, 
       {name: "time", height:72, map_to:"auto", type:"duration"}
@@ -321,7 +322,7 @@ export default {
 
       task.my_template = "<span id='lightbox_users_title'>Assign to: </span><div class='lightbox_user'>" 
       + `${task.users.map((taskUser, index) => {
-        return `<select id="userSelect${index}" class='userSelect'> ${this.$props.users.map(user =>{
+        return `<select id="userSelect${index}" class='userSelect'> <option value='none'> </option> ${this.$props.users.map(user =>{
           return `<option class="userOption" value='${JSON.stringify({ username: user.username, id: user.id })}' ${taskUser.username === user.username ? 'selected' : ''}>${user.username}</option>`
         }).join('')
         })} </select>`
@@ -337,7 +338,12 @@ export default {
         let selects = container.querySelectorAll('select');
         selects.forEach(select => {
           select.onchange = function(e) {
-            task.users[parseInt(select.id.split('userSelect')[1])] = JSON.parse(e.target.value);
+            if (e.target.value === 'none') {
+              task.users[parseInt(select.id.split('userSelect')[1])] = '';
+            }
+            else {
+              task.users[parseInt(select.id.split('userSelect')[1])] = JSON.parse(e.target.value);
+            }
           };
         });
         if (addUserAssign) {
@@ -346,12 +352,16 @@ export default {
             const newUser = task.users[task.users.length - 1];
             const newUserSelect = document.createElement('select');
             newUserSelect.onchange = function(e) {
-              console.log(e.target.value);
-              task.users[parseInt(newUserSelect.id.split('userSelect')[1])] = JSON.parse(e.target.value);
+              if (e.target.value === 'none') {
+                task.users[parseInt(select.id.split('userSelect')[1])] = '';
+              }
+              else {
+                task.users[parseInt(newUserSelect.id.split('userSelect')[1])] = JSON.parse(e.target.value);
+              }
             };
             newUserSelect.id = `userSelect${task.users.length - 1}`;
             newUserSelect.className = 'userSelect';
-            newUserSelect.innerHTML = `<option value='none'>Select an user</option>` + this.$props.users.map(user => `<option value='${JSON.stringify({ username: user.username, id: user.id })}'>${user.username}</option>`).join('');
+            newUserSelect.innerHTML = `<option value='none'> </option>` + this.$props.users.map(user => `<option value='${JSON.stringify({ username: user.username, id: user.id })}'>${user.username}</option>`).join('');
             let lastChild = container.lastElementChild;
             container.insertBefore(newUserSelect, lastChild);
 
@@ -383,8 +393,8 @@ export default {
       let css = "";
 
       switch(task.state){
-          case "Opened":
-              css = "opened";
+          case "Unassigned":
+              css = "unassigned";
               break;
           case "Closed":
               css = "closed";
@@ -533,7 +543,6 @@ export default {
     });
 
     gantt.attachEvent("onLightboxSave", function(id, item){
-      console.log(item);
         if(!item.name){
             gantt.message({type:"error", text:"Enter task name!"});
             return false;
@@ -590,20 +599,20 @@ export default {
     background-image: url("../../../generic/icons/Folder\ plus\ solid.svg")!important;
 } */
 
-.opened {
-    background-color: #168af0;
+.unassigned {
+    background-color: #2b84cf;
 }
 
 .closed {
-    background-color: #28bf2d;
+    background-color: #44b231;
 }
 
 .in-progress {
-    background-color: #eda30e;
+    background-color: #d8a338;
 }
 
 .late {
-    background-color: #e32222;
+    background-color: #db4646;
 }
 
 .unscheduled {

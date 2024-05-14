@@ -120,6 +120,7 @@ export default class GroupChartMediator extends Vue {
       project_id: task.project_id,
       epic_id: task.epic_id,
       name: task.name,
+      description: task.description,
       start_date: task.start_date,
       end_date: task.end_date,
       progress: task.progress,
@@ -135,10 +136,9 @@ export default class GroupChartMediator extends Vue {
         if (request.hasOwnProperty(attr) && oldtask.hasOwnProperty(attr) && request[attr as keyof typeof request] !== oldtask[attr as keyof typeof oldtask]) {
           switch (attr) {
             case 'name':
+            case 'description':
             case 'start_date':
             case 'end_date':
-            case 'progress':
-            case 'state':
             case 'user': {
               const indexToUpdate = this.requestsQueue.findIndex(req => req.id === request.id);
               if (indexToUpdate !== -1) {

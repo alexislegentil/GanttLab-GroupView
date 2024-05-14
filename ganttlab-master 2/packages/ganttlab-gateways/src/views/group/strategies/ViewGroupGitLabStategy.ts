@@ -439,11 +439,22 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
 
                     let assignee_ids: Array<number> = [];
                     for (const user of task.user) {
-                        assignee_ids.push(user.id);
+                        if (user != "") assignee_ids.push(user.id) ;
                     }
+                    let description = task.description || '';
+                    const ganttStartRegex = /GanttStart: \d{4}-\d{2}-\d{2}/;
+                    
+                    if (ganttStartRegex.test(description)) {
+                        // Si la description contient déjà "GanttStart: date", remplacez la date
+                        description = description.replace(ganttStartRegex, `GanttStart: ${task.start_date}`);
+                    } else {
+                        // Sinon, ajoutez "GanttStart: date" au début de la description
+                        description = `GanttStart: ${task.start_date}\n${description}`;
+                    }
+                    
                     const data = {
                         title: task.name,
-                        description: `GanttStart: ${task.start_date}`,
+                        description: description,
                         due_date: task.end_date,
                         assignee_ids: assignee_ids,
                     };
