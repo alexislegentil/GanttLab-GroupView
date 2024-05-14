@@ -1,6 +1,8 @@
 import { GitLabMilestone } from './GitLabMilestone';
 
 export interface GitLabIssue {
+  iid: number;
+  project_id: number;
   title: string;
   web_url: string;
   created_at: string;
@@ -9,7 +11,5 @@ export interface GitLabIssue {
   milestone: GitLabMilestone | null;
   state: string;
   assignees: Array<any> | null;
-  iid?: number;
-  project_id?: number;
   labels?: Array<string>;
 }

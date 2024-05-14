@@ -37,4 +37,19 @@ export abstract class SourceVisitor<T> extends View {
 
     return this.slugStrategies[source.slug].execute(source, this.configuration, filter);
   }
+
+  async uploadTasks(tasks: Array<any>, source: Source ): Promise<void> {
+    if (!this.slugStrategies[source.slug]) {
+      throw new Error(
+        `The '${source.slug}' source is not supported by the '${this.slug}'`,
+      );
+    }
+
+    // because that's the only implemented way to upload tasks
+    if (source.slug === 'gitlab' && this.slug === 'group') { 
+      this.slugStrategies[source.slug].uploadTasks(source, this.configuration, tasks);
+    }
+
+   
+  }
 }

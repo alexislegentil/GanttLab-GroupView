@@ -58,4 +58,8 @@ export class ViewMineGitLabStrategy
       gitlabPagination.total,
     );
   }
+
+  uploadTasks(source: GitLabGateway, configuration: Configuration, tasks: Array<any>): void {
+    throw new Error('Method not implemented.');
+  }
 }

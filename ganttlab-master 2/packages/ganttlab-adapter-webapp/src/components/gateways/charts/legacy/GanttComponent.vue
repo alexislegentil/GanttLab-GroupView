@@ -1,13 +1,10 @@
 <template>
-  <div ref="ganttContainer" style="height: 90vh;"></div>
+  <div ref="ganttContainer" style="height: 90vh; width: 99vw;"></div>
 </template>
  
 <script>
 /* eslint-disable @typescript-eslint/camelcase */
 import {gantt, Gantt} from 'dhtmlx-gantt';
-
-
-gantt.clearAll();
 
 const dateToStr = gantt.date.date_to_str(gantt.config.task_date);
 
@@ -15,7 +12,7 @@ const dateEditor = {type: "date", map_to: "start_date"};
 const durationEditor = {type: "number", map_to: "duration", min:0, max: 100};
 
 const stateEditor = {type: "select", options: [
-        {key: "Opened", label: "Opened"},
+        {key: "Unassigned", label: "Unassigned"},
         {key: "Closed", label: "Closed"},
         {key: "InProgress", label: "In progress"},
         {key: "Late", label: "Late"},
@@ -38,8 +35,8 @@ legend.appendChild(header);
 const legendList = document.createElement('div');
 legendList.className = 'legend-list';
 
-const states = ['Opened', 'Closed', 'In progress', 'Late', 'Unscheduled', 'folder'];
-const descriptions = ['Opened issues', 'Closed issues', 'In progress', 'Late issues', 'Unscheduled', 'Parent'];
+const states = ['Unassigned', 'Closed', 'In progress', 'Late', 'Unscheduled', 'folder'];
+const descriptions = ['Unassigned issues', 'Closed issues', 'In progress', 'Late issues', 'Unscheduled', 'Parent'];
 
 for (let i = 0; i < states.length; i++) {
   const row = document.createElement('div');
@@ -58,9 +55,44 @@ for (let i = 0; i < states.length; i++) {
 
 legend.appendChild(legendList);
 
+// Créer la modal et ses éléments
+const modal = document.createElement('div');
+const content = document.createElement('div');
+const closeButton = document.createElement('span');
+const text = document.createElement('p');
+const okButton = document.createElement('button');
+const cancelButton = document.createElement('button');
+
+// Ajouter du texte aux éléments
+closeButton.textContent = '×';
+text.textContent = 'Send all changes to GitLab ?';
+okButton.textContent = 'OK';
+okButton.style.backgroundColor = '#4caf50';
+cancelButton.textContent = 'Cancel';
+cancelButton.style.backgroundColor = '#bbbbbb';
+
+// Ajouter des classes aux éléments pour le style
+modal.classList.add('modal');
+content.classList.add('modal-content');
+closeButton.classList.add('close-button');
+
+// Ajouter des événements aux boutons
+closeButton.addEventListener('click', () => modal.style.display = 'none');
+cancelButton.addEventListener('click', () => modal.style.display = 'none');
+
+// Ajouter les éléments à la modal
+content.appendChild(closeButton);
+content.appendChild(text);
+content.appendChild(okButton);
+content.appendChild(cancelButton);
+modal.appendChild(content);
+
+// Ajouter la modal au document
+document.body.appendChild(modal);
+
 
 const stateFilter = {
-  Opened: true,
+  Unassigned: true,
   Closed: true,
   InProgress: true,
   Late: true,
@@ -78,6 +110,8 @@ const daysStyle = function(date){
     return "";
 };
 
+
+
 export default {
   props: {
     tasks: {
@@ -85,6 +119,33 @@ export default {
       default () {
         return {data: [], links: []}
       }
+    },
+    requestsQueue: {
+      type: Array,
+      required: true
+    },
+    users: {
+      type: Array,
+      required: true
+    }
+  },
+  
+  watch: {
+    requestsQueue: {
+      handler: function (requestsQueue) {
+        const uploadButtonDiv = document.querySelector(".upload-logo-container");
+        if (requestsQueue.length > 0) {
+          if (uploadButtonDiv) {
+            uploadButtonDiv.style.display = 'block';
+          }
+        }
+        else {
+          if (uploadButtonDiv) {
+            uploadButtonDiv.style.display = 'none';
+          }
+        }
+      },
+      deep: true
     }
   },
 
@@ -106,15 +167,32 @@ export default {
     },
     $_initDataProcessor: function() {
       if (!gantt.$_dataProcessorInitialized) {
-        gantt.createDataProcessor((entity, action, data, id) => {
+        this.dp = gantt.createDataProcessor((entity, action, data, id) => {
           this.$emit(`${entity}-updated`, id, action, data);
+        });
+        this.dp.attachEvent("onBeforeUpdate", function (id, status, data) {
+            if (!data.name) {
+                gantt.message("The task's name can't be empty!");
+                return false;
+            }
+            if (!data.start_date || !data.end_date || data.start_date > data.end_date) {
+                gantt.message("Task's dates are invalid!");
+                return false;
+            }
+            return true;
         });
         gantt.$_dataProcessorInitialized = true;
       }
     },
+    addAssignUserToTask: function(id) {
+      const task = gantt.getTask(id);
+      task.users.push('');
+    }
   },
  
   mounted: function () {
+
+    console.log('component mounted');
 
     this.$_initGanttEvents();
 
@@ -147,7 +225,7 @@ export default {
                       <button class="gantt-undo" onclick="gantt.undo()">Undo</button>
                       <button class="gantt-redo" onclick="gantt.redo()">Redo</button>
                     <div class="state-filter">
-                      <div class="state-filter-opened"><input type="checkbox" id="Opened" class="state-checkbox" checked=${stateFilter["Opened"]} onChange="stateCheckboxOnChange('Opened')"><label for="Opened">Opened</label></div>
+                      <div class="state-filter-unassigned"><input type="checkbox" id="Unassigned" class="state-checkbox" checked=${stateFilter["Unassigned"]} onChange="stateCheckboxOnChange('Unassigned')"><label for="Unassigned">Unassigned</label></div>
                       <div class="state-filter-closed"><input type="checkbox" id="Closed" class="state-checkbox" checked=${stateFilter["Closed"]} onChange="stateCheckboxOnChange('Closed')"><label for="Closed">Closed</label></div>
                       <div class="state-filter-inprogress"><input type="checkbox" id="InProgress" class="state-checkbox" checked=${stateFilter["InProgress"]} onChange="stateCheckboxOnChange('InProgress')"><label for="InProgress">InProgress</label></div>
                       <div class="state-filter-late"><input type="checkbox" id="Late" class="state-checkbox" checked=${stateFilter["Late"]} onChange="stateCheckboxOnChange('Late')"><label for="Late">Late</label></div>
@@ -160,6 +238,14 @@ export default {
                       <option value="2days">2 Jours</option>
                       <option value="week">Semaines</option>
                     </select>
+                    <div class="upload-logo-container" title="push all changes to GitLab" style="display: none">
+                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+                        <!--
+                          <!Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.>
+                        -->
+                       <path fill="#28bf2d" d="M246.6 9.4c-12.5-12.5-32.8-12.5-45.3 0l-128 128c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 109.3 192 320c0 17.7 14.3 32 32 32s32-14.3 32-32l0-210.7 73.4 73.4c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3l-128-128zM64 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64c0 53 43 96 96 96l256 0c53 0 96-43 96-96l0-64c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64c0 17.7-14.3 32-32 32L96 448c-17.7 0-32-14.3-32-32l0-64z"/>
+                       </svg>
+                    </div>
                     </div>`
                   
                   , css:"gantt-controls", height: 40
@@ -203,14 +289,16 @@ export default {
       {name: "name", label: "Task name", tree: true, width: 170, resize: true },
       {name: "start_date", label: "Start time", align: "center", width: 150 , resize: true, editor: dateEditor},
       {name: "duration", label: "Duration", align: "center", width: 60, editor: durationEditor},
-      {name: "user", label: "User", align: "center", width: 100},
+      {name: "users", label: "User", align: "center", width: 100, template:function(obj){
+                                return obj.users ? obj.users.map(user => user.username).join(', ') : "";}},
       {name: "state", label: "State", align: "center", width: 100, editor: stateEditor}
     ];
 
     gantt.config.lightbox.sections = [
       {name: "name", label: "Name", height:30, map_to:"name", type:"textarea", focus:true},
+      {name:"description", label: "Description", height:72, map_to:"description", type:"textarea"},
       {name:"state",    height:22, map_to:"state", type:"select", options: stateEditor.options},
-      {name:"template", height:64, type:"template", map_to:"my_template"}, 
+      {name:"template", height:150, type:"template", map_to:"my_template"}, 
       {name: "time", height:72, map_to:"auto", type:"duration"}
     ];
 
@@ -225,19 +313,70 @@ export default {
 
     gantt.config.lightbox.project_sections.allow_root = false;
 
-    gantt.attachEvent("onBeforeLightbox", function(id) {
-    const task = gantt.getTask(id);
-    task.my_template = "<span id='lightbox_users'>Assign to: </span>"+ task.user
-    +"<br>  <span id='lightbox_progress'>Progress: </span>"+ task.progress*100 +" %"
-    +`<br>  <div class='lightbox_labels'>${task.labels.map(label => `<span style="padding: 3px;color: white;background-color:${label.color};border-radius:5px">${label.name}</span>`).join('')}</div>`;
-    return true;
-});
+    gantt.attachEvent("onBeforeLightbox", (id) =>  {
+      const task = gantt.getTask(id);
+    
+      //<!--!Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.-->
+      const addButton = `<div class='addUserAssign' ><svg xmlns="http:www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z"/></svg></div>`;
+
+      task.my_template = "<span id='lightbox_users_title'>Assign to: </span><div class='lightbox_user'>" 
+      + `${task.users.map((taskUser, index) => {
+        return `<select id="userSelect${index}" class='userSelect'> <option value='none'> </option> ${this.$props.users.map(user =>{
+          return `<option class="userOption" value='${JSON.stringify({ username: user.username, id: user.id })}' ${taskUser.username === user.username ? 'selected' : ''}>${user.username}</option>`
+        }).join('')
+        })} </select>`
+      }).join('')}`
+      + addButton + "</div>"
+      + "<br>  <span id='lightbox_progress'>Progress: </span>"+ task.progress*100 +" %"
+      + `<br>  <div class='lightbox_labels'>${task.labels.map(label => `<span style="padding: 3px;color: white;background-color:${label.color};border-radius:5px">${label.name}</span>`).join('')}</div>`;
+
+
+      this.$nextTick(() => {
+        const container = document.querySelector('.lightbox_user');
+        const addUserAssign = document.querySelector('.addUserAssign');
+        let selects = container.querySelectorAll('select');
+        selects.forEach(select => {
+          select.onchange = function(e) {
+            if (e.target.value === 'none') {
+              task.users[parseInt(select.id.split('userSelect')[1])] = '';
+            }
+            else {
+              task.users[parseInt(select.id.split('userSelect')[1])] = JSON.parse(e.target.value);
+            }
+          };
+        });
+        if (addUserAssign) {
+          addUserAssign.addEventListener('click', () => {
+            this.addAssignUserToTask(id);
+            const newUser = task.users[task.users.length - 1];
+            const newUserSelect = document.createElement('select');
+            newUserSelect.onchange = function(e) {
+              if (e.target.value === 'none') {
+                task.users[parseInt(newUserSelect.id.split('userSelect')[1])] = '';
+              }
+              else {
+                task.users[parseInt(newUserSelect.id.split('userSelect')[1])] = JSON.parse(e.target.value);
+              }
+            };
+            newUserSelect.id = `userSelect${task.users.length - 1}`;
+            newUserSelect.className = 'userSelect';
+            newUserSelect.innerHTML = `<option value='none'> </option>` + this.$props.users.map(user => `<option value='${JSON.stringify({ username: user.username, id: user.id })}'>${user.username}</option>`).join('');
+            let lastChild = container.lastElementChild;
+            container.insertBefore(newUserSelect, lastChild);
+
+            // Mettre à jour la référence à selects
+            selects = container.querySelectorAll('select');
+          });
+        }
+      });
+      return true;
+    });
 
 
     gantt.config.lightbox.allow_root = false;
 
     gantt.templates.task_text = function(start, end, task) {
-      return "<b>Name:</b> " + task.name + (task.user ? ",<b> Assign to:</b> " + task.user : "");
+      return "<b>Name:</b> " + task.name ;
     };
     gantt.templates.tooltip_text = function(start, end, task) {
       // Personnalisez ici le texte du tooltip pour chaque tâche (hover)
@@ -246,15 +385,15 @@ export default {
       + "End: " + gantt.templates.tooltip_date_format(end) + "<br/>" 
       + "Duration: " + task.duration + " days" + "<br/>"
       + (task.state ? "<br/>State: " + task.state : "")
-      + (task.user ? "<br/>User: " + task.user : "");
+      + (task.users ? "<br/>" + `${task.users.map(user => user.username).join(', ')}` : "");
     };
 
     gantt.templates.task_class = function(start, end, task){
       let css = "";
 
       switch(task.state){
-          case "Opened":
-              css = "opened";
+          case "Unassigned":
+              css = "unassigned";
               break;
           case "Closed":
               css = "closed";
@@ -297,22 +436,9 @@ export default {
       gantt.config.open_tree_initially = true;   //if more than 50 tasks, tasks will be closed by default
     }
 
-    gantt.attachEvent('onTaskSelected', (id) => {
-      const task = gantt.getTask(id);
-      this.$emit('task-selected', task);
-});
- 
-    gantt.attachEvent('onTaskIdChange', (id, new_id) => {
-       if (gantt.getSelectedId() == new_id) {
-         const task = gantt.getTask(new_id);
-         this.$emit('task-selected', task);
-        }
-     });
-    
-
     gantt.init(this.$refs.ganttContainer);
     gantt.parse(this.$props.tasks);
-    this.$_initDataProcessor();
+    
 
     if (isThereStandaloneTasks) {
       document.getElementById('standaloneFilter').addEventListener('change', function(e) {
@@ -351,11 +477,17 @@ export default {
           ];
           break;
       }
-      console.log(gantt.config.scales);
       gantt.render(); // re-rendre le diagramme de Gantt avec la nouvelle configuration
-      console.log('updateGanttScale');
     });
-     
+
+    document.querySelector(".upload-logo-container").addEventListener('click', () => {
+      modal.style.display = 'block';
+    });
+
+    okButton.addEventListener('click', () => {
+      this.$emit('upload-tasks');
+      modal.style.display = 'none';
+    });
 
     let filterValue = "";
 
@@ -395,24 +527,45 @@ export default {
     }
 
     gantt.attachEvent("onBeforeTaskDisplay", function (id, task) {
-      let thereIsAlmostOneFilterFalse = false;
+      let thereIsAtLeastOneFilterToApply = false;
       for (const state in stateFilter) {
         if (!stateFilter[state]) {
-          thereIsAlmostOneFilterFalse = true;
+          thereIsAtLeastOneFilterToApply = true;
           break;
         }
       }
 
-      if (!filterValue && !thereIsAlmostOneFilterFalse && standaloneFilter) {
+      if (!filterValue && !thereIsAtLeastOneFilterToApply && standaloneFilter) {
         return true;
     }
         return filterLogic(task);
     });
+
+    gantt.attachEvent("onLightboxSave", function(id, item){
+        if(!item.name){
+            gantt.message({type:"error", text:"Enter task name!"});
+            return false;
+        }
+        if (!item.start_date || !item.end_date || item.start_date > item.end_date) {
+                gantt.message("Task's dates are invalid!");
+                return false;
+            }
+        return true;
+    });
   
     gantt.$root.appendChild(legend);
+    this.$_initDataProcessor();
   },
 
-  
+  beforeDestroy: function() {
+    gantt.clearAll();
+    gantt.detachAllEvents();
+    this.dp.destructor();
+    gantt.$dataProcessor = null;
+    gantt.$_eventsInitialized = false;
+    gantt.$_dataProcessorInitialized = false;  
+  }
+
 }
 </script>
  
@@ -445,20 +598,20 @@ export default {
     background-image: url("../../../generic/icons/Folder\ plus\ solid.svg")!important;
 } */
 
-.opened {
-    background-color: #168af0;
+.unassigned {
+    background-color: #2b84cf;
 }
 
 .closed {
-    background-color: #28bf2d;
+    background-color: #44b231;
 }
 
 .in-progress {
-    background-color: #eda30e;
+    background-color: #d8a338;
 }
 
 .late {
-    background-color: #e32222;
+    background-color: #db4646;
 }
 
 .unscheduled {
@@ -467,6 +620,51 @@ export default {
 
 .folder {
     background-color: #4f4e4e;
+}
+
+.modal {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0,0,0); /* Fallback color */
+  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 15% auto; /* 15% from the top and centered */
+  padding: 20px;
+  border: 1px solid #888;
+  width: 30%; /* Could be more or less, depending on screen size */
+}
+
+.modal-content button {
+  background-color: #168af0;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 5px 10px;
+  margin: 0 10px;
+}
+
+.close-button {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close-button:hover,
+.close-button:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
 }
 
 .gantt_row.gantt_row_project, .gantt_row.odd.gantt_row_project{
@@ -568,6 +766,13 @@ export default {
   cursor: pointer;
 }
 
+.upload-logo-container {
+  width: 1.3em;
+  margin-left: auto;
+  margin-right: 2em;
+  cursor: pointer;
+}
+
 
 .lightbox_labels {
   display: flex;
@@ -618,5 +823,47 @@ export default {
 		flex-shrink: 0;
 		margin:0 5px;
 	}
+
+#lightbox_users_title {
+  font-weight: bold;
+  display: block;
+}
+
+.lightbox_user {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.userSelect {
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  max-width: 7em;
+}
+
+.userOption {
+  padding: 5px;
+}
+
+.addUserAssign {
+  border: none;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  width: 16px;
+}
+
+#lightbox_progress {
+  font-weight: bold;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.lightbox_labels {
+  padding: 5px;
+  border-radius: 5px;
+}
 
 </style>

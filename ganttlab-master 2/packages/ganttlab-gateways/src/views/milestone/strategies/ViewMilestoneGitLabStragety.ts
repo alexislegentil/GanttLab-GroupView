@@ -111,4 +111,8 @@ export class ViewMilestoneGitLabStrategy
       tasksForActiveMilestone,
     );
   }
+
+  uploadTasks(source: GitLabGateway, configuration: Configuration, tasks: Array<any>): void {
+    throw new Error('Method not implemented.');
+  }
 }

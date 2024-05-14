@@ -9,6 +9,8 @@ import {
         PaginatedList,
         PaginatedListOfProjects,
         Milestone,
+        Source,
+        User,
     } from 'ganttlab-entities';
     import { GitLabGateway } from '../../../sources/gitlab/GitLabGateway';
     import { GitLabIssue } from '../../../sources/gitlab/types/GitLabIssue';
@@ -20,6 +22,7 @@ import {
 import { GitLabProject } from '../../../sources/gitlab/types/GitLabProject';
 import { Epic } from 'ganttlab-entities/dist/core/Epic';
 import { GitLabMilestone } from '../../../sources/gitlab/types/GitLabMilestone';
+import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
     
     export class ViewGroupGitLabStrategy
         implements ViewSourceStrategy<Group> {
@@ -42,11 +45,24 @@ import { GitLabMilestone } from '../../../sources/gitlab/types/GitLabMilestone';
                 url: `/groups/${encodedGroup}`,
             });
 
+            const usersResponse = await source.safeAxiosRequest<Array<GitLabUser>>({
+                method: 'GET',
+                url: `/groups/${encodedGroup}/members/all`,
+                params: {
+                    per_page: 100,
+                },
+            });
+            const users: Array<User> = [];
+            for (const gitlabUser of usersResponse.data) {
+                const user = new User(gitlabUser.id, gitlabUser.email, gitlabUser.username, gitlabUser.avatar_url, gitlabUser.web_url);
+                users.push(user);
+            }
+            
+
             const gitlabGroup = groupResponse.data;
-            activeGroup = new Group(gitlabGroup.name, gitlabGroup.path, [] , gitlabGroup.avatar_url, gitlabGroup.web_url, gitlabGroup.description);
+            activeGroup = new Group(gitlabGroup.name, gitlabGroup.path, [] , users , gitlabGroup.avatar_url , gitlabGroup.web_url , gitlabGroup.description);
 
-
-
+         
 
             if (configuration.sortBy === 'epic') {
             
@@ -76,12 +92,11 @@ import { GitLabMilestone } from '../../../sources/gitlab/types/GitLabMilestone';
                 });
                 const epicPagination = getPaginationFromGitLabHeaders(headers);
                 for (const gitlabIssue of data) {
-                    console.log(gitlabIssue);
                     const task = getTaskFromGitLabIssue(gitlabIssue);
                     task.addState(gitlabIssue.state);
                     if (gitlabIssue.assignees) {
                         for (const user of gitlabIssue.assignees) {
-                            task.addUser(user.username);
+                            task.addUser(user.username, user.id);
                         }
                     } 
                     if (gitlabIssue.labels) {
@@ -143,7 +158,7 @@ import { GitLabMilestone } from '../../../sources/gitlab/types/GitLabMilestone';
                 task.addState(gitlabIssue.state);
                 if (gitlabIssue.assignees) {
                     for (const user of gitlabIssue.assignees) {
-                        task.addUser(user.username);
+                        task.addUser(user.username, user.id);
                     }
                 } 
                 const blockedBy = await source.safeAxiosRequest<Array<any>>({
@@ -232,7 +247,7 @@ import { GitLabMilestone } from '../../../sources/gitlab/types/GitLabMilestone';
                             task.addState(gitlabIssue.state);
                             if (gitlabIssue.assignees) {
                                 for (const user of gitlabIssue.assignees) {
-                                    task.addUser(user.username);
+                                    task.addUser(user.username, user.id);
                                 }
                             } 
                             if (gitlabIssue.labels) {
@@ -291,7 +306,6 @@ import { GitLabMilestone } from '../../../sources/gitlab/types/GitLabMilestone';
           
                     const milestone = getMilestoneFromGitLabMilestone(gitlabMilestone);
                     milestonesList.push(milestone);
-                    console.log(milestone);
                     let tasksForMilestones: PaginatedListOfTasks | null = null;
                     let tasksListByMilestone: Array<Task> = [];
             
@@ -308,7 +322,7 @@ import { GitLabMilestone } from '../../../sources/gitlab/types/GitLabMilestone';
                         task.addState(gitlabIssue.state);
                         if (gitlabIssue.assignees) {
                             for (const user of gitlabIssue.assignees) {
-                                task.addUser(user.username);
+                                task.addUser(user.username, user.id);
                             }
                         } 
                         if (gitlabIssue.labels) {
@@ -367,7 +381,7 @@ import { GitLabMilestone } from '../../../sources/gitlab/types/GitLabMilestone';
                     task.addState(gitlabIssue.state);
                     if (gitlabIssue.assignees) {
                         for (const user of gitlabIssue.assignees) {
-                            task.addUser(user.username);
+                            task.addUser(user.username, user.id);
                         }
                     } 
                     if (gitlabIssue.labels) {
@@ -411,17 +425,82 @@ import { GitLabMilestone } from '../../../sources/gitlab/types/GitLabMilestone';
                 activeGroup.addTasks(allTasksPaginated);
             }
 
-
-
-            console.log(activeGroup);
-
-            
+            console.log(activeGroup);            
             return activeGroup;
           //  return tasksForAllProjects as PaginatedListOfTasks;
         }
 
-        //post
+        async uploadTasks(source: GitLabGateway, configuration: Configuration, tasks: Array<any>): Promise<void> {
         
+            for (const task of tasks) {
+               
+                if (task.type === 'task'  && task.task_iid && task.project_id) {
 
+                    let assignee_ids: Array<number> = [];
+                    for (const user of task.user) {
+                        if (user != "") assignee_ids.push(user.id) ;
+                    }
+                    let description = task.description || '';
+                    const ganttStartRegex = /GanttStart: \d{4}-\d{2}-\d{2}/;
+                    
+                    if (ganttStartRegex.test(description)) {
+                        // Si la description contient déjà "GanttStart: date", remplacez la date
+                        description = description.replace(ganttStartRegex, `GanttStart: ${task.start_date}`);
+                    } else {
+                        // Sinon, ajoutez "GanttStart: date" au début de la description
+                        description = `GanttStart: ${task.start_date}\n${description}`;
+                    }
+
+                    let state_event = '';
+                    if (task.state === "Closed") {
+                        state_event = 'close';
+                    }
+                    else {
+                        state_event = 'reopen';
+                    }
+                    
+                    const data = {
+                        title: task.name,
+                        description: description,
+                        due_date: task.end_date,
+                        assignee_ids: assignee_ids,
+                        state_event: state_event,
+                    };
+            
+                    try {
+                        await source.safeAxiosRequest({
+                            method: 'PUT',
+                            url: `/projects/${task.project_id}/issues/${task.task_iid}`,
+                            data: data
+                        });
+                        console.log(`Task ${task.id} updated successfully.`);
+                    } catch (error) {
+                        console.error(`Failed to update task ${task.id}: ${error}`);
+                    }
+                }
+                else if (task.type === "task" && task.epic_id) {
+                    const encodedGroup = encodeURIComponent(
+                        configuration.group.path as string,
+                    );
+                    const data = {
+                        title: task.name,
+                        start_date_fixed : task.start_date,
+                        due_date_fixed : task.end_date
+                    };
+            
+                    try {
+                        await source.safeAxiosRequest({
+                            method: 'PUT',
+                            url: `/groups/${encodedGroup}/epics/${task.epic_id}`,
+                            data: data
+                        });
+                        console.log(`Project ${task.id} updated successfully.`);
+                    } catch (error) {
+                        console.error(`Failed to update project ${task.id}: ${error}`);
+                    }
+                }
+            }
+        }
+        
     }
   

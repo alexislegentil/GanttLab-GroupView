@@ -2,6 +2,7 @@ import { PaginatedListOfTasks } from '../pagination/PaginatedListOfTasks';
 import { Epic } from './Epic';
 import { Milestone } from './Milestone';
 import { Project } from './Project';
+import { User } from './User';
 
 /**
  * A way to group {@link Task}s
@@ -30,6 +31,7 @@ export class Group {
     public name: string,
     public path: string,
     public projects: Array<Project>,
+    public users: Array<User>,
     public avatar_url?: string,
     public web_url?: string,
     public description?: string,

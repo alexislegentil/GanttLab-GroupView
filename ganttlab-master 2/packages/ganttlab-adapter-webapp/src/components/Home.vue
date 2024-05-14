@@ -194,12 +194,12 @@
                       class="w-4 ml-2 inline-block rounded-full shadow-inner"
                     />
                   </a>
-                  <div
+                  <!-- <div
                     class="cursor-pointer transition duration-200 ease-in hover:text-yellow-700"
                     @click="refresh"
                   >
                     <Icon size="16" name="refresh-circle-outline" />
-                  </div>
+                  </div> -->
                   <a
                     href="https://gitlab.com/ganttlab/ganttlab/-/blob/master/README.md#how-it-works"
                     target="_blank"
@@ -251,7 +251,9 @@
           :group="group"
           :project="project"
           :sourceUrl="sourceUrl"
-          :viewGateway="viewGateway" />
+          :viewGateway="viewGateway"
+          @upload-tasks="uploadTasks"
+           />
         </div>
         <div v-else class="w-full p-16">
           <NoData
@@ -290,11 +292,12 @@ Group,
 } from 'ganttlab-entities';
 import { ImplementedSourcesGateways } from '../helpers/ImplementedSourcesGateways';
 import { DisplayableError } from '../helpers/DisplayableError';
-import { addDisplaybleError } from '../helpers';
+import { addDisplaybleError, addDisplaybleSuccess } from '../helpers';
 import { TasksAndMilestones } from 'ganttlab-use-cases';
 import LocalForage, { getRememberedViews } from '../helpers/LocalForage';
 import { trackVirtualpageView, trackInteractionEvent } from '../helpers/GTM';
 import { FilterGateway } from '@/helpers/ImplementedFiltersGateways';
+import { DisplayableSuccess } from '@/helpers/DisplayableSuccess';
 
 const mainState = getModule(MainModule);
 
@@ -412,8 +415,6 @@ export default class Home extends Vue {
   }
 
   async setFilter(filter: FilterGateway) {
-    console.log(filter);
-    console.log(`Selected filter: ${filter.name}`);
     mainState.setFilterGateway(filter);
     this.viewGateway ? this.setView(this.viewGateway) : null;
     trackInteractionEvent('Filter', 'Changed', `${filter}` );
@@ -428,18 +429,9 @@ export default class Home extends Vue {
     this.paginatedMilestones = null;
     this.group = null;
     let filter = mainState.filterGateway ? mainState.filterGateway.instance : null;
-    // if (view.slug === 'group') {
-    //   this.littleHeader = true;
-    //   filter = null;
-    // }
-    // else {
-    //   this.littleHeader = false;
-    // }
-    
-    // get the view data
+  
     try {
       const data = await this.sourceGateway.getDataFor(view, filter);
-     // console.log(data);
       if (data instanceof PaginatedListOfTasks) {
         this.paginatedTasks = data;
       }
@@ -452,16 +444,15 @@ export default class Home extends Vue {
       }
       if (data instanceof Group) {
         this.group = data;
-       // console.log(this.group);
-       
       }
+
       trackVirtualpageView(
         `${this.sourceGateway.name} - ${view.name}`,
         `/${this.sourceGateway.slug}/${view.slug}`,
       );
     } catch (error) {
       addDisplaybleError(
-        new DisplayableError(error, 'Unable to get view data'),
+        new DisplayableError(error as string, 'Unable to get view data'),
       );
       trackInteractionEvent('View', 'Error', view.slug);
       this.paginatedTasks = new PaginatedListOfTasks([], 1, 0);
@@ -485,6 +476,27 @@ export default class Home extends Vue {
     }
     else {
       this.littleHeader = false;
+    }
+  }
+
+  async uploadTasks(tasks: Array<any>) {
+    if (this.sourceGateway && this.viewGateway && tasks.length > 0) {
+      try {
+        await this.sourceGateway.uploadTasks(tasks, this.viewGateway);
+        trackInteractionEvent('Tasks', 'Uploaded');
+        addDisplaybleSuccess(
+          new DisplayableSuccess('Tasks uploaded successfully', 'Tasks uploaded'),
+        )
+      } catch (error) {
+        addDisplaybleError(
+          new DisplayableError(error as Error, 'Error while uploading tasks'),
+        );
+      }
+    }
+    else if (tasks.length === 0) {
+      addDisplaybleError(
+        new DisplayableError('No tasks to upload', 'Error while uploading tasks'),
+      );
     }
   }
 

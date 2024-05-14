@@ -33,7 +33,7 @@ export class GitLabGateway extends AxiosBackedAuthenticatableSource {
       method: 'GET',
       url: '/user',
     });
-    return new User(data.email, data.username, data.web_url, data.avatar_url);
+    return new User(data.id, data.email, data.username, data.web_url, data.avatar_url);
   }
 
   async searchProjects(search: string): Promise<GitLabProject[]> {

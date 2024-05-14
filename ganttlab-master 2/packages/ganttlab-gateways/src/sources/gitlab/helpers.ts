@@ -11,8 +11,11 @@ export function getTaskFromGitLabIssue(gitlabIssue: GitLabIssue): Task {
     gitlabIssue.description,
   );
   return new Task(
+    gitlabIssue.iid,
+    gitlabIssue.project_id,
     gitlabIssue.title,
     gitlabIssue.web_url,
+    gitlabIssue.description,
     startDate
       ? startDate
       : gitlabIssue.milestone && gitlabIssue.milestone.start_date
@@ -70,6 +73,7 @@ export function getGroupFromGitLabGroup(
   return new Group(
     GitLabGroup.name,
     GitLabGroup.path,
+    [],
     [],
     GitLabGroup.avatar_url,
     GitLabGroup.web_url,

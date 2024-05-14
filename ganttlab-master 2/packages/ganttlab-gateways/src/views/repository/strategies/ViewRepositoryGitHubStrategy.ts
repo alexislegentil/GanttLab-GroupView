@@ -52,4 +52,8 @@ export class ViewRepositoryGitHubStrategy
       githubPagination.lastPage,
     );
   }
+
+  uploadTasks(source: GitHubGateway, configuration: Configuration, tasks: Array<any>): void {
+    throw new Error('Method not implemented.');
+  }
 }

@@ -11865,6 +11865,13 @@
   "resolved" "https://registry.npmjs.org/vue-hot-reload-api/-/vue-hot-reload-api-2.3.4.tgz"
   "version" "2.3.4"
 
+"vue-js-modal@^2.0.1":
+  "integrity" "sha512-5FUwsH2zoxRKX4a7wkFAqX0eITCcIMunJDEfIxzHs2bHw9o20+Iqm+uQvBcg1jkzyo1+tVgThR/7NGU8djbD8Q=="
+  "resolved" "https://registry.npmjs.org/vue-js-modal/-/vue-js-modal-2.0.1.tgz"
+  "version" "2.0.1"
+  dependencies:
+    "resize-observer-polyfill" "^1.5.1"
+
 "vue-loader@^15.9.1":
   "integrity" "sha512-IaPU2KOPjs/QjMlxFs/TiTtQUSbftQ7lsAvoxe21rtcQohsMhx+1AltXCNhZIpIn46PtODiAgz+o8RbMpKtmJw=="
   "resolved" "https://registry.npmjs.org/vue-loader/-/vue-loader-15.9.1.tgz"

@@ -31,6 +31,7 @@ import Icon from './generic/Icon.vue';
 import { getModule } from 'vuex-module-decorators';
 import MainModule from '../store/modules/MainModule';
 import { DisplayableError } from '../helpers/DisplayableError';
+import { DisplayableSuccess } from '@/helpers/DisplayableSuccess';
 
 const mainState = getModule(MainModule);
 
@@ -42,15 +43,25 @@ const mainState = getModule(MainModule);
 export default class Toaster extends Vue {
   type = 'error';
   message: DisplayableError | null = null;
-  messages: Array<DisplayableError> = [];
+  messages: Array<DisplayableError> | Array<DisplayableSuccess> = [];
+
 
   clearMessage(message: DisplayableError) {
     this.message = null;
     mainState.clearError(message);
   }
 
+  clearSuccess(message: DisplayableSuccess) {
+    this.message = null;
+    mainState.clearSuccess(message);
+  }
+
   get errors(): Array<DisplayableError> {
     return mainState.errors;
+  }
+
+  get allSuccess(): Array<DisplayableSuccess> {
+    return mainState.successes;
   }
 
   @Watch('errors')
@@ -63,6 +74,19 @@ export default class Toaster extends Vue {
       }, 10000);
     }
   }
+
+@Watch('allSuccess')
+onSuccessesChange(successes: Array<DisplayableSuccess>) {
+  if (successes.length) {
+    const message = successes[0];
+    this.type = 'success';
+    this.message = message;
+    setTimeout(() => {
+      this.clearSuccess(message);
+    }, 10000);
+  }
+}
+  
 }
 </script>
 

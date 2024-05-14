@@ -17,4 +17,6 @@ export interface ViewSourceStrategy<T> {
    * @param configuration - The {@link Configuration} to use for the {@link View}
    */
   execute(source: Source, configuration: Configuration, filter: Filter | null): Promise<T>;
+
+  uploadTasks(source: Source, configuration: Configuration, tasks: Array<any>): void;
 }

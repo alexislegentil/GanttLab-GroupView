@@ -10,12 +10,14 @@ export class User {
   public avatarUrl: string;
 
   /**
+   * @param id - The user ID
    * @param email - This user email
    * @param username - A username (or login) for this user
    * @param url - The URL to this user (directly usable in an `<a>` href)
    * @param _avatarUrl - An URL directly usable in an img src
    */
   constructor(
+    public id: number,
     public email: string,
     public username: string,
     public url: string | null = null,

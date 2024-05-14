@@ -39,19 +39,24 @@
     <GanttComponent
       class="left-ganttContainer"
       :tasks="tasks"
+      :requests-queue="requestsQueue"
+      :users="users"
       @task-updated="logTaskUpdate"
       @link-updated="logLinkUpdate"
       @task-selected="selectTask"
+      @upload-tasks="uploadTasks"
     ></GanttComponent>
   </div>
 </template>
  
 <script lang="ts">
+/* eslint-disable @typescript-eslint/camelcase */
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import GanttComponent from './legacy/GanttComponent.vue';
 import { getConvertedGroup } from './legacy/index';
 import { getLinksFromGroup } from './legacy/index';
-import { Group } from 'ganttlab-entities';
+import { Group, Project, User } from 'ganttlab-entities';
+import { gantt } from 'dhtmlx-gantt';
 
 @Component({
   components: {
@@ -67,6 +72,8 @@ export default class GroupChartMediator extends Vue {
   public messages: Array<string> = [];
   public selectedTask: any = null;
   public rightContainerVisible = false;
+  public requestsQueue: Array<any> = [];
+  public users: Array<User> = this.group.users;
 
   selectTask(task:any){
       this.selectedTask = task
@@ -87,10 +94,15 @@ export default class GroupChartMediator extends Vue {
       }
   }
 
+  mounted() {
+    this.$on('task-updated', this.logTaskUpdate);
+  }
+
   logTaskUpdate (id: number, mode: string, task:any) {
-      const text = (task && task.name ? ` (${task.name})`: '')
-      const message = `Task ${mode}: ${id} ${text}`
-      this.addMessage(message)
+      const text = (task && task.name ? ` (${task.name})`: '');
+      const message = `Task ${mode}: ${id} ${text}`;
+      this.addMessage(message);
+      this.convertToRequest(task);
   }
 
   logLinkUpdate (id: number, mode: string, link:any) {
@@ -100,6 +112,62 @@ export default class GroupChartMediator extends Vue {
     }
     this.addMessage(message)
   }
+
+  convertToRequest (task:any) {
+    const request = {
+      id: task.id,
+      task_iid: task.task_iid,
+      project_id: task.project_id,
+      epic_id: task.epic_id,
+      name: task.name,
+      description: task.description,
+      start_date: task.start_date,
+      end_date: task.end_date,
+      progress: task.progress,
+      user: task.users,
+      state: task.state,
+      type: task.type? task.type : 'task'
+    }
+    if (this.requestsQueue.some(req => req.id === request.id)) {
+      const oldtask = gantt.getTask(request.id);
+      
+      for (const attr in request) {
+        // eslint-disable-next-line no-prototype-builtins
+        if (request.hasOwnProperty(attr) && oldtask.hasOwnProperty(attr) && request[attr as keyof typeof request] !== oldtask[attr as keyof typeof oldtask]) {
+          switch (attr) {
+            case 'name':
+            case 'description':
+            case 'start_date':
+            case 'end_date':
+            case 'state':
+            case 'user': {
+              const indexToUpdate = this.requestsQueue.findIndex(req => req.id === request.id);
+              if (indexToUpdate !== -1) {
+                const updatedRequest = { ...this.requestsQueue[indexToUpdate], [attr]: request[attr] };
+                this.requestsQueue.splice(indexToUpdate, 1, updatedRequest);
+              }
+              break;
+            }
+          }
+        }
+      }
+      return;
+    }
+    else {
+      this.requestsQueue.push(request)
+    }
+  }
+
+async uploadTasks () {
+  try {
+    await this.$emit('upload-tasks', this.requestsQueue);
+  } catch (error) {
+    console.error("Une erreur s'est produite lors de l'envoi des tâches :", error);
+  } finally {
+    this.requestsQueue = [];
+  }
+}
+  
 
   toggleRightContainer() {
     this.rightContainerVisible = !this.rightContainerVisible;
