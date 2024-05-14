@@ -47,10 +47,9 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
 
             const usersResponse = await source.safeAxiosRequest<Array<GitLabUser>>({
                 method: 'GET',
-                url: `/users`,
+                url: `/groups/${encodedGroup}/members/all`,
                 params: {
                     per_page: 100,
-                    without_project_bots: true,
                 },
             });
             const users: Array<User> = [];
