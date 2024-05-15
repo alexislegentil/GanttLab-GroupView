@@ -27,6 +27,7 @@ interface LegacyDhtmlXgantt {
   labels?: any[];
   color?: string;
   row_height?: number;
+  level: number;
 }
 
 interface DhtmlxLink {
@@ -155,13 +156,14 @@ if (group.epics && group.epics.length > 0) {
       progress: 0,
       type:  epic.start_date  && epic.due_date ? "task" : "project",  //like this, if there are fixed dates there are priorities, and if not the dates are the child issues ones
       color:"#4f4e4e",
-      row_height: 25
+      row_height: 25,
+      level: 0
     };
     taskID++;
     data.push(epicRow);
 
-    if (epic.Tasks && epic.Tasks.list) {
-      for (const task of epic.Tasks.list) {
+    if (epic.Tasks && epic.Tasks) {
+      for (const task of epic.Tasks) {
         const taskState: TaskState | null = getStateFromGitLabState(task);
           let labels: any[] = [];
           if (task.labels && task.labels.length > 0) {
@@ -182,7 +184,8 @@ if (group.epics && group.epics.length > 0) {
           state: taskState ? taskState : null,
           users: task.users,
           type: "task",
-          labels: labels
+          labels: labels,
+          level: 1
         };
         data.push(taskRow);
         taskID++;
@@ -203,7 +206,8 @@ if (group.projects && group.projects.length > 0) {
       progress: 0,
       type: "project",
       color:"#4f4e4e",
-      row_height: 25
+      row_height: 25,
+      level: 0
     };
     taskID++;
     data.push(projectRow);
@@ -228,7 +232,8 @@ if (group.projects && group.projects.length > 0) {
             state: taskState ? taskState : null,
             users: task.users,
             type: "task",
-            labels: labels
+            labels: labels,
+            level: 1
           };
         data.push(taskRow);
         taskID++;
@@ -240,7 +245,6 @@ if (group.projects && group.projects.length > 0) {
 if (group.milestones && group.milestones.length > 0) {
   // Convert milestones
   for (const milestone of group.milestones) {
-    console.log(moment(milestone.due).format('YYYY-MM-DD HH:mm:ss'));
     const milestoneRow : LegacyDhtmlXgantt = {
       id: taskID,
       name: milestone.name,
@@ -250,7 +254,8 @@ if (group.milestones && group.milestones.length > 0) {
       progress: 0,
       type: "project",
       color:"#4f4e4e",
-      row_height: 25
+      row_height: 25,
+      level: 0
     };
     taskID++;
     data.push(milestoneRow);
@@ -275,7 +280,8 @@ if (group.milestones && group.milestones.length > 0) {
           state: taskState ? taskState : null,
           users: task.users,
           type: "task",
-          labels: labels
+          labels: labels,
+          level: 1
         };
         data.push(taskRow);
         taskID++;
@@ -284,10 +290,10 @@ if (group.milestones && group.milestones.length > 0) {
   }
 }
 
-if (group.tasks && group.tasks.list && group.tasks.list.length > 0) {
+if (group.tasks && group.tasks && group.tasks.length > 0) {
   
   // Add standalone tasks
-  for (const task of group.tasks.list) {
+  for (const task of group.tasks) {
     const taskState: TaskState | null = getStateFromGitLabState(task);
       let labels: any[] = [];
           if (task.labels && task.labels.length > 0) {
@@ -308,7 +314,8 @@ if (group.tasks && group.tasks.list && group.tasks.list.length > 0) {
       state: taskState ? taskState : null,
       users: task.users,
       type: "task",
-      labels: labels
+      labels: labels,
+      level: 1
     };
     data.push(taskRow);
     taskID++;
@@ -324,8 +331,8 @@ export function getLinksFromGroup(group: Group, convertedGroup: Array<LegacyDhtm
   // Convert epics
   if (group.epics && group.epics.length > 0) {
     for (const epic of group.epics) {
-      if (epic.Tasks && epic.Tasks.list) {
-        for (const task of epic.Tasks.list) {
+      if (epic.Tasks && epic.Tasks) {
+        for (const task of epic.Tasks) {
           if (task.blockedBy && task.blockedBy.length > 0) {
             for (const blockedBy of task.blockedBy) {
               const link : DhtmlxLink = {
@@ -365,9 +372,9 @@ export function getLinksFromGroup(group: Group, convertedGroup: Array<LegacyDhtm
     }
   }
 
-  if (group.tasks && group.tasks.list && group.tasks.list.length > 0) {
+  if (group.tasks && group.tasks && group.tasks.length > 0) {
     // Add standalone tasks
-    for (const task of group.tasks.list) {
+    for (const task of group.tasks) {
       if (task.blockedBy && task.blockedBy.length > 0) {
         for (const blockedBy of task.blockedBy) {
           const link : DhtmlxLink = {

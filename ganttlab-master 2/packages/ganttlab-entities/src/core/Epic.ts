@@ -1,11 +1,12 @@
 import { PaginatedListOfTasks } from "../pagination/PaginatedListOfTasks";
+import { Task } from "./Task";
 
 /**
  * A project, which can contain tasks, milestones...
  */
 export class Epic {
 
-    public Tasks: PaginatedListOfTasks | null = null;
+    public Tasks: Task[] | null = null;
 
     constructor(
         public title: string,
@@ -19,7 +20,7 @@ export class Epic {
         this.Tasks = null;
     }
 
-    public addTasks(Task: PaginatedListOfTasks) {
+    public addTasks(Task: Task[]) {
       this.Tasks = Task;
     }
   }

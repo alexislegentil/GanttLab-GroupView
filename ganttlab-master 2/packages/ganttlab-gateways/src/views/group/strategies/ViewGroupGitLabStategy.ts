@@ -45,19 +45,57 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                 url: `/groups/${encodedGroup}`,
             });
 
-            const usersResponse = await source.safeAxiosRequest<Array<GitLabUser>>({
-                method: 'GET',
-                url: `/groups/${encodedGroup}/members/all`,
-                params: {
-                    per_page: 100,
+            // const usersResponse = await source.safeAxiosRequest<Array<GitLabUser>>({
+            //     method: 'GET',
+            //     url: `/groups/${encodedGroup}/members/all`,
+            //     params: {
+            //         per_page: 50,
+            //     },
+            // });
+            const usersResponse = [
+                {
+                    id: 1,
+                    email: "user1@example.com",
+                    username: "user1",
+                    avatar_url: "https://example.com/avatar1.png",
+                    web_url: "https://example.com/user1"
                 },
-            });
+                {
+                    id: 2,
+                    email: "user2@example.com",
+                    username: "user2",
+                    avatar_url: "https://example.com/avatar2.png",
+                    web_url: "https://example.com/user2"
+                },
+                {
+                    id: 3,
+                    email: "user3@example.com",
+                    username: "user3",
+                    avatar_url: "https://example.com/avatar3.png",
+                    web_url: "https://example.com/user3"
+                },
+                {
+                    id: 4,
+                    email: "user4@example.com",
+                    username: "user4",
+                    avatar_url: "https://example.com/avatar4.png",
+                    web_url: "https://example.com/user4"
+                }
+            ];
+            
             const users: Array<User> = [];
-            for (const gitlabUser of usersResponse.data) {
+            for (const gitlabUser of usersResponse) {
                 const user = new User(gitlabUser.id, gitlabUser.email, gitlabUser.username, gitlabUser.avatar_url, gitlabUser.web_url);
                 users.push(user);
             }
             
+            // const users: Array<User> = [];
+            // for (const gitlabUser of usersResponse.data) {
+            //     const user = new User(gitlabUser.id, gitlabUser.email, gitlabUser.username, gitlabUser.avatar_url, gitlabUser.web_url);
+            //     users.push(user);
+            // }
+            
+            // doesn't work if not owner or maintainer
 
             const gitlabGroup = groupResponse.data;
             activeGroup = new Group(gitlabGroup.name, gitlabGroup.path, [] , users , gitlabGroup.avatar_url , gitlabGroup.web_url , gitlabGroup.description);
@@ -66,111 +104,144 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
 
             if (configuration.sortBy === 'epic') {
             
-            const epicsResponse = await source.safeAxiosRequest<Array<Epic>>({
-                method: 'GET',
-                url: `/groups/${encodedGroup}/epics`,
-                params: {
-                    state: 'all',
-                    scope : 'all',
-                },
-            });
-            const epicsList: Array<Epic> = [];
-            for (const epic of epicsResponse.data) {
-                const newEpic = new Epic(epic.title, epic.description, epic.web_url, epic.state, epic.start_date, epic.due_date, epic.iid);
-               epicsList.push(newEpic);
-
-               let tasksForEpics: PaginatedListOfTasks | null = null;
-               let tasksListByEpic: Array<Task> = [];
-
-                const { data, headers } = await source.safeAxiosRequest<Array<GitLabIssue>>({
-                 method: 'GET',
-                 url: `/groups/${encodedGroup}/epics/${epic.iid}/issues`,
-                 params: {
-                      state: 'all',
-                      scope : 'all',
-                 },
-                });
-                const epicPagination = getPaginationFromGitLabHeaders(headers);
-                for (const gitlabIssue of data) {
-                    const task = getTaskFromGitLabIssue(gitlabIssue);
-                    task.addState(gitlabIssue.state);
-                    if (gitlabIssue.assignees) {
-                        for (const user of gitlabIssue.assignees) {
-                            task.addUser(user.username, user.id);
-                        }
-                    } 
-                    if (gitlabIssue.labels) {
-                        for (const labelName of gitlabIssue.labels) {
-                            const label = await source.safeAxiosRequest<any>({
-                                method: 'GET',
-                                url: `/projects/${gitlabIssue.project_id}/labels/${labelName}`,
-                            });
-                            task.addLabel(labelName, label.data.color);
-                        }
-                    }
-                    const blockedBy = await source.safeAxiosRequest<Array<any>>({
+                let epicPage = 1;
+                const epicsList: Array<Epic> = [];
+                
+                while (true) {
+                    const epicsResponse = await source.safeAxiosRequest<Array<Epic>>({
                         method: 'GET',
-                        url: `/projects/${gitlabIssue.project_id}/issues/${gitlabIssue.iid}/links`,
+                        url: `/groups/${encodedGroup}/epics`,
+                        params: {
+                            state: 'all',
+                            scope : 'all',
+                            per_page: 100,
+                            page: epicPage,
+                        },
                     });
-                    for (const link of blockedBy.data) {
-                        if (link.link_type === 'is_blocked_by') {
-                        task.addBlockedBy(link.title);
+                
+                    const epicPagination = getPaginationFromGitLabHeaders(epicsResponse.headers);
+                
+                    for (const epic of epicsResponse.data) {
+                        const newEpic = new Epic(epic.title, epic.description, epic.web_url, epic.state, epic.start_date, epic.due_date, epic.iid);
+                        epicsList.push(newEpic);
+                
+                        let taskForEpicPage = 1;
+                        let tasksListByEpic: Task[] = [];
+                
+                        while (true) {
+                            const { data, headers } = await source.safeAxiosRequest<Array<GitLabIssue>>({
+                                method: 'GET',
+                                url: `/groups/${encodedGroup}/epics/${epic.iid}/issues`,
+                                params: {
+                                    per_page: 100,
+                                    page: taskForEpicPage,
+                                    state: 'all',
+                                    scope: 'all',
+                                },
+                            });
+                
+                            const taskPagination = getPaginationFromGitLabHeaders(headers);
+                
+                            for (const gitlabIssue of data) {
+                                const task = getTaskFromGitLabIssue(gitlabIssue);
+                                task.addState(gitlabIssue.state);
+                                if (gitlabIssue.assignees) {
+                                    for (const user of gitlabIssue.assignees) {
+                                        task.addUser(user.username, user.id);
+                                    }
+                                } 
+                                if (gitlabIssue.labels) {
+                                    for (const labelName of gitlabIssue.labels) {
+                                        const label = await source.safeAxiosRequest<any>({
+                                            method: 'GET',
+                                            url: `/projects/${gitlabIssue.project_id}/labels/${labelName}`,
+                                        });
+                                        task.addLabel(labelName, label.data.color);
+                                    }
+                                }
+                                const blockedBy = await source.safeAxiosRequest<Array<any>>({
+                                    method: 'GET',
+                                    url: `/projects/${gitlabIssue.project_id}/issues/${gitlabIssue.iid}/links`,
+                                });
+                                for (const link of blockedBy.data) {
+                                    if (link.link_type === 'is_blocked_by') {
+                                    task.addBlockedBy(link.title);
+                                    }
+                                }
+                                tasksListByEpic.push(task);
+                            }
+                        
+                            if (!taskPagination.nextPage) {
+                                break;
+                            }
+                        
+                            taskForEpicPage++;
                         }
-
+                        
+                        newEpic.addTasks(tasksListByEpic);
+                        activeGroup.addEpic(newEpic);
                     }
-                    tasksListByEpic.push(task);
+                
+                    if (!epicPagination.nextPage) {
+                        break;
+                    }
+                
+                    epicPage++;
                 }
-
-                tasksForEpics = new PaginatedListOfTasks(
-                    tasksListByEpic,
-                    configuration.tasks.page as number,
-                    configuration.tasks.pageSize as number,
-                    epicPagination.previousPage,
-                    epicPagination.nextPage,
-                    epicPagination.lastPage,
-                    epicPagination.total,
-                );
-
-                tasksListByEpic.sort((a: Task, b: Task) => {
-                    if (a.due && b.due) {
-                        return a.due.getTime() - b.due.getTime();
+                activeGroup.epics.sort((a: Epic, b: Epic) => {
+                    if (a.due_date && b.due_date) {
+                        return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
                     }
                     return 0;
                 });
 
-                newEpic.addTasks(tasksForEpics);
-               activeGroup.addEpic(newEpic);
-            }
+            let taskPage = 1;
+            let allTasksList: Task[] = [];
 
-            const {data, headers} = await source.safeAxiosRequest<Array<GitLabIssue>>({
-                method: 'GET',
-                url: `/groups/${encodedGroup}/issues`,
-                params: {
-                    state: 'all',
-                    epic_id: 'none',
-                    scope : 'all',
-                },
-            });
-            const pagination = getPaginationFromGitLabHeaders(headers);
-            for (const gitlabIssue of data) {
-
-                const task = getTaskFromGitLabIssue(gitlabIssue);
-                task.addState(gitlabIssue.state);
-                if (gitlabIssue.assignees) {
-                    for (const user of gitlabIssue.assignees) {
-                        task.addUser(user.username, user.id);
-                    }
-                } 
-                const blockedBy = await source.safeAxiosRequest<Array<any>>({
+            while (true) {
+                const { data, headers } = await source.safeAxiosRequest<Array<GitLabIssue>>({
                     method: 'GET',
-                    url: `/projects/${gitlabIssue.project_id}/issues/${gitlabIssue.iid}/links`,
+                    url: `/groups/${encodedGroup}/issues`,
+                    params: {
+                        state: 'all',
+                        epic_id: 'none',
+                        scope: 'all',
+                        per_page: 100,
+                        page: taskPage,
+                    },
                 });
-                for (const link of blockedBy.data) {
-                    if (link.link_type === 'is_blocked_by') {
-                    task.addBlockedBy(link.title);
-                    }                    
+
+                const pagination = getPaginationFromGitLabHeaders(headers);
+
+                for (const gitlabIssue of data) {
+                    const task = getTaskFromGitLabIssue(gitlabIssue);
+                    task.addState(gitlabIssue.state);
+
+                    if (gitlabIssue.assignees) {
+                        for (const user of gitlabIssue.assignees) {
+                            task.addUser(user.username, user.id);
+                        }
+                    }
+
+                    const blockedBy = await source.safeAxiosRequest<Array<any>>({
+                        method: 'GET',
+                        url: `/projects/${gitlabIssue.project_id}/issues/${gitlabIssue.iid}/links`,
+                    });
+
+                    for (const link of blockedBy.data) {
+                        if (link.link_type === 'is_blocked_by') {
+                            task.addBlockedBy(link.title);
+                        }
+                    }
+
+                    allTasksList.push(task);
                 }
-                allTasksList.push(task);
+
+                if (!pagination.nextPage) {
+                    break;
+                }
+
+                taskPage++;
             }
 
             allTasksList.sort((a: Task, b: Task) => {
@@ -180,19 +251,8 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                 return 0;
             });
 
-            allTasksPaginated = new PaginatedListOfTasks(
-                allTasksList,
-                configuration.tasks.page as number,
-                configuration.tasks.pageSize as number,
-                pagination.previousPage,
-                pagination.nextPage,
-                pagination.lastPage,
-                pagination.total,
-            );
-
-            activeGroup.addTasks(allTasksPaginated);
-            }
-
+            activeGroup.addTasks(allTasksList);
+        }
 
 
             //does the group have projects?
@@ -367,63 +427,72 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                 }
                 activeGroup.addMilestones(milestonesList);
             
-                const {data, headers} = await source.safeAxiosRequest<Array<GitLabIssue>>({
-                    method: 'GET',
-                    url: `/groups/${encodedGroup}/issues`,
-                    params: {
-                        state: 'all',
-                        milestone: 'none',
-                    },
-                });
-                const pagination = getPaginationFromGitLabHeaders(headers);
-                for (const gitlabIssue of data) {
-                    const task = getTaskFromGitLabIssue(gitlabIssue);
-                    task.addState(gitlabIssue.state);
-                    if (gitlabIssue.assignees) {
-                        for (const user of gitlabIssue.assignees) {
-                            task.addUser(user.username, user.id);
-                        }
-                    } 
-                    if (gitlabIssue.labels) {
-                        for (const labelName of gitlabIssue.labels) {
-                            const label = await source.safeAxiosRequest<any>({
-                                method: 'GET',
-                                url: `/projects/${gitlabIssue.project_id}/labels/${labelName}`,
-                            });
-                            task.addLabel(labelName, label.data.color);
-                        }
-                    }
-                    const blockedBy = await source.safeAxiosRequest<Array<any>>({
+              let allTaskPage = 1;
+                let allTasksList: Task[] = [];
+
+                while (true) {
+                    const { data, headers } = await source.safeAxiosRequest<Array<GitLabIssue>>({
                         method: 'GET',
-                        url: `/projects/${gitlabIssue.project_id}/issues/${gitlabIssue.iid}/links`,
+                        url: `/groups/${encodedGroup}/issues`,
+                        params: {
+                            per_page: 100,
+                            page: allTaskPage,
+                            state: 'all',
+                            milestone: 'none',
+                        },
                     });
-                    for (const link of blockedBy.data) {
-                        if (link.link_type === 'is_blocked_by') {
-                            task.addBlockedBy(link.title);
-                        }                    
+
+                    const pagination = getPaginationFromGitLabHeaders(headers);
+
+                    for (const gitlabIssue of data) {
+                        const task = getTaskFromGitLabIssue(gitlabIssue);
+                        task.addState(gitlabIssue.state);
+
+                        if (gitlabIssue.assignees) {
+                            for (const user of gitlabIssue.assignees) {
+                                task.addUser(user.username, user.id);
+                            }
+                        }
+
+                        if (gitlabIssue.labels) {
+                            for (const labelName of gitlabIssue.labels) {
+                                const label = await source.safeAxiosRequest<any>({
+                                    method: 'GET',
+                                    url: `/projects/${gitlabIssue.project_id}/labels/${labelName}`,
+                                });
+                                task.addLabel(labelName, label.data.color);
+                            }
+                        }
+
+                        const blockedBy = await source.safeAxiosRequest<Array<any>>({
+                            method: 'GET',
+                            url: `/projects/${gitlabIssue.project_id}/issues/${gitlabIssue.iid}/links`,
+                        });
+
+                        for (const link of blockedBy.data) {
+                            if (link.link_type === 'is_blocked_by') {
+                                task.addBlockedBy(link.title);
+                            }
+                        }
+
+                        allTasksList.push(task);
                     }
-                    allTasksList.push(task);
+
+                    if (!pagination.nextPage) {
+                        break;
+                    }
+
+                    allTaskPage++;
                 }
-            
+
                 allTasksList.sort((a: Task, b: Task) => {
                     if (a.due && b.due) {
                         return a.due.getTime() - b.due.getTime();
                     }
                     return 0;
                 });
-            
-                allTasksPaginated = new PaginatedListOfTasks(
-                    allTasksList,
-                    configuration.tasks.page as number,
-                    configuration.tasks.pageSize as number,
-                    pagination.previousPage,
-                    pagination.nextPage,
-                    pagination.lastPage,
-                    pagination.total,
-                );
-            
-                activeGroup.addTasks(allTasksPaginated);
-            }
+
+                activeGroup.addTasks(allTasksList);}
 
             console.log(activeGroup);            
             return activeGroup;

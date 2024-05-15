@@ -198,7 +198,7 @@ export default {
 
     let isThereStandaloneTasks = false;
     for (const task of this.$props.tasks.data) {
-      if (task.type !== 'project' && task.parent == 0) {
+      if (task.level === 1 && task.parent === 0) {
         isThereStandaloneTasks = true;
         break;
       }
@@ -234,9 +234,10 @@ export default {
                     <div class='searchEl'><label for="searchFilter">Search task :</label><input id='searchFilter' style='width: 120px;' type='text' placeholder='Search tasks...'></div>
                     ${isThereStandaloneTasks ? `<div class='standaloneFilter'><label for="standaloneFilter">Standalone tasks :</label><input id='standaloneFilter' type='checkbox' checked=${standaloneFilter}></div>` : ''}
                     <select v-model="${selectedScale}" class="selectScale">
-                      <option value="day">Jour</option>
-                      <option value="2days">2 Jours</option>
-                      <option value="week">Semaines</option>
+                      <option value="day">Day</option>
+                      <option value="2days">2 Days</option>
+                      <option value="week">Week</option>
+                      <option value="month">Month</option>
                     </select>
                     <div class="upload-logo-container" title="push all changes to GitLab" style="display: none">
                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
@@ -417,7 +418,7 @@ export default {
     };
 
     gantt.templates.grid_row_class = function(start, end, task){
-        return gantt.hasChild(task.id) ? "gantt_row_project" : "";
+        return task.level === 0 ? "gantt_row_project" : "";
     };  
 
 
@@ -476,6 +477,11 @@ export default {
             {unit: "week", step: 1, format: "%j, %D", css: daysStyle}
           ];
           break;
+        case 'month':
+          gantt.config.scales = [
+            {unit: "month", step: 1, format: "%F, %Y"},
+          ];
+          break;
       }
       gantt.render(); // re-rendre le diagramme de Gantt avec la nouvelle configuration
     });
@@ -519,7 +525,7 @@ export default {
       }
 
       // check standalone
-      if (!standaloneFilter && !gantt.hasChild(task.id) && task.type !== "project" && task.parent == 0 ) {
+      if (!standaloneFilter && !gantt.hasChild(task.id) && task.level === 1 && task.parent == 0 ) {
         match = false;
       }
 
