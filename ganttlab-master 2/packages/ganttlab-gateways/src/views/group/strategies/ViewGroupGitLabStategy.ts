@@ -36,6 +36,8 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                 configuration.group.path as string,
             );
 
+            const state = configuration.addClosedIssue ? 'all' : 'opened';
+
             let activeGroup: Group | null = null;
             let allTasksPaginated: PaginatedListOfTasks | null = null;
             let allTasksList: Array<Task> = [];
@@ -45,58 +47,26 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                 url: `/groups/${encodedGroup}`,
             });
 
-            // const usersResponse = await source.safeAxiosRequest<Array<GitLabUser>>({
-            //     method: 'GET',
-            //     url: `/groups/${encodedGroup}/members/all`,
-            //     params: {
-            //         per_page: 50,
-            //     },
-            // });
-            const usersResponse = [
-                {
-                    id: 1,
-                    email: "user1@example.com",
-                    username: "user1",
-                    avatar_url: "https://example.com/avatar1.png",
-                    web_url: "https://example.com/user1"
-                },
-                {
-                    id: 2,
-                    email: "user2@example.com",
-                    username: "user2",
-                    avatar_url: "https://example.com/avatar2.png",
-                    web_url: "https://example.com/user2"
-                },
-                {
-                    id: 3,
-                    email: "user3@example.com",
-                    username: "user3",
-                    avatar_url: "https://example.com/avatar3.png",
-                    web_url: "https://example.com/user3"
-                },
-                {
-                    id: 4,
-                    email: "user4@example.com",
-                    username: "user4",
-                    avatar_url: "https://example.com/avatar4.png",
-                    web_url: "https://example.com/user4"
-                }
-            ];
-            
+
             const users: Array<User> = [];
-            for (const gitlabUser of usersResponse) {
-                const user = new User(gitlabUser.id, gitlabUser.email, gitlabUser.username, gitlabUser.avatar_url, gitlabUser.web_url);
-                users.push(user);
+            if (configuration.admin) {
+                const usersResponse = await source.safeAxiosRequest<Array<GitLabUser>>({
+                    method: 'GET',
+                    url: `/groups/${encodedGroup}/members/all`,
+                    params: {
+                        per_page: 50,
+                    },
+                });
+
+                for (const gitlabUser of usersResponse.data) {
+                    const user = new User(gitlabUser.id, gitlabUser.email, gitlabUser.username, gitlabUser.avatar_url, gitlabUser.web_url);
+                    users.push(user);
+                }
             }
             
-            // const users: Array<User> = [];
-            // for (const gitlabUser of usersResponse.data) {
-            //     const user = new User(gitlabUser.id, gitlabUser.email, gitlabUser.username, gitlabUser.avatar_url, gitlabUser.web_url);
-            //     users.push(user);
-            // }
             
-            // doesn't work if not owner or maintainer
-
+      
+            
             const gitlabGroup = groupResponse.data;
             activeGroup = new Group(gitlabGroup.name, gitlabGroup.path, [] , users , gitlabGroup.avatar_url , gitlabGroup.web_url , gitlabGroup.description);
 
@@ -112,8 +82,7 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                         method: 'GET',
                         url: `/groups/${encodedGroup}/epics`,
                         params: {
-                            state: 'all',
-                            scope : 'all',
+                            state: state,
                             per_page: 100,
                             page: epicPage,
                         },
@@ -135,7 +104,7 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                                 params: {
                                     per_page: 100,
                                     page: taskForEpicPage,
-                                    state: 'all',
+                                    state: state,
                                     scope: 'all',
                                 },
                             });
@@ -159,15 +128,19 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                                         task.addLabel(labelName, label.data.color);
                                     }
                                 }
-                                const blockedBy = await source.safeAxiosRequest<Array<any>>({
-                                    method: 'GET',
-                                    url: `/projects/${gitlabIssue.project_id}/issues/${gitlabIssue.iid}/links`,
-                                });
-                                for (const link of blockedBy.data) {
-                                    if (link.link_type === 'is_blocked_by') {
-                                    task.addBlockedBy(link.title);
+
+                                if (configuration.displayLink) {
+                                    const blockedBy = await source.safeAxiosRequest<Array<any>>({
+                                        method: 'GET',
+                                        url: `/projects/${gitlabIssue.project_id}/issues/${gitlabIssue.iid}/links`,
+                                    });
+                                    for (const link of blockedBy.data) {
+                                        if (link.link_type === 'is_blocked_by') {
+                                        task.addBlockedBy(link.title);
+                                        }
                                     }
                                 }
+                                
                                 tasksListByEpic.push(task);
                             }
                         
@@ -188,28 +161,22 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                 
                     epicPage++;
                 }
-                activeGroup.epics.sort((a: Epic, b: Epic) => {
-                    if (a.due_date && b.due_date) {
-                        return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
-                    }
-                    return 0;
-                });
 
-            let taskPage = 1;
-            let allTasksList: Task[] = [];
+                let taskPage = 1;
+                let allTasksList: Task[] = [];
 
-            while (true) {
-                const { data, headers } = await source.safeAxiosRequest<Array<GitLabIssue>>({
-                    method: 'GET',
-                    url: `/groups/${encodedGroup}/issues`,
-                    params: {
-                        state: 'all',
-                        epic_id: 'none',
-                        scope: 'all',
-                        per_page: 100,
-                        page: taskPage,
-                    },
-                });
+                while (true) {
+                    const { data, headers } = await source.safeAxiosRequest<Array<GitLabIssue>>({
+                        method: 'GET',
+                        url: `/groups/${encodedGroup}/issues`,
+                        params: {
+                            state: state,
+                            epic_id: 'none',
+                            scope: 'all',
+                            per_page: 100,
+                            page: taskPage,
+                        },
+                    });
 
                 const pagination = getPaginationFromGitLabHeaders(headers);
 
@@ -223,14 +190,16 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                         }
                     }
 
-                    const blockedBy = await source.safeAxiosRequest<Array<any>>({
-                        method: 'GET',
-                        url: `/projects/${gitlabIssue.project_id}/issues/${gitlabIssue.iid}/links`,
-                    });
+                    if (configuration.displayLink) {
+                        const blockedBy = await source.safeAxiosRequest<Array<any>>({
+                            method: 'GET',
+                            url: `/projects/${gitlabIssue.project_id}/issues/${gitlabIssue.iid}/links`,
+                        });
 
-                    for (const link of blockedBy.data) {
-                        if (link.link_type === 'is_blocked_by') {
-                            task.addBlockedBy(link.title);
+                        for (const link of blockedBy.data) {
+                            if (link.link_type === 'is_blocked_by') {
+                                task.addBlockedBy(link.title);
+                            }
                         }
                     }
 
@@ -244,13 +213,6 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                 taskPage++;
             }
 
-            allTasksList.sort((a: Task, b: Task) => {
-                if (a.due && b.due) {
-                    return a.due.getTime() - b.due.getTime();
-                }
-                return 0;
-            });
-
             activeGroup.addTasks(allTasksList);
         }
 
@@ -262,7 +224,6 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                 method: 'GET',
                 url: `/groups/${encodedGroup}/projects`,
                 params: {
-                    state: 'all',
                     scope : 'all',
                  //   archived: false,
                 },
@@ -295,7 +256,7 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                             method: 'GET',
                             url: `/projects/${encodedProject}/issues`,
                             params: {
-                                state: 'all',
+                                state: state,
                                 scope : 'all',
                             //  group: gitlabProject.name,
                             },
@@ -341,12 +302,6 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                             projectPagination.total,
                         );
 
-                        activeTaskList.sort((a: Task, b: Task) => {
-                            if (a.due && b.due) {
-                                return a.due.getTime() - b.due.getTime();
-                            }
-                            return 0;
-                        });
                         project.addTasks(tasksForActiveProject);
                 }
             }
@@ -358,7 +313,7 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                     method: 'GET',
                     url: `/groups/${encodedGroup}/milestones`,
                     params: {
-                        state: 'all',
+                        state: 'active',
                     },
                     });
                 const milestonesList: Array<Milestone> = [];
@@ -416,13 +371,6 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                         milestonePagination.total,
                     );
             
-                    tasksListByMilestone.sort((a: Task, b: Task) => {
-                        if (a.due && b.due) {
-                            return a.due.getTime() - b.due.getTime();
-                        }
-                        return 0;
-                    });
-            
                     milestone.addTasks(tasksForMilestones);
                 }
                 activeGroup.addMilestones(milestonesList);
@@ -437,7 +385,7 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                         params: {
                             per_page: 100,
                             page: allTaskPage,
-                            state: 'all',
+                            state: state,
                             milestone: 'none',
                         },
                     });
@@ -484,13 +432,6 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
 
                     allTaskPage++;
                 }
-
-                allTasksList.sort((a: Task, b: Task) => {
-                    if (a.due && b.due) {
-                        return a.due.getTime() - b.due.getTime();
-                    }
-                    return 0;
-                });
 
                 activeGroup.addTasks(allTasksList);}
 

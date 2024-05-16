@@ -23,7 +23,7 @@ interface LegacyDhtmlXgantt {
   progress: number;
   state?: TaskState | null;
   type?: string;
-  users?: Array<Object> | null;
+  users?: Array<Record<string, any>> | null;
   labels?: any[];
   color?: string;
   row_height?: number;
@@ -321,6 +321,13 @@ if (group.tasks && group.tasks && group.tasks.length > 0) {
     taskID++;
   }
 }
+
+data.sort((a, b) => {
+  if (a.end_date && b.end_date) {
+    return moment(a.end_date).diff(moment(b.end_date));
+  }
+  return 0; 
+});
   return  data ;
 }
 

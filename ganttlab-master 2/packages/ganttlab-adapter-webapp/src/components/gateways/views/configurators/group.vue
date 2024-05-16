@@ -122,6 +122,17 @@
       <label for="sortByMilestones">Sort by Milestones</label>
     </div>
     <!-- ... -->
+
+    <div class="checkbox-group">
+      <input type="checkbox" id="admin" v-model="isAdmin" />
+      <label for="admin">Admin</label>
+
+      <input type="checkbox" id="displayLink" v-model="displayLink" />
+      <label for="displayLink">Display Link</label>
+
+      <input type="checkbox" id="addClosedIssue" v-model="addClosedIssue" />
+      <label for="addClosedIssue">Add Closed Issue</label>
+    </div>
   
 </template>
 
@@ -149,6 +160,9 @@
     public groups: Array<GitLabGroup> | null = null;
     public group: GitLabGroup | null = null;
     public sortBy = 'epic'; // 'projects', 'epic' or 'milestones'
+    public isAdmin = false;
+    public displayLink = false;
+    public addClosedIssue = false;
   
     @Prop({ required: true }) readonly sourceGateway!: GitLabGateway;
   
@@ -208,6 +222,9 @@
             pageSize: 50,
           },
             sortBy: this.sortBy,
+            isAdmin: this.isAdmin,
+            displayLink: this.displayLink,
+            addClosedIssue: this.addClosedIssue,
         };
       }
       return null;
@@ -244,4 +261,26 @@
     background-color: #4caf50;
     color: white;
   }
+
+  .checkbox-group {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.checkbox-group input[type="checkbox"] {
+  display: none;
+}
+
+.checkbox-group label {
+  padding: 10px 20px;
+  background-color: #f2f2f2;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.checkbox-group input[type="checkbox"]:checked + label {
+  background-color: #4caf50;
+  color: white;
+}
   </style>

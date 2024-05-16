@@ -362,7 +362,7 @@ export default {
             newUserSelect.id = `userSelect${task.users.length - 1}`;
             newUserSelect.className = 'userSelect';
             newUserSelect.innerHTML = `<option value='none'> </option>` + this.$props.users.map(user => `<option value='${JSON.stringify({ username: user.username, id: user.id })}'>${user.username}</option>`).join('');
-            let lastChild = container.lastElementChild;
+            const lastChild = container.lastElementChild;
             container.insertBefore(newUserSelect, lastChild);
 
             // Mettre à jour la référence à selects
@@ -436,9 +436,13 @@ export default {
     if (this.$props.tasks.data.length < 50) {
       gantt.config.open_tree_initially = true;   //if more than 50 tasks, tasks will be closed by default
     }
-
+    
+    
     gantt.init(this.$refs.ganttContainer);
     gantt.parse(this.$props.tasks);
+    gantt.sort((a, b) => {
+     return a.end_date - b.end_date;
+    }, false, 0, false);
     
 
     if (isThereStandaloneTasks) {
