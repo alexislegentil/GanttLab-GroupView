@@ -94,24 +94,19 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                         const newEpic = new Epic(epic.title, epic.description, epic.web_url, epic.state, epic.start_date, epic.due_date, epic.iid);
                         epicsList.push(newEpic);
                 
-                        let taskForEpicPage = 1;
                         let tasksListByEpic: Task[] = [];
                 
-                        while (true) {
                             const { data, headers } = await source.safeAxiosRequest<Array<GitLabIssue>>({
                                 method: 'GET',
                                 url: `/groups/${encodedGroup}/epics/${epic.iid}/issues`,
-                                params: {
-                                    per_page: 100,
-                                    page: taskForEpicPage,
-                                    state: state,
-                                    scope: 'all',
-                                },
                             });
                 
-                            const taskPagination = getPaginationFromGitLabHeaders(headers);
                 
                             for (const gitlabIssue of data) {
+                                if (gitlabIssue.state === 'closed' && !configuration.addClosedIssue) {
+                                    continue;
+                                }
+
                                 const task = getTaskFromGitLabIssue(gitlabIssue);
                                 task.addState(gitlabIssue.state);
                                 if (gitlabIssue.assignees) {
@@ -143,13 +138,6 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                                 
                                 tasksListByEpic.push(task);
                             }
-                        
-                            if (!taskPagination.nextPage) {
-                                break;
-                            }
-                        
-                            taskForEpicPage++;
-                        }
                         
                         newEpic.addTasks(tasksListByEpic);
                         activeGroup.addEpic(newEpic);
