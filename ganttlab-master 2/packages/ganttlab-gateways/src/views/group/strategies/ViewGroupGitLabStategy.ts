@@ -220,8 +220,7 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                 },
             });
             const projectPagination = getPaginationFromGitLabHeaders(projectsResponse.headers);
-            let tasksForAllProjects: PaginatedListOfTasks | null = null;
-            let tasksForActiveGroup: PaginatedListOfProjects | null = null;
+
             
             const projectsList: Array<Project> = [];
             const tasksList: Array<Task> = [];
@@ -243,57 +242,58 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                         gitlabProject.path_with_namespace as string,
                     );
         
-                        const { data, headers } = await source.safeAxiosRequest<Array<GitLabIssue>>({
-                            method: 'GET',
-                            url: `/projects/${encodedProject}/issues`,
-                            params: {
-                                state: state,
-                                scope : 'all',
-                            //  group: gitlabProject.name,
-                            },
-                        });
+                    let page = 1;
+                    let hasNextPage = true;
                     
-                        for (const gitlabIssue of data) {
-                            const task = getTaskFromGitLabIssue(gitlabIssue);
-                            tasksList.push(task);
-                            task.addState(gitlabIssue.state);
-                            if (gitlabIssue.assignees) {
-                                for (const user of gitlabIssue.assignees) {
-                                    task.addUser(user.username, user.id);
-                                }
-                            } 
-                            if (gitlabIssue.labels) {
-                                for (const labelName of gitlabIssue.labels) {
-                                    const label = await source.safeAxiosRequest<any>({
-                                        method: 'GET',
-                                        url: `/projects/${gitlabIssue.project_id}/labels/${labelName}`,
-                                    });
-                                    task.addLabel(labelName, label.data.color);
-                                }
-                            }
+                    while (hasNextPage) {
+                      const { data, headers } = await source.safeAxiosRequest<Array<GitLabIssue>>({
+                        method: 'GET',
+                        url: `/projects/${encodedProject}/issues`,
+                        params: {
+                          state: state,
+                          scope: 'all',
+                          page: page,
+                        },
+                      });
+                      const taskByProjectPagination = getPaginationFromGitLabHeaders(headers);
+                    
+                      for (const gitlabIssue of data) {
+                        const task = getTaskFromGitLabIssue(gitlabIssue);
+                        tasksList.push(task);
+                        task.addState(gitlabIssue.state);
+                        if (gitlabIssue.assignees) {
+                          for (const user of gitlabIssue.assignees) {
+                            task.addUser(user.username, user.id);
+                          }
+                        }
+                        if (gitlabIssue.labels) {
+                          for (const labelName of gitlabIssue.labels) {
+                            const label = await source.safeAxiosRequest<any>({
+                              method: 'GET',
+                              url: `/projects/${gitlabIssue.project_id}/labels/${labelName}`,
+                            });
+                            task.addLabel(labelName, label.data.color);
+                          }
+                        }
+                        if (configuration.displayLink) {
                             const blockedBy = await source.safeAxiosRequest<Array<any>>({
-                                method: 'GET',
-                                url: `/projects/${gitlabIssue.project_id}/issues/${gitlabIssue.iid}/links`,
+                            method: 'GET',
+                            url: `/projects/${gitlabIssue.project_id}/issues/${gitlabIssue.iid}/links`,
                             });
                             for (const link of blockedBy.data) {
-                                if (link.link_type === 'is_blocked_by') {
+                            if (link.link_type === 'is_blocked_by') {
                                 task.addBlockedBy(link.title);
-                                }
                             }
-                            activeTaskList.push(task);
-                        }   
-                        
-                        tasksForActiveProject = new PaginatedListOfTasks(
-                            activeTaskList,
-                            configuration.tasks.page as number,
-                            configuration.tasks.pageSize as number,
-                            projectPagination.previousPage,
-                            projectPagination.nextPage,
-                            projectPagination.lastPage,
-                            projectPagination.total,
-                        );
-
-                        project.addTasks(tasksForActiveProject);
+                            }
+                        }
+                        activeTaskList.push(task);
+                      }
+                    
+                      // Check if there is a next page
+                      hasNextPage = taskByProjectPagination.nextPage ? true : false;
+                      page++;
+                    }
+                        project.addTasks(activeTaskList);
                 }
             }
 
@@ -312,57 +312,58 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
           
                     const milestone = getMilestoneFromGitLabMilestone(gitlabMilestone);
                     milestonesList.push(milestone);
-                    let tasksForMilestones: PaginatedListOfTasks | null = null;
+                    let page = 1;
+                    let hasNextPage = true;
                     let tasksListByMilestone: Array<Task> = [];
-            
+
+                    while (hasNextPage) {
                     const { data, headers } = await source.safeAxiosRequest<Array<GitLabIssue>>({
                         method: 'GET',
                         url: `/groups/${encodedGroup}/issues`,
                         params: {
-                            milestone: milestone.name,
+                        milestone: milestone.name,
+                        page: page,
                         },
                     });
-                    const milestonePagination = getPaginationFromGitLabHeaders(headers);
+                    const taskByMilestonePagination = getPaginationFromGitLabHeaders(headers);
+
                     for (const gitlabIssue of data) {
                         const task = getTaskFromGitLabIssue(gitlabIssue);
                         task.addState(gitlabIssue.state);
                         if (gitlabIssue.assignees) {
-                            for (const user of gitlabIssue.assignees) {
-                                task.addUser(user.username, user.id);
-                            }
+                        for (const user of gitlabIssue.assignees) {
+                            task.addUser(user.username, user.id);
+                        }
                         } 
                         if (gitlabIssue.labels) {
-                            for (const labelName of gitlabIssue.labels) {
-                                const label = await source.safeAxiosRequest<any>({
-                                    method: 'GET',
-                                    url: `/projects/${gitlabIssue.project_id}/labels/${labelName}`,
-                                });
-                                task.addLabel(labelName, label.data.color);
-                            }
+                        for (const labelName of gitlabIssue.labels) {
+                            const label = await source.safeAxiosRequest<any>({
+                            method: 'GET',
+                            url: `/projects/${gitlabIssue.project_id}/labels/${labelName}`,
+                            });
+                            task.addLabel(labelName, label.data.color);
                         }
-                        const blockedBy = await source.safeAxiosRequest<Array<any>>({
+                        }
+                        if (configuration.displayLink) {
+                            const blockedBy = await source.safeAxiosRequest<Array<any>>({
                             method: 'GET',
                             url: `/projects/${gitlabIssue.project_id}/issues/${gitlabIssue.iid}/links`,
-                        });
-                        for (const link of blockedBy.data) {
+                            });
+                            for (const link of blockedBy.data) {
                             if (link.link_type === 'is_blocked_by') {
                                 task.addBlockedBy(link.title);
+                            }
                             }
                         }
                         tasksListByMilestone.push(task);
                     }
+
+                    // Check if there is a next page
+                    hasNextPage = taskByMilestonePagination.nextPage ? true : false;;
+                    page++;
+                    }
             
-                    tasksForMilestones = new PaginatedListOfTasks(
-                        tasksListByMilestone,
-                        configuration.tasks.page as number,
-                        configuration.tasks.pageSize as number,
-                        milestonePagination.previousPage,
-                        milestonePagination.nextPage,
-                        milestonePagination.lastPage,
-                        milestonePagination.total,
-                    );
-            
-                    milestone.addTasks(tasksForMilestones);
+                    milestone.addTasks(tasksListByMilestone);
                 }
                 activeGroup.addMilestones(milestonesList);
             

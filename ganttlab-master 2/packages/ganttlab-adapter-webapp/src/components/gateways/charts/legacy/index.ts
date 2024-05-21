@@ -211,8 +211,8 @@ if (group.projects && group.projects.length > 0) {
     };
     taskID++;
     data.push(projectRow);
-    if (project.tasks && project.tasks.list) {
-      for (const task of project.tasks.list) {
+    if (project.tasks && project.tasks) {
+      for (const task of project.tasks) {
         const taskState: TaskState | null = getStateFromGitLabState(task);
           let labels: any[] = [];
           if (task.labels && task.labels.length > 0) {
@@ -259,8 +259,8 @@ if (group.milestones && group.milestones.length > 0) {
     };
     taskID++;
     data.push(milestoneRow);
-    if (milestone.tasks && milestone.tasks.list) {
-      for (const task of milestone.tasks.list) {
+    if (milestone.tasks && milestone.tasks) {
+      for (const task of milestone.tasks) {
         const taskState: TaskState | null = getStateFromGitLabState(task);
           let labels: any[] = [];
           if (task.labels && task.labels.length > 0) {
@@ -354,8 +354,8 @@ export function getLinksFromGroup(group: Group, convertedGroup: Array<LegacyDhtm
   if (group.projects && group.projects.length > 0) {
     // Convert projects
     for (const project of group.projects) {
-      if (project.tasks && project.tasks.list) {
-        for (const task of project.tasks.list) {
+      if (project.tasks && project.tasks) {
+        for (const task of project.tasks) {
           if (task.blockedBy && task.blockedBy.length > 0) {
             for (const blockedBy of task.blockedBy) {
               const link : DhtmlxLink = {

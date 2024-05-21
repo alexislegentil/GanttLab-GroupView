@@ -192,7 +192,7 @@ async uploadTasks () {
   }
 
   get formattedAssignTo() {
-      return this.selectedTask.user;
+      return this.selectedTask.users?.map((user: any) => user.username).join(', ');
   }
   
   get formattedState() {

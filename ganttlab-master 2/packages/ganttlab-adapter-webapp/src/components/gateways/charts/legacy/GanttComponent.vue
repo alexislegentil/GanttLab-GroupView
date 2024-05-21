@@ -135,7 +135,8 @@ export default {
 
   data() {
     return {
-      selectedScale: "day"
+      selectedScale: "day",
+      isHidden: false
     }
   },
   
@@ -205,6 +206,10 @@ export default {
     addAssignUserToTask: function(id) {
       const task = gantt.getTask(id);
       task.users.push('');
+    },
+    toggleLegend() {
+      const legend = document.getElementById('gantt-legend');
+      legend.classList.toggle('hidden');
     }
   },
  
@@ -255,6 +260,7 @@ export default {
                       <option value="week">Week</option>
                       <option value="month">Month</option>
                     </select>
+                    <button class="toggleLegend">Toggle Legend</button>
                     <div class="upload-logo-container" title="push all changes to GitLab" style="display: none">
                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
                         <!--
@@ -436,16 +442,25 @@ export default {
     gantt.config.columns_resizable = true;
     gantt.config.columns_autoresize = true;
 
+    let today = new Date();
 
-    gantt.addMarker({
-      start_date: new Date(), //a Date object that sets the marker's date
+    const todayMarker = gantt.addMarker({
+      start_date: today, //a Date object that sets the marker's date
       css: "today", //a CSS class applied to the marker
       text: "Now", //the marker title
-      title: dateToStr( new Date()) // the marker's tooltip
+      title: dateToStr( today) // the marker's tooltip
     });
 
+    let closestTask = this.$props.tasks.data.reduce((closest, current) => {
+      let currentDate = new Date(current.start_date);
+      let closestDate = new Date(closest.start_date);
+      return Math.abs(today - currentDate) < Math.abs(today - closestDate) ? current : closest;
+    });
+
+    
+
     if (this.$props.tasks.data.length < 50) {
-      gantt.config.open_tree_initially = true;   //if more than 50 tasks, tasks will be closed by default
+      gantt.config.open_tree_initially = true;   //if more than 50 tasks, epics will be closed by default
     }
     
     
@@ -459,6 +474,10 @@ export default {
     const end = performance.now();
     const executionTime = end - start;
     console.log(`Temps d'exécution tri : ${executionTime} millisecondes.`);
+
+    
+    gantt.showDate(gantt.getMarker(todayMarker).start_date);
+    gantt.showTask(closestTask.id);                             // this will scroll the timeline to the task, horizontally and vertically
 
     let firstElement = this.$props.tasks.data[0];
     let lastElement = this.$props.tasks.data[this.$props.tasks.data.length - 1];
@@ -488,6 +507,8 @@ export default {
         gantt.refreshData();
       });
     }
+
+    document.querySelector(".toggleLegend").addEventListener('click', this.toggleLegend);
     
     document.querySelectorAll(".state-checkbox").forEach(function(checkbox) {
         checkbox.onchange = function(e) {
@@ -735,12 +756,16 @@ export default {
 
 .gantt-controls button {
     margin-right: 1rem;
-    padding: 0.5rem 1rem;
+    padding: 0.3rem 0.8rem;
     background-color: #168af0;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
+}
+
+.toggleLegend {
+  margin-left: 1rem;
 }
 .state-checkbox {
     display: flex;
