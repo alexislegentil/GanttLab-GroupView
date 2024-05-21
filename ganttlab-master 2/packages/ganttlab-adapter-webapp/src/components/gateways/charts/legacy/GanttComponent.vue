@@ -459,8 +459,9 @@ export default {
 
     
 
-    if (this.$props.tasks.data.length < 50) {
-      gantt.config.open_tree_initially = true;   //if more than 50 tasks, epics will be closed by default
+    let topLevelTasks = this.$props.tasks.data.filter(task => task.level === 0);
+    if (topLevelTasks.length < 10) {
+      gantt.config.open_tree_initially = true; // if less than 10 top level tasks, epics will be opened by default
     }
     
     

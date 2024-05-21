@@ -132,6 +132,10 @@
 
       <input type="checkbox" id="addClosedIssue" v-model="addClosedIssue" />
       <label for="addClosedIssue">Add Closed Issue</label>
+
+      <i class="fas fa-info-circle" title="Admin: you must have the owner or maintainer role on the group 
+Display Link: retrieves “blocked by” issues. Increases loading time
+Add Closed Issue: increases loading time and reduces graph readability"></i>
     </div>
   
 </template>
@@ -139,6 +143,7 @@
     </div>
   </template>
   
+  <script src="https://kit.fontawesome.com/a076d05399.js"></script>
   <script lang="ts">
   import { Component, Vue, Emit, Prop } from 'vue-property-decorator';
   import GenericAutocomplete from '../../../generic/forms/Autocomplete.vue';
@@ -264,6 +269,7 @@
 
   .checkbox-group {
   display: flex;
+  align-items: center;
   margin-bottom: 20px;
 }
 
