@@ -32,6 +32,8 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
             filter: Filter | null,
         ): Promise<Group> {
 
+            const start = performance.now();
+
             const encodedGroup = encodeURIComponent(
                 configuration.group.path as string,
             );
@@ -103,6 +105,7 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                 
                 
                             for (const gitlabIssue of data) {
+
                                 if (gitlabIssue.state === 'closed' && !configuration.addClosedIssue) {
                                     continue;
                                 }
@@ -423,7 +426,14 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
 
                 activeGroup.addTasks(allTasksList);}
 
-            console.log(activeGroup);            
+            console.log(activeGroup);       
+            
+            const end = performance.now();
+
+            const executionTime = end - start;
+        
+            console.log(`Temps d'exécution requête : ${executionTime} millisecondes.`);
+
             return activeGroup;
           //  return tasksForAllProjects as PaginatedListOfTasks;
         }
@@ -446,7 +456,7 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                         description = description.replace(ganttStartRegex, `GanttStart: ${task.start_date}`);
                     } else {
                         // Sinon, ajoutez "GanttStart: date" au début de la description
-                        description = `GanttStart: ${task.start_date}\n${description}`;
+                        description = `GanttStart: ${task.start_date}\n\n${description}`;
                     }
 
                     let state_event = '';

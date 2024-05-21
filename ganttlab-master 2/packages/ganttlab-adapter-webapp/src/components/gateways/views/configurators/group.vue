@@ -264,23 +264,12 @@
 
   .checkbox-group {
   display: flex;
-  justify-content: space-between;
   margin-bottom: 20px;
 }
 
-.checkbox-group input[type="checkbox"] {
-  display: none;
-}
-
 .checkbox-group label {
-  padding: 10px 20px;
-  background-color: #f2f2f2;
-  border-radius: 5px;
+  padding: 10px 35px 10px 5px;
   cursor: pointer;
 }
 
-.checkbox-group input[type="checkbox"]:checked + label {
-  background-color: #4caf50;
-  color: white;
-}
   </style>

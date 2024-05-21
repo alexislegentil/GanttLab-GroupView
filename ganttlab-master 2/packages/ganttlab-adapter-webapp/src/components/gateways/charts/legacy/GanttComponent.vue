@@ -5,6 +5,11 @@
 <script>
 /* eslint-disable @typescript-eslint/camelcase */
 import {gantt, Gantt} from 'dhtmlx-gantt';
+import { getModule } from 'vuex-module-decorators';
+import MainModule from '../../../../store/modules/MainModule';
+import moment from 'moment-timezone';
+
+const mainState = getModule(MainModule);
 
 const dateToStr = gantt.date.date_to_str(gantt.config.task_date);
 
@@ -101,8 +106,6 @@ const stateFilter = {
 
 let standaloneFilter = true;
 
-let selectedScale = "day";
-
 const daysStyle = function(date){
     const dateToStr = gantt.date.date_to_str("%D");
     if (dateToStr(date) == "Sun"||dateToStr(date) == "Sat")  return "weekend";
@@ -129,12 +132,18 @@ export default {
       required: true
     }
   },
+
+  data() {
+    return {
+      selectedScale: "day"
+    }
+  },
   
   watch: {
     requestsQueue: {
       handler: function (requestsQueue) {
         const uploadButtonDiv = document.querySelector(".upload-logo-container");
-        if (requestsQueue.length > 0) {
+        if (requestsQueue.length > 0 && mainState.viewGateway.configuration.admin) {
           if (uploadButtonDiv) {
             uploadButtonDiv.style.display = 'block';
           }
@@ -144,6 +153,15 @@ export default {
             uploadButtonDiv.style.display = 'none';
           }
         }
+      },
+      deep: true
+    },
+    selectedScale: {
+      handler: function (newVal, oldVal) {
+        const selectScale = document.querySelector(".selectScale");
+        selectScale.value = newVal;
+        let event = new Event('change');
+        selectScale.dispatchEvent(event);
       },
       deep: true
     }
@@ -192,8 +210,6 @@ export default {
  
   mounted: function () {
 
-    console.log('component mounted');
-
     this.$_initGanttEvents();
 
     let isThereStandaloneTasks = false;
@@ -226,14 +242,14 @@ export default {
                       <button class="gantt-redo" onclick="gantt.redo()">Redo</button>
                     <div class="state-filter">
                       <div class="state-filter-unassigned"><input type="checkbox" id="Unassigned" class="state-checkbox" checked=${stateFilter["Unassigned"]} onChange="stateCheckboxOnChange('Unassigned')"><label for="Unassigned">Unassigned</label></div>
-                      <div class="state-filter-closed"><input type="checkbox" id="Closed" class="state-checkbox" checked=${stateFilter["Closed"]} onChange="stateCheckboxOnChange('Closed')"><label for="Closed">Closed</label></div>
+                      <div class="state-filter-closed" style="display : ${mainState.viewGateway.configuration.addClosedIssue ? ``:`none`}"><input type="checkbox" id="Closed" class="state-checkbox" checked=${stateFilter["Closed"]} onChange="stateCheckboxOnChange('Closed')"><label for="Closed">Closed</label></div>
                       <div class="state-filter-inprogress"><input type="checkbox" id="InProgress" class="state-checkbox" checked=${stateFilter["InProgress"]} onChange="stateCheckboxOnChange('InProgress')"><label for="InProgress">InProgress</label></div>
                       <div class="state-filter-late"><input type="checkbox" id="Late" class="state-checkbox" checked=${stateFilter["Late"]} onChange="stateCheckboxOnChange('Late')"><label for="Late">Late</label></div>
                       <div class="state-filter-unscheduled"><input type="checkbox" id="Unscheduled" class="state-checkbox" checked=${stateFilter["Unscheduled"]} onChange="stateCheckboxOnChange('Unscheduled')"><label for="Unscheduled">Unscheduled</label></div>
                     </div>
                     <div class='searchEl'><label for="searchFilter">Search task :</label><input id='searchFilter' style='width: 120px;' type='text' placeholder='Search tasks...'></div>
                     ${isThereStandaloneTasks ? `<div class='standaloneFilter'><label for="standaloneFilter">Standalone tasks :</label><input id='standaloneFilter' type='checkbox' checked=${standaloneFilter}></div>` : ''}
-                    <select v-model="${selectedScale}" class="selectScale">
+                    <select v-model="${this.selectedScale}" class="selectScale">
                       <option value="day">Day</option>
                       <option value="2days">2 Days</option>
                       <option value="week">Week</option>
@@ -278,11 +294,6 @@ export default {
           }
       ]
     };
-
-    gantt.config.scales = [
-      {unit: "month", step: 1, format: "%F, %Y"},
-      {unit: "day", step: 1, format: "%j, %D",  css:daysStyle}  
-    ];
     
     gantt.config.fit_tasks = true;
 
@@ -440,9 +451,35 @@ export default {
     
     gantt.init(this.$refs.ganttContainer);
     gantt.parse(this.$props.tasks);
-    gantt.sort((a, b) => {
-     return a.end_date - b.end_date;
-    }, false, 0, false);
+
+    const start = performance.now();
+
+    gantt.sort((a, b) => new Date(a.end_date) - new Date(b.end_date), false, 0, false);
+
+    const end = performance.now();
+    const executionTime = end - start;
+    console.log(`Temps d'exécution tri : ${executionTime} millisecondes.`);
+
+    let firstElement = this.$props.tasks.data[0];
+    let lastElement = this.$props.tasks.data[this.$props.tasks.data.length - 1];
+
+    let startDate = new Date(firstElement.start_date);
+    let endDate = new Date(lastElement.end_date);
+
+    let diffInDays = moment(startDate).diff(moment(endDate), 'days');
+   
+      if (diffInDays <= 7) {
+        this.selectedScale = "day";
+
+      } else if (diffInDays <= 30) {
+        this.selectedScale = "2days";
+
+      } else if (diffInDays <= 200) {
+        this.selectedScale = "week";
+      } else {
+        this.selectedScale = "month";
+
+      }
     
 
     if (isThereStandaloneTasks) {
@@ -459,10 +496,11 @@ export default {
         };
     });
 
+   
     document.querySelector(".selectScale").addEventListener('change', function(e) {
-      selectedScale = e.target.value;
+      this.selectedScale = e.target.value;
   
-      switch (selectedScale) {
+      switch (this.selectedScale) {
         case 'day':
           gantt.config.scales = [
             {unit: "month", step: 1, format: "%F, %Y"},
