@@ -94,6 +94,16 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                 
                     for (const epic of epicsResponse.data) {
                         const newEpic = new Epic(epic.title, epic.description, epic.web_url, epic.state, epic.start_date, epic.due_date, epic.iid);
+                        if (epic.labels.length > 0) {
+                        for (const labelName of epic.labels as any) {
+                            const encodedLabelName = encodeURIComponent(labelName as string);
+                            const label = await source.safeAxiosRequest<any>({
+                            method: 'GET',
+                            url: `/groups/${encodedGroup}/labels/${encodedLabelName}`,
+                            });
+                            newEpic.addLabel(label.data.name, label.data.color); // Call addLabel on newEpic
+                        }
+                        }
                         epicsList.push(newEpic);
                 
                         let tasksListByEpic: Task[] = [];

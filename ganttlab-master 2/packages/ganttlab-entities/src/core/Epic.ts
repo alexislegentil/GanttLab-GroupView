@@ -1,12 +1,20 @@
 import { PaginatedListOfTasks } from "../pagination/PaginatedListOfTasks";
 import { Task } from "./Task";
 
+class Label {
+  constructor(
+    public name: string,
+    public color: string,
+  ) {}
+}
+
 /**
  * A project, which can contain tasks, milestones...
  */
 export class Epic {
 
     public Tasks: Task[] | null = null;
+    public labels: Array<Label> = [];
 
     constructor(
         public title: string,
@@ -22,6 +30,11 @@ export class Epic {
 
     public addTasks(Task: Task[]) {
       this.Tasks = Task;
+    }
+
+    public addLabel(labelName: string, labelColor: string): void {
+      const label = new Label(labelName, labelColor);
+      this.labels.push(label);
     }
   }
   

@@ -338,7 +338,7 @@ export default {
       const addButton = `<div class='addUserAssign' ><svg xmlns="http:www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z"/></svg></div>`;
 
       task.my_template = "<span id='lightbox_users_title'>Assign to: </span><div class='lightbox_user'>" 
-      + `${task.users.map((taskUser, index) => {
+      + `${task.users?.map((taskUser, index) => {
         return `<select id="userSelect${index}" class='userSelect'> <option value='none'> </option> ${this.$props.users.map(user =>{
           return `<option class="userOption" value='${JSON.stringify({ username: user.username, id: user.id })}' ${taskUser.username === user.username ? 'selected' : ''}>${user.username}</option>`
         }).join('')
@@ -346,7 +346,7 @@ export default {
       }).join('')}`
       + addButton + "</div>"
       + "<br>  <span id='lightbox_progress'>Progress: </span>"+ task.progress*100 +" %"
-      + `<br>  <div class='lightbox_labels'>${task.labels.map(label => `<span style="padding: 3px;color: white;background-color:${label.color};border-radius:5px">${label.name}</span>`).join('')}</div>`;
+      + `<br>  <div class='lightbox_labels'>${task.labels?.map(label => `<span style="padding: 3px;color: white;background-color:${label.color};border-radius:5px">${label.name}</span>`).join('')}</div>`;
 
 
       this.$nextTick(() => {
@@ -470,7 +470,9 @@ export default {
 
     const start = performance.now();
 
-    gantt.sort((a, b) => new Date(a.end_date) - new Date(b.end_date), false, 0, false);
+    gantt.sort((a, b) => {     
+      return new Date(a.end_date) - new Date(b.end_date);
+    }, false, 0, false);
 
     const end = performance.now();
     const executionTime = end - start;
@@ -660,13 +662,26 @@ export default {
     overflow:hidden;
     text-overflow: ellipsis;
 }
-/* .gantt_tree_icon.gantt_folder_open {
-    background-image: url("../../../generic/icons/Folder\ Minus\ Classic.svg")!important;
+
+.gantt_cell .gantt_tree_icon.gantt_folder_open {
+    background-image: url("../../../generic/icons/FolderOpened.svg")!important;
+    background-size: 17px 17px; 
 }
 
-.gantt_tree_icon.gantt_folder_closed {
-    background-image: url("../../../generic/icons/Folder\ plus\ solid.svg")!important;
-} */
+.gantt_cell .gantt_tree_icon.gantt_folder_closed {
+    background-image: url("../../../generic/icons/FolderClosed.svg")!important;
+    background-size: 17px 17px; 
+}
+
+.gantt_row_project > div > .gantt_tree_icon.gantt_file {
+  background-image: url("../../../generic/icons/FolderOpened.svg")!important;
+  background-size: 17px 17px; 
+}
+
+div:not(.gantt_row_project) > div > .gantt_tree_icon.gantt_file {
+    background-image: url("../../../generic/icons/File.svg")!important;
+    background-size: 17px 17px; 
+}
 
 .unassigned {
     background-color: #2b84cf;

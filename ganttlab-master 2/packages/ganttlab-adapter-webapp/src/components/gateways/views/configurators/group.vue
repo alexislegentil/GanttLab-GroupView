@@ -133,8 +133,8 @@
       <input type="checkbox" id="addClosedIssue" v-model="addClosedIssue" />
       <label for="addClosedIssue">Add Closed Issue</label>
 
-      <i class="fas fa-info-circle" title="Admin: you must have the owner or maintainer role on the group 
-Display Link: retrieves “blocked by” issues. Increases loading time
+      <i class="fas fa-info-circle" title="Admin: you must have the owner or maintainer role on the group to make changes on gitlab
+Display Link: retrieves “blocked by” issues. Increases loading time 
 Add Closed Issue: increases loading time and reduces graph readability"></i>
     </div>
   

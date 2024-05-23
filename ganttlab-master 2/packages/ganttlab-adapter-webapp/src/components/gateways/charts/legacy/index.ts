@@ -146,6 +146,10 @@ export function getConvertedGroup(group: Group): Array<LegacyDhtmlXgantt> {
   // Convert epics
 if (group.epics && group.epics.length > 0) {
   for (const epic of group.epics) {
+    let labels: any[] = [];
+    if (epic.labels && epic.labels.length > 0) {
+      labels = epic.labels;
+    }
     const epicRow : LegacyDhtmlXgantt = {
       id: taskID,
       epic_id: epic.iid,
@@ -157,6 +161,7 @@ if (group.epics && group.epics.length > 0) {
       type:  epic.start_date  && epic.due_date ? "task" : "project",  //like this, if there are fixed dates there are priorities, and if not the dates are the child issues ones
       color:"#4f4e4e",
       row_height: 25,
+      labels: labels,
       level: 0
     };
     taskID++;
