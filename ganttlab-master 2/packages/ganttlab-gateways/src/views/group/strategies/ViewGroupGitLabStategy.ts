@@ -93,16 +93,16 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                     const epicPagination = getPaginationFromGitLabHeaders(epicsResponse.headers);
                 
                     for (const epic of epicsResponse.data) {
-                        const newEpic = new Epic(epic.title, epic.description, epic.web_url, epic.state, epic.start_date, epic.due_date, epic.iid);
+                        const newEpic = new Epic(epic.title, epic.description, epic.web_url, epic.state, epic.start_date, epic.due_date, epic.iid, epic.created_at);
                         if (epic.labels.length > 0) {
-                        for (const labelName of epic.labels as any) {
-                            const encodedLabelName = encodeURIComponent(labelName as string);
-                            const label = await source.safeAxiosRequest<any>({
-                            method: 'GET',
-                            url: `/groups/${encodedGroup}/labels/${encodedLabelName}`,
-                            });
-                            newEpic.addLabel(label.data.name, label.data.color); // Call addLabel on newEpic
-                        }
+                            for (const labelName of epic.labels as any) {
+                                const encodedLabelName = encodeURIComponent(labelName as string);
+                                const label = await source.safeAxiosRequest<any>({
+                                method: 'GET',
+                                url: `/groups/${encodedGroup}/labels/${encodedLabelName}`,
+                                });
+                                newEpic.addLabel(label.data.name, label.data.color); // Call addLabel on newEpic
+                            }
                         }
                         epicsList.push(newEpic);
                 
@@ -188,6 +188,16 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                     if (gitlabIssue.assignees) {
                         for (const user of gitlabIssue.assignees) {
                             task.addUser(user.username, user.id);
+                        }
+                    }
+
+                    if (gitlabIssue.labels) {
+                        for (const labelName of gitlabIssue.labels) {
+                            const label = await source.safeAxiosRequest<any>({
+                                method: 'GET',
+                                url: `/projects/${gitlabIssue.project_id}/labels/${labelName}`,
+                            });
+                            task.addLabel(labelName, label.data.color);
                         }
                     }
 

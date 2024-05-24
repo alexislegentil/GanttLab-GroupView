@@ -304,7 +304,7 @@ export default {
     gantt.config.fit_tasks = true;
 
     gantt.config.columns = [
-      {name: "name", label: "Task name", tree: true, width: 170, resize: true },
+      {name: "name", label: "Task name", tree: true, width: 200, resize: true },
       {name: "start_date", label: "Start time", align: "center", width: 150 , resize: true, editor: dateEditor},
       {name: "duration", label: "Duration", align: "center", width: 60, editor: durationEditor},
       {name: "users", label: "User", align: "center", width: 100, template:function(obj){
@@ -314,7 +314,7 @@ export default {
 
     gantt.config.lightbox.sections = [
       {name: "name", label: "Name", height:30, map_to:"name", type:"textarea", focus:true},
-      {name:"description", label: "Description", height:72, map_to:"description", type:"textarea"},
+      {name:"description", label: "Description", height:120, map_to:"description", type:"textarea"},
       {name:"state",    height:22, map_to:"state", type:"select", options: stateEditor.options},
       {name:"template", height:150, type:"template", map_to:"my_template"}, 
       {name: "time", height:72, map_to:"auto", type:"duration"}
@@ -322,6 +322,8 @@ export default {
 
     gantt.config.lightbox.project_sections = [
       {name: "name", label: "Name", height:30, map_to:"name", type:"textarea", focus:true},
+      {name:"description", label: "Description", height:72, map_to:"description", type:"textarea"},
+      {name:"template", height:150, type:"template", map_to:"my_template"}, 
       {name: "time", height:72, map_to:"auto", type:"duration"}
     ];
 
@@ -333,6 +335,13 @@ export default {
 
     gantt.attachEvent("onBeforeLightbox", (id) =>  {
       const task = gantt.getTask(id);
+
+      if (task.level === 0 ) {
+        gantt.config.lightbox.sections = gantt.config.lightbox.project_sections;
+        task.my_template = `<div class='lightbox_labels'>${task.labels?.map(label => `<span style="padding: 3px;color: white;background-color:${label.color};border-radius:5px">${label.name}</span>`).join('')}</div>`;
+
+        return true;
+      }
     
       //<!--!Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.-->
       const addButton = `<div class='addUserAssign' ><svg xmlns="http:www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z"/></svg></div>`;

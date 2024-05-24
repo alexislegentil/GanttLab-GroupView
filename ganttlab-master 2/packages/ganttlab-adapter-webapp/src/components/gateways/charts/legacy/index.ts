@@ -150,15 +150,16 @@ if (group.epics && group.epics.length > 0) {
     if (epic.labels && epic.labels.length > 0) {
       labels = epic.labels;
     }
+    
     const epicRow : LegacyDhtmlXgantt = {
       id: taskID,
       epic_id: epic.iid,
       name: epic.title,
-      start_date: epic.start_date ?  moment(epic.start_date).format('YYYY-MM-DD HH:mm:ss') : null,
-      end_date: epic.due_date ?  moment(epic.due_date).format('YYYY-MM-DD HH:mm:ss') : null,
+      start_date: epic.start_date ?  moment(epic.start_date).format('YYYY-MM-DD HH:mm:ss') : moment(epic.created_at).format('YYYY-MM-DD HH:mm:ss'),
+      end_date: epic.due_date ?  moment(epic.due_date).format('YYYY-MM-DD HH:mm:ss') : epic.start_date ? moment(epic.start_date).add(1, 'days').format('YYYY-MM-DD HH:mm:ss') : moment(epic.created_at).add(1, 'days').format('YYYY-MM-DD HH:mm:ss'),
       parent: 0,
       progress: 0,
-      type:  epic.start_date  && epic.due_date ? "task" : "project",  //like this, if there are fixed dates there are priorities, and if not the dates are the child issues ones
+      type:  epic.start_date  && epic.due_date  ? "task" : epic.Tasks && epic.Tasks.length > 0 ? "project" : "task",  //like this, if there are fixed dates there are priorities, and if not the dates are the child issues ones
       color:"#4f4e4e",
       row_height: 25,
       labels: labels,

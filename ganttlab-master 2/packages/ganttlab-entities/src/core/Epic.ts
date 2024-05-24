@@ -24,6 +24,7 @@ export class Epic {
         public start_date: string,
         public due_date: string,
         public iid: number,
+        public created_at: string,
     ) {
         this.Tasks = null;
     }
