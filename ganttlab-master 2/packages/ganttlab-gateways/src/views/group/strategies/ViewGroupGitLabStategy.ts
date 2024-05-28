@@ -51,7 +51,7 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
 
 
             const users: Array<User> = [];
-            if (configuration.admin) {
+            if (configuration.admin) {  // if user is admin, he can just get all user from the group, else users will be an array with every assignee of the tasks
                 const usersResponse = await source.safeAxiosRequest<Array<GitLabUser>>({
                     method: 'GET',
                     url: `/groups/${encodedGroup}/members/all`,
@@ -66,14 +66,10 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                 }
             }
             
-            
-      
-            
             const gitlabGroup = groupResponse.data;
             activeGroup = new Group(gitlabGroup.name, gitlabGroup.path, [] , users , gitlabGroup.avatar_url , gitlabGroup.web_url , gitlabGroup.description);
 
          
-
             if (configuration.sortBy === 'epic') {
             
                 let epicPage = 1;
@@ -111,6 +107,9 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                             const { data, headers } = await source.safeAxiosRequest<Array<GitLabIssue>>({
                                 method: 'GET',
                                 url: `/groups/${encodedGroup}/epics/${epic.iid}/issues`,
+                                params: {
+                                    state: state,
+                                },
                             });
                 
                 
@@ -124,8 +123,13 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                                 task.addState(gitlabIssue.state);
                                 if (gitlabIssue.assignees) {
                                     for (const user of gitlabIssue.assignees) {
+                                        if (!configuration.admin) {
+                                          if (!users.some(u => u.username === user.username)) {
+                                            users.push(new User(user.id, user.email, user.username, user.avatar_url, user.web_url));
+                                          }
+                                        }
                                         task.addUser(user.username, user.id);
-                                    }
+                                      }
                                 } 
                                 if (gitlabIssue.labels) {
                                     for (const labelName of gitlabIssue.labels) {
@@ -187,8 +191,13 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
 
                     if (gitlabIssue.assignees) {
                         for (const user of gitlabIssue.assignees) {
+                            if (!configuration.admin) {
+                              if (!users.some(u => u.username === user.username)) {
+                                users.push(new User(user.id, user.email, user.username, user.avatar_url, user.web_url));
+                              }
+                            }
                             task.addUser(user.username, user.id);
-                        }
+                          }
                     }
 
                     if (gitlabIssue.labels) {
@@ -282,9 +291,14 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                         tasksList.push(task);
                         task.addState(gitlabIssue.state);
                         if (gitlabIssue.assignees) {
-                          for (const user of gitlabIssue.assignees) {
-                            task.addUser(user.username, user.id);
-                          }
+                            for (const user of gitlabIssue.assignees) {
+                                if (!configuration.admin) {
+                                  if (!users.some(u => u.username === user.username)) {
+                                    users.push(new User(user.id, user.email, user.username, user.avatar_url, user.web_url));
+                                  }
+                                }
+                                task.addUser(user.username, user.id);
+                              }
                         }
                         if (gitlabIssue.labels) {
                           for (const labelName of gitlabIssue.labels) {
@@ -351,9 +365,14 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
                         const task = getTaskFromGitLabIssue(gitlabIssue);
                         task.addState(gitlabIssue.state);
                         if (gitlabIssue.assignees) {
-                        for (const user of gitlabIssue.assignees) {
-                            task.addUser(user.username, user.id);
-                        }
+                            for (const user of gitlabIssue.assignees) {
+                                if (!configuration.admin) {
+                                  if (!users.some(u => u.username === user.username)) {
+                                    users.push(new User(user.id, user.email, user.username, user.avatar_url, user.web_url));
+                                  }
+                                }
+                                task.addUser(user.username, user.id);
+                              }
                         } 
                         if (gitlabIssue.labels) {
                         for (const labelName of gitlabIssue.labels) {
@@ -410,6 +429,11 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
 
                         if (gitlabIssue.assignees) {
                             for (const user of gitlabIssue.assignees) {
+                                if (!configuration.admin) {
+                                  if (!users.some(u => u.username === user.username)) {
+                                    users.push(new User(user.id, user.email, user.username, user.avatar_url, user.web_url));
+                                  }
+                                }
                                 task.addUser(user.username, user.id);
                             }
                         }
@@ -454,6 +478,10 @@ import { GitLabUser } from '../../../sources/gitlab/types/GitLabUser';
             const executionTime = end - start;
         
             console.log(`Temps d'exécution requête : ${executionTime} millisecondes.`);
+
+            if (configuration.admin === false) {
+                activeGroup.users = users;
+            }
 
             return activeGroup;
           //  return tasksForAllProjects as PaginatedListOfTasks;

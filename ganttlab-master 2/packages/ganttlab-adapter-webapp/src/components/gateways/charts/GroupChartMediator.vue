@@ -1,6 +1,7 @@
 <template>
   <div class="gantt-container">
     <button class="button" @click="toggleRightContainer">{{ rightContainerVisible ? 'Hide' : 'Show' }} logs</button>
+    <button class="toggleLegend">Toggle Legend</button>
     <transition name="slide">
     <div class="right-container" v-show="rightContainerVisible">
       <div class="gantt-selected-info">
@@ -94,7 +95,13 @@ export default class GroupChartMediator extends Vue {
       }
   }
 
+  toggleLegend() {
+      const legend = document.getElementById('gantt-legend');
+      legend?.classList.toggle('hidden');
+    }
+
   mounted() {
+    document.querySelector(".toggleLegend")?.addEventListener('click', this.toggleLegend);
     this.$on('task-updated', this.logTaskUpdate);
   }
 
@@ -167,7 +174,8 @@ async uploadTasks () {
     this.requestsQueue = [];
   }
 }
-  
+
+
 
   toggleRightContainer() {
     this.rightContainerVisible = !this.rightContainerVisible;
@@ -273,8 +281,23 @@ async uploadTasks () {
     color: #d9d9d9;
   }
 
+.toggleLegend {
+  background-color: #619bcd;
+  border: none;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 13px;
+  margin: 4px 2px;
+  cursor: pointer;
+  transition-duration: 0.4s;
+}
+
   .button {
-  background-color: #4CAF50; 
+  background-color: #7ab47d; 
   border: none; 
   color: white; 
   padding: 5px 10px; 
