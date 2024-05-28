@@ -421,6 +421,19 @@ export default class Home extends Vue {
   }
 
   async setView(view: SourceVisitor<unknown>) {
+    let filter = mainState.filterGateway ? mainState.filterGateway.instance : null;
+
+    if (view.slug === 'group') {
+      filter = null;
+      if (!this.littleHeader) {
+        this.littleHeader = true;
+        return;
+      }
+    }
+    else {
+      this.littleHeader = false;
+    }
+
     if (!this.sourceGateway) {
       return;
     }
@@ -428,7 +441,7 @@ export default class Home extends Vue {
     this.paginatedTasks = null;
     this.paginatedMilestones = null;
     this.group = null;
-    let filter = mainState.filterGateway ? mainState.filterGateway.instance : null;
+    
   
     try {
       const data = await this.sourceGateway.getDataFor(view, filter);
@@ -468,14 +481,6 @@ export default class Home extends Vue {
         configuration: view.configuration,
       };
       LocalForage.setItem('viewsBySource', viewsBySource);
-    }
-
-    if (view.slug === 'group') {
-      this.littleHeader = true;
-      filter = null;
-    }
-    else {
-      this.littleHeader = false;
     }
   }
 

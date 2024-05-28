@@ -70,33 +70,33 @@ import { AnyKindOfDictionary } from 'lodash';
       await this.$emit('upload-tasks', tasks);
     }
   
-    get previousPage(): number | null {
-      if (this.group.tasks && this.group.tasks.previousPage) {
-        return this.group.tasks.previousPage;
-      }
-      return null;
-    }
+    // get previousPage(): number | null {
+    //   if (this.group.tasks && this.group.tasks.previousPage) {
+    //     return this.group.tasks.previousPage;
+    //   }
+    //   return null;
+    // }
   
-    get currentPage(): number | null {
-      if (this.group.tasks && this.group.tasks.page) {
-        return this.group.tasks.page;
-      }
-      return null;
-    }
+    // get currentPage(): number | null {
+    //   if (this.group.tasks && this.group.tasks.page) {
+    //     return this.group.tasks.page;
+    //   }
+    //   return null;
+    // }
   
-    get nextPage(): number | null {
-      if (this.group.tasks && this.group.tasks.nextPage) {
-        return this.group.tasks.nextPage;
-      }
-      return null;
-    }
+    // get nextPage(): number | null {
+    //   if (this.group.tasks && this.group.tasks.nextPage) {
+    //     return this.group.tasks.nextPage;
+    //   }
+    //   return null;
+    // }
   
-    get lastPage(): number | null {
-      if (this.group.tasks && this.group.tasks.lastPage) {
-        return this.group.tasks.lastPage;
-      }
-      return null;
-    }
+    // get lastPage(): number | null {
+    //   if (this.group.tasks && this.group.tasks.lastPage) {
+    //     return this.group.tasks.lastPage;
+    //   }
+    //   return null;
+    // }
   
     // chart name is stored in vuex store
     get chart(): string {

@@ -5,6 +5,12 @@
 <script>
 /* eslint-disable @typescript-eslint/camelcase */
 import {gantt, Gantt} from 'dhtmlx-gantt';
+import { getModule } from 'vuex-module-decorators';
+import MainModule from '../../../../store/modules/MainModule';
+import moment from 'moment-timezone';
+
+
+const mainState = getModule(MainModule);
 
 const dateToStr = gantt.date.date_to_str(gantt.config.task_date);
 
@@ -101,8 +107,6 @@ const stateFilter = {
 
 let standaloneFilter = true;
 
-let selectedScale = "day";
-
 const daysStyle = function(date){
     const dateToStr = gantt.date.date_to_str("%D");
     if (dateToStr(date) == "Sun"||dateToStr(date) == "Sat")  return "weekend";
@@ -129,12 +133,20 @@ export default {
       required: true
     }
   },
+
+  data() {
+    return {
+      selectedScale: "day",
+      isHidden: false,
+      selectedUsers: null
+    }
+  },
   
   watch: {
     requestsQueue: {
       handler: function (requestsQueue) {
         const uploadButtonDiv = document.querySelector(".upload-logo-container");
-        if (requestsQueue.length > 0) {
+        if (requestsQueue.length > 0 && mainState.viewGateway.configuration.admin) {
           if (uploadButtonDiv) {
             uploadButtonDiv.style.display = 'block';
           }
@@ -144,6 +156,15 @@ export default {
             uploadButtonDiv.style.display = 'none';
           }
         }
+      },
+      deep: true
+    },
+    selectedScale: {
+      handler: function (newVal, oldVal) {
+        const selectScale = document.querySelector(".selectScale");
+        selectScale.value = newVal;
+        const event = new Event('change');
+        selectScale.dispatchEvent(event);
       },
       deep: true
     }
@@ -192,13 +213,13 @@ export default {
  
   mounted: function () {
 
-    console.log('component mounted');
-
     this.$_initGanttEvents();
+
+    const userArray = this.users.map(user => user.username);
 
     let isThereStandaloneTasks = false;
     for (const task of this.$props.tasks.data) {
-      if (task.type !== 'project' && task.parent == 0) {
+      if (task.level === 1 && task.parent === 0) {
         isThereStandaloneTasks = true;
         break;
       }
@@ -226,18 +247,35 @@ export default {
                       <button class="gantt-redo" onclick="gantt.redo()">Redo</button>
                     <div class="state-filter">
                       <div class="state-filter-unassigned"><input type="checkbox" id="Unassigned" class="state-checkbox" checked=${stateFilter["Unassigned"]} onChange="stateCheckboxOnChange('Unassigned')"><label for="Unassigned">Unassigned</label></div>
-                      <div class="state-filter-closed"><input type="checkbox" id="Closed" class="state-checkbox" checked=${stateFilter["Closed"]} onChange="stateCheckboxOnChange('Closed')"><label for="Closed">Closed</label></div>
+                      <div class="state-filter-closed" style="display : ${mainState.viewGateway.configuration.addClosedIssue ? ``:`none`}"><input type="checkbox" id="Closed" class="state-checkbox" checked=${stateFilter["Closed"]} onChange="stateCheckboxOnChange('Closed')"><label for="Closed">Closed</label></div>
                       <div class="state-filter-inprogress"><input type="checkbox" id="InProgress" class="state-checkbox" checked=${stateFilter["InProgress"]} onChange="stateCheckboxOnChange('InProgress')"><label for="InProgress">InProgress</label></div>
                       <div class="state-filter-late"><input type="checkbox" id="Late" class="state-checkbox" checked=${stateFilter["Late"]} onChange="stateCheckboxOnChange('Late')"><label for="Late">Late</label></div>
                       <div class="state-filter-unscheduled"><input type="checkbox" id="Unscheduled" class="state-checkbox" checked=${stateFilter["Unscheduled"]} onChange="stateCheckboxOnChange('Unscheduled')"><label for="Unscheduled">Unscheduled</label></div>
                     </div>
                     <div class='searchEl'><label for="searchFilter">Search task :</label><input id='searchFilter' style='width: 120px;' type='text' placeholder='Search tasks...'></div>
                     ${isThereStandaloneTasks ? `<div class='standaloneFilter'><label for="standaloneFilter">Standalone tasks :</label><input id='standaloneFilter' type='checkbox' checked=${standaloneFilter}></div>` : ''}
-                    <select v-model="${selectedScale}" class="selectScale">
-                      <option value="day">Jour</option>
-                      <option value="2days">2 Jours</option>
-                      <option value="week">Semaines</option>
+                    <select v-model="${this.selectedScale}" class="selectScale">
+                      <option value="day">Day</option>
+                      <option value="2days">2 Days</option>
+                      <option value="week">Week</option>
+                      <option value="month">Month</option>
                     </select>
+                  
+                    <div class="custom-select-container">
+                      <div class="custom-select" id="userSelect" ">
+                        Select users
+                        <div class="custom-select-arrow"></div>
+                      </div>
+                      <div class="custom-select-dropdown" id="userDropdown">
+                        ${this.users.map(user => `
+                          <label class="custom-select-option">
+                            <input type="checkbox" value="${user.username}">
+                            ${user.username}
+                          </label>
+                        `).join('')}
+                      </div>
+                    </div>
+
                     <div class="upload-logo-container" title="push all changes to GitLab" style="display: none">
                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
                         <!--
@@ -277,16 +315,11 @@ export default {
           }
       ]
     };
-
-    gantt.config.scales = [
-      {unit: "month", step: 1, format: "%F, %Y"},
-      {unit: "day", step: 1, format: "%j, %D",  css:daysStyle}  
-    ];
     
     gantt.config.fit_tasks = true;
 
     gantt.config.columns = [
-      {name: "name", label: "Task name", tree: true, width: 170, resize: true },
+      {name: "name", label: "Task name", tree: true, width: 200, resize: true },
       {name: "start_date", label: "Start time", align: "center", width: 150 , resize: true, editor: dateEditor},
       {name: "duration", label: "Duration", align: "center", width: 60, editor: durationEditor},
       {name: "users", label: "User", align: "center", width: 100, template:function(obj){
@@ -296,7 +329,7 @@ export default {
 
     gantt.config.lightbox.sections = [
       {name: "name", label: "Name", height:30, map_to:"name", type:"textarea", focus:true},
-      {name:"description", label: "Description", height:72, map_to:"description", type:"textarea"},
+      {name:"description", label: "Description", height:120, map_to:"description", type:"textarea"},
       {name:"state",    height:22, map_to:"state", type:"select", options: stateEditor.options},
       {name:"template", height:150, type:"template", map_to:"my_template"}, 
       {name: "time", height:72, map_to:"auto", type:"duration"}
@@ -304,6 +337,8 @@ export default {
 
     gantt.config.lightbox.project_sections = [
       {name: "name", label: "Name", height:30, map_to:"name", type:"textarea", focus:true},
+      {name:"description", label: "Description", height:72, map_to:"description", type:"textarea"},
+      {name:"template", height:150, type:"template", map_to:"my_template"}, 
       {name: "time", height:72, map_to:"auto", type:"duration"}
     ];
 
@@ -315,12 +350,19 @@ export default {
 
     gantt.attachEvent("onBeforeLightbox", (id) =>  {
       const task = gantt.getTask(id);
+
+      if (task.level === 0 ) {
+        gantt.config.lightbox.sections = gantt.config.lightbox.project_sections;
+        task.my_template = `<div class='lightbox_labels'>${task.labels?.map(label => `<span style="padding: 3px;color: white;background-color:${label.color};border-radius:5px">${label.name}</span>`).join('')}</div>`;
+
+        return true;
+      }
     
       //<!--!Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.-->
       const addButton = `<div class='addUserAssign' ><svg xmlns="http:www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z"/></svg></div>`;
 
       task.my_template = "<span id='lightbox_users_title'>Assign to: </span><div class='lightbox_user'>" 
-      + `${task.users.map((taskUser, index) => {
+      + `${task.users?.map((taskUser, index) => {
         return `<select id="userSelect${index}" class='userSelect'> <option value='none'> </option> ${this.$props.users.map(user =>{
           return `<option class="userOption" value='${JSON.stringify({ username: user.username, id: user.id })}' ${taskUser.username === user.username ? 'selected' : ''}>${user.username}</option>`
         }).join('')
@@ -328,7 +370,7 @@ export default {
       }).join('')}`
       + addButton + "</div>"
       + "<br>  <span id='lightbox_progress'>Progress: </span>"+ task.progress*100 +" %"
-      + `<br>  <div class='lightbox_labels'>${task.labels.map(label => `<span style="padding: 3px;color: white;background-color:${label.color};border-radius:5px">${label.name}</span>`).join('')}</div>`;
+      + `<br>  <div class='lightbox_labels'>${task.labels?.map(label => `<span style="padding: 3px;color: white;background-color:${label.color};border-radius:5px">${label.name}</span>`).join('')}</div>`;
 
 
       this.$nextTick(() => {
@@ -361,7 +403,7 @@ export default {
             newUserSelect.id = `userSelect${task.users.length - 1}`;
             newUserSelect.className = 'userSelect';
             newUserSelect.innerHTML = `<option value='none'> </option>` + this.$props.users.map(user => `<option value='${JSON.stringify({ username: user.username, id: user.id })}'>${user.username}</option>`).join('');
-            let lastChild = container.lastElementChild;
+            const lastChild = container.lastElementChild;
             container.insertBefore(newUserSelect, lastChild);
 
             // Mettre à jour la référence à selects
@@ -417,27 +459,73 @@ export default {
     };
 
     gantt.templates.grid_row_class = function(start, end, task){
-        return gantt.hasChild(task.id) ? "gantt_row_project" : "";
+        return task.level === 0 ? "gantt_row_project" : "";
     };  
 
 
     gantt.config.columns_resizable = true;
     gantt.config.columns_autoresize = true;
 
+    const today = new Date();
 
-    gantt.addMarker({
-      start_date: new Date(), //a Date object that sets the marker's date
+    const todayMarker = gantt.addMarker({
+      start_date: today, //a Date object that sets the marker's date
       css: "today", //a CSS class applied to the marker
       text: "Now", //the marker title
-      title: dateToStr( new Date()) // the marker's tooltip
+      title: dateToStr( today) // the marker's tooltip
     });
 
-    if (this.$props.tasks.data.length < 50) {
-      gantt.config.open_tree_initially = true;   //if more than 50 tasks, tasks will be closed by default
-    }
+    const closestTask = this.$props.tasks.data.reduce((closest, current) => {
+      const currentDate = new Date(current.start_date);
+      const closestDate = new Date(closest.start_date);
+      return Math.abs(today - currentDate) < Math.abs(today - closestDate) ? current : closest;
+    });
 
+    
+
+    const topLevelTasks = this.$props.tasks.data.filter(task => task.level === 0);
+    if (topLevelTasks.length < 10) {
+      gantt.config.open_tree_initially = true; // if less than 10 top level tasks, epics will be opened by default
+    }
+    
+    
     gantt.init(this.$refs.ganttContainer);
     gantt.parse(this.$props.tasks);
+
+    const start = performance.now();
+
+    gantt.sort((a, b) => {     
+      return new Date(a.end_date) - new Date(b.end_date);
+    }, false, 0, false);
+
+    const end = performance.now();
+    const executionTime = end - start;
+    console.log(`Temps d'exécution tri : ${executionTime} millisecondes.`);
+
+    
+    gantt.showDate(gantt.getMarker(todayMarker).start_date);
+    gantt.showTask(closestTask.id);                             // this will scroll the timeline to the task, horizontally and vertically
+
+    const firstElement = this.$props.tasks.data[0];
+    const lastElement = this.$props.tasks.data[this.$props.tasks.data.length - 1];
+
+    const startDate = new Date(firstElement.start_date);
+    const endDate = new Date(lastElement.end_date);
+
+    const diffInDays = moment(startDate).diff(moment(endDate), 'days');
+   
+      if (diffInDays <= 7) {
+        this.selectedScale = "day";
+
+      } else if (diffInDays <= 30) {
+        this.selectedScale = "2days";
+
+      } else if (diffInDays <= 200) {
+        this.selectedScale = "week";
+      } else {
+        this.selectedScale = "month";
+
+      }
     
 
     if (isThereStandaloneTasks) {
@@ -446,6 +534,8 @@ export default {
         gantt.refreshData();
       });
     }
+
+    
     
     document.querySelectorAll(".state-checkbox").forEach(function(checkbox) {
         checkbox.onchange = function(e) {
@@ -454,10 +544,11 @@ export default {
         };
     });
 
+   
     document.querySelector(".selectScale").addEventListener('change', function(e) {
-      selectedScale = e.target.value;
+      this.selectedScale = e.target.value;
   
-      switch (selectedScale) {
+      switch (this.selectedScale) {
         case 'day':
           gantt.config.scales = [
             {unit: "month", step: 1, format: "%F, %Y"},
@@ -476,6 +567,11 @@ export default {
             {unit: "week", step: 1, format: "%j, %D", css: daysStyle}
           ];
           break;
+        case 'month':
+          gantt.config.scales = [
+            {unit: "month", step: 1, format: "%F, %Y"},
+          ];
+          break;
       }
       gantt.render(); // re-rendre le diagramme de Gantt avec la nouvelle configuration
     });
@@ -489,6 +585,30 @@ export default {
       modal.style.display = 'none';
     });
 
+    
+    const userSelectBtn = document.getElementById('userSelect');
+    userSelectBtn.addEventListener('click', function() {
+      const dropdown = document.getElementById('userDropdown');
+      dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+    });
+    
+    
+    const selectUsers = document.querySelector('.custom-select-dropdown');
+    selectUsers.onchange = (event) => {
+      const selectedOptions = document.querySelectorAll('.custom-select-option input:checked');
+      this.selectedUsers = Array.from(selectedOptions).map(option => option.value);
+      // Mettre à jour l'état de selectedUsers dans votre application
+      gantt.refreshData();
+    };
+
+    document.addEventListener('click', function(event) {
+      const select = document.querySelector('.custom-select-container');
+      const dropdown = document.getElementById('userDropdown');
+      if (!select.contains(event.target)) {
+        dropdown.style.display = 'none';
+      }
+    });
+
     let filterValue = "";
 
     gantt.attachEvent("onDataRender", function () {
@@ -499,7 +619,7 @@ export default {
     });
     });
 
-    function filterLogic(task, match) {
+    const filterLogic = (task, match)  => {
       match = match || false;
       // check children
       gantt.eachTask(function (child) {
@@ -513,20 +633,39 @@ export default {
           match = true;
       }
 
+      // check users
+      if (this.selectedUsers.length > 0) {
+        if (task.level === 0) {
+          // Pour les tâches de niveau 0, vérifiez si elles ont au moins un enfant qui correspond au filtre
+          let hasMatchingChild = false;
+          gantt.eachTask((child) => {
+            if (child.users?.some(user => this.selectedUsers.includes(user.username))) {
+              hasMatchingChild = true;
+            }
+          }, task.id);
+          if (!hasMatchingChild) {
+            match = false;
+          }
+        } else if (task.level === 1 && !task.users?.some(user => this.selectedUsers.includes(user.username))) {
+          // Pour les tâches de niveau 1, vérifiez simplement si elles correspondent au filtre
+          match = false;
+        }
+      }
+
       // check state
       if (stateFilter[task.state] === false) {
           match = false;
       }
 
       // check standalone
-      if (!standaloneFilter && !gantt.hasChild(task.id) && task.type !== "project" && task.parent == 0 ) {
+      if (!standaloneFilter && !gantt.hasChild(task.id) && task.level === 1 && task.parent == 0 ) {
         match = false;
       }
 
       return match;
     }
 
-    gantt.attachEvent("onBeforeTaskDisplay", function (id, task) {
+    gantt.attachEvent("onBeforeTaskDisplay", (id, task) => {
       let thereIsAtLeastOneFilterToApply = false;
       for (const state in stateFilter) {
         if (!stateFilter[state]) {
@@ -534,11 +673,26 @@ export default {
           break;
         }
       }
+      let isThereUsersFilter = false;
+      if (this.selectedUsers && this.selectedUsers.length > 0) {
+        isThereUsersFilter = true;
+      }
 
-      if (!filterValue && !thereIsAtLeastOneFilterToApply && standaloneFilter) {
+      if (!filterValue && !thereIsAtLeastOneFilterToApply && standaloneFilter && !isThereUsersFilter) {
         return true;
-    }
-        return filterLogic(task);
+      }
+      
+      return filterLogic(task);
+    });
+
+    gantt.attachEvent("onDataRender", () =>{
+      const closestTask = this.$props.tasks.data.reduce((closest, current) => {
+        const currentDate = new Date(current.start_date);
+        const closestDate = new Date(closest.start_date);
+        return Math.abs(today - currentDate) < Math.abs(today - closestDate) ? current : closest;
+      });
+      gantt.showDate(gantt.getMarker(todayMarker).start_date);
+      gantt.showTask(closestTask.id);     
     });
 
     gantt.attachEvent("onLightboxSave", function(id, item){
@@ -558,6 +712,7 @@ export default {
   },
 
   beforeDestroy: function() {
+    console.log('destroyed');
     gantt.clearAll();
     gantt.detachAllEvents();
     this.dp.destructor();
@@ -590,13 +745,26 @@ export default {
     overflow:hidden;
     text-overflow: ellipsis;
 }
-/* .gantt_tree_icon.gantt_folder_open {
-    background-image: url("../../../generic/icons/Folder\ Minus\ Classic.svg")!important;
+
+.gantt_cell .gantt_tree_icon.gantt_folder_open {
+    background-image: url("../../../generic/icons/FolderOpened.svg")!important;
+    background-size: 17px 17px; 
 }
 
-.gantt_tree_icon.gantt_folder_closed {
-    background-image: url("../../../generic/icons/Folder\ plus\ solid.svg")!important;
-} */
+.gantt_cell .gantt_tree_icon.gantt_folder_closed {
+    background-image: url("../../../generic/icons/FolderClosed.svg")!important;
+    background-size: 17px 17px; 
+}
+
+.gantt_row_project > div > .gantt_tree_icon.gantt_file {
+  background-image: url("../../../generic/icons/FolderOpened.svg")!important;
+  background-size: 17px 17px; 
+}
+
+div:not(.gantt_row_project) > div > .gantt_tree_icon.gantt_file {
+    background-image: url("../../../generic/icons/File.svg")!important;
+    background-size: 17px 17px; 
+}
 
 .unassigned {
     background-color: #2b84cf;
@@ -687,13 +855,14 @@ export default {
 
 .gantt-controls button {
     margin-right: 1rem;
-    padding: 0.5rem 1rem;
-    background-color: #168af0;
-    color: white;
+    padding: 0.3rem 0.8rem;
+    background-color: #d4d4d4;
+    color: black;
     border: none;
     border-radius: 4px;
     cursor: pointer;
 }
+
 .state-checkbox {
     display: flex;
     justify-content: space-between;
@@ -865,5 +1034,44 @@ export default {
   padding: 5px;
   border-radius: 5px;
 }
+
+ .custom-select-container {
+    position: relative;
+    display: inline-block;
+    margin-left: 2em;
+  }
+  .custom-select {
+    padding: 0.3em;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+    border-radius: 5px;
+  }
+  .custom-select-arrow {
+    float: right;
+    margin-top: 5px;
+  }
+  .custom-select-dropdown {
+    display: none;
+    position: fixed;
+    background-color: white;
+    border: 1px solid #ccc;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 1;
+    width: 100%;
+  }
+  .custom-select-option {
+    display: block;
+    padding: 8px;
+    cursor: pointer;
+  }
+  .custom-select-option:hover {
+    background-color: #f1f1f1;
+  }
+  .custom-select-option input {
+    margin-right: 8px;
+  }
 
 </style>

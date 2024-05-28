@@ -1,4 +1,5 @@
 import { PaginatedListOfTasks } from '../pagination/PaginatedListOfTasks';
+import { Task } from './Task';
 
 /**
  * A way to group {@link Task}s
@@ -7,7 +8,7 @@ export class Milestone {
   /**
    * The paginated list of {@link Task}s in the milestone
    */
-  public tasks: PaginatedListOfTasks | null = null;
+  public tasks: Task[] | null = null;
 
   /**
    * @param name - The milestone name
@@ -24,7 +25,7 @@ export class Milestone {
     public due?: Date,
   ) {}
 
-  public addTasks(tasks: PaginatedListOfTasks) {
+  public addTasks(tasks: Task[]) {
     this.tasks = tasks;
   }
 }

@@ -23,10 +23,11 @@ interface LegacyDhtmlXgantt {
   progress: number;
   state?: TaskState | null;
   type?: string;
-  users?: Array<Object> | null;
+  users?: Array<Record<string, any>> | null;
   labels?: any[];
   color?: string;
   row_height?: number;
+  level: number;
 }
 
 interface DhtmlxLink {
@@ -145,23 +146,30 @@ export function getConvertedGroup(group: Group): Array<LegacyDhtmlXgantt> {
   // Convert epics
 if (group.epics && group.epics.length > 0) {
   for (const epic of group.epics) {
+    let labels: any[] = [];
+    if (epic.labels && epic.labels.length > 0) {
+      labels = epic.labels;
+    }
+    
     const epicRow : LegacyDhtmlXgantt = {
       id: taskID,
       epic_id: epic.iid,
       name: epic.title,
-      start_date: epic.start_date ?  moment(epic.start_date).format('YYYY-MM-DD HH:mm:ss') : null,
-      end_date: epic.due_date ?  moment(epic.due_date).format('YYYY-MM-DD HH:mm:ss') : null,
+      start_date: epic.start_date ?  moment(epic.start_date).format('YYYY-MM-DD HH:mm:ss') : moment(epic.created_at).format('YYYY-MM-DD HH:mm:ss'),
+      end_date: epic.due_date ?  moment(epic.due_date).format('YYYY-MM-DD HH:mm:ss') : epic.start_date ? moment(epic.start_date).add(1, 'days').format('YYYY-MM-DD HH:mm:ss') : moment(epic.created_at).add(1, 'days').format('YYYY-MM-DD HH:mm:ss'),
       parent: 0,
       progress: 0,
-      type:  epic.start_date  && epic.due_date ? "task" : "project",  //like this, if there are fixed dates there are priorities, and if not the dates are the child issues ones
+      type:  epic.start_date  && epic.due_date  ? "task" : epic.Tasks && epic.Tasks.length > 0 ? "project" : "task",  //like this, if there are fixed dates there are priorities, and if not the dates are the child issues ones
       color:"#4f4e4e",
-      row_height: 25
+      row_height: 25,
+      labels: labels,
+      level: 0
     };
     taskID++;
     data.push(epicRow);
 
-    if (epic.Tasks && epic.Tasks.list) {
-      for (const task of epic.Tasks.list) {
+    if (epic.Tasks && epic.Tasks) {
+      for (const task of epic.Tasks) {
         const taskState: TaskState | null = getStateFromGitLabState(task);
           let labels: any[] = [];
           if (task.labels && task.labels.length > 0) {
@@ -182,7 +190,8 @@ if (group.epics && group.epics.length > 0) {
           state: taskState ? taskState : null,
           users: task.users,
           type: "task",
-          labels: labels
+          labels: labels,
+          level: 1
         };
         data.push(taskRow);
         taskID++;
@@ -203,12 +212,13 @@ if (group.projects && group.projects.length > 0) {
       progress: 0,
       type: "project",
       color:"#4f4e4e",
-      row_height: 25
+      row_height: 25,
+      level: 0
     };
     taskID++;
     data.push(projectRow);
-    if (project.tasks && project.tasks.list) {
-      for (const task of project.tasks.list) {
+    if (project.tasks && project.tasks) {
+      for (const task of project.tasks) {
         const taskState: TaskState | null = getStateFromGitLabState(task);
           let labels: any[] = [];
           if (task.labels && task.labels.length > 0) {
@@ -228,7 +238,8 @@ if (group.projects && group.projects.length > 0) {
             state: taskState ? taskState : null,
             users: task.users,
             type: "task",
-            labels: labels
+            labels: labels,
+            level: 1
           };
         data.push(taskRow);
         taskID++;
@@ -240,7 +251,6 @@ if (group.projects && group.projects.length > 0) {
 if (group.milestones && group.milestones.length > 0) {
   // Convert milestones
   for (const milestone of group.milestones) {
-    console.log(moment(milestone.due).format('YYYY-MM-DD HH:mm:ss'));
     const milestoneRow : LegacyDhtmlXgantt = {
       id: taskID,
       name: milestone.name,
@@ -250,12 +260,13 @@ if (group.milestones && group.milestones.length > 0) {
       progress: 0,
       type: "project",
       color:"#4f4e4e",
-      row_height: 25
+      row_height: 25,
+      level: 0
     };
     taskID++;
     data.push(milestoneRow);
-    if (milestone.tasks && milestone.tasks.list) {
-      for (const task of milestone.tasks.list) {
+    if (milestone.tasks && milestone.tasks) {
+      for (const task of milestone.tasks) {
         const taskState: TaskState | null = getStateFromGitLabState(task);
           let labels: any[] = [];
           if (task.labels && task.labels.length > 0) {
@@ -275,7 +286,8 @@ if (group.milestones && group.milestones.length > 0) {
           state: taskState ? taskState : null,
           users: task.users,
           type: "task",
-          labels: labels
+          labels: labels,
+          level: 1
         };
         data.push(taskRow);
         taskID++;
@@ -284,10 +296,10 @@ if (group.milestones && group.milestones.length > 0) {
   }
 }
 
-if (group.tasks && group.tasks.list && group.tasks.list.length > 0) {
+if (group.tasks && group.tasks && group.tasks.length > 0) {
   
   // Add standalone tasks
-  for (const task of group.tasks.list) {
+  for (const task of group.tasks) {
     const taskState: TaskState | null = getStateFromGitLabState(task);
       let labels: any[] = [];
           if (task.labels && task.labels.length > 0) {
@@ -308,12 +320,14 @@ if (group.tasks && group.tasks.list && group.tasks.list.length > 0) {
       state: taskState ? taskState : null,
       users: task.users,
       type: "task",
-      labels: labels
+      labels: labels,
+      level: 1
     };
     data.push(taskRow);
     taskID++;
   }
 }
+
   return  data ;
 }
 
@@ -324,8 +338,8 @@ export function getLinksFromGroup(group: Group, convertedGroup: Array<LegacyDhtm
   // Convert epics
   if (group.epics && group.epics.length > 0) {
     for (const epic of group.epics) {
-      if (epic.Tasks && epic.Tasks.list) {
-        for (const task of epic.Tasks.list) {
+      if (epic.Tasks && epic.Tasks) {
+        for (const task of epic.Tasks) {
           if (task.blockedBy && task.blockedBy.length > 0) {
             for (const blockedBy of task.blockedBy) {
               const link : DhtmlxLink = {
@@ -346,8 +360,8 @@ export function getLinksFromGroup(group: Group, convertedGroup: Array<LegacyDhtm
   if (group.projects && group.projects.length > 0) {
     // Convert projects
     for (const project of group.projects) {
-      if (project.tasks && project.tasks.list) {
-        for (const task of project.tasks.list) {
+      if (project.tasks && project.tasks) {
+        for (const task of project.tasks) {
           if (task.blockedBy && task.blockedBy.length > 0) {
             for (const blockedBy of task.blockedBy) {
               const link : DhtmlxLink = {
@@ -365,9 +379,9 @@ export function getLinksFromGroup(group: Group, convertedGroup: Array<LegacyDhtm
     }
   }
 
-  if (group.tasks && group.tasks.list && group.tasks.list.length > 0) {
+  if (group.tasks && group.tasks && group.tasks.length > 0) {
     // Add standalone tasks
-    for (const task of group.tasks.list) {
+    for (const task of group.tasks) {
       if (task.blockedBy && task.blockedBy.length > 0) {
         for (const blockedBy of task.blockedBy) {
           const link : DhtmlxLink = {

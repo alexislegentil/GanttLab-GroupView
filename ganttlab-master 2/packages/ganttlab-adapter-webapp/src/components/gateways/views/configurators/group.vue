@@ -122,12 +122,28 @@
       <label for="sortByMilestones">Sort by Milestones</label>
     </div>
     <!-- ... -->
+
+    <div class="checkbox-group">
+      <input type="checkbox" id="admin" v-model="isAdmin" />
+      <label for="admin">Admin</label>
+
+      <input type="checkbox" id="displayLink" v-model="displayLink" />
+      <label for="displayLink">Display Link</label>
+
+      <input type="checkbox" id="addClosedIssue" v-model="addClosedIssue" />
+      <label for="addClosedIssue">Add Closed Issue</label>
+
+      <i class="fas fa-info-circle" title="Admin: you must have the owner or maintainer role on the group to make changes on gitlab
+Display Link: retrieves “blocked by” issues. Increases loading time 
+Add Closed Issue: increases loading time and reduces graph readability"></i>
+    </div>
   
 </template>
 
     </div>
   </template>
   
+  <script src="https://kit.fontawesome.com/a076d05399.js"></script>
   <script lang="ts">
   import { Component, Vue, Emit, Prop } from 'vue-property-decorator';
   import GenericAutocomplete from '../../../generic/forms/Autocomplete.vue';
@@ -149,6 +165,9 @@
     public groups: Array<GitLabGroup> | null = null;
     public group: GitLabGroup | null = null;
     public sortBy = 'epic'; // 'projects', 'epic' or 'milestones'
+    public isAdmin = false;
+    public displayLink = false;
+    public addClosedIssue = false;
   
     @Prop({ required: true }) readonly sourceGateway!: GitLabGateway;
   
@@ -208,6 +227,9 @@
             pageSize: 50,
           },
             sortBy: this.sortBy,
+            isAdmin: this.isAdmin,
+            displayLink: this.displayLink,
+            addClosedIssue: this.addClosedIssue,
         };
       }
       return null;
@@ -244,4 +266,16 @@
     background-color: #4caf50;
     color: white;
   }
+
+  .checkbox-group {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.checkbox-group label {
+  padding: 10px 35px 10px 5px;
+  cursor: pointer;
+}
+
   </style>

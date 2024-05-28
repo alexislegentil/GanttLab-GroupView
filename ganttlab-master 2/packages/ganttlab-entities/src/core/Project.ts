@@ -18,10 +18,10 @@ export class Project {
     public url: string,
     public shortDescription: string,
     public avatarUrl: string,
-    public tasks?: PaginatedListOfTasks,
+    public tasks?: Task[],
   ) {}
 
-  public addTasks(tasks: PaginatedListOfTasks) {
+  public addTasks(tasks: Task[]) {
     this.tasks = tasks;
   }
 }
