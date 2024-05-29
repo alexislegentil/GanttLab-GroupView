@@ -138,7 +138,9 @@ export default {
     return {
       selectedScale: "day",
       isHidden: false,
-      selectedUsers: null
+      selectedUsers: null,
+      markerId: null,
+      eventIds: [],
     }
   },
   
@@ -173,16 +175,18 @@ export default {
   methods: {
     $_initGanttEvents: function() {
       if (!gantt.$_eventsInitialized) {
-        gantt.attachEvent('onTaskSelected', (id) => {
+        const selectedEventId = gantt.attachEvent('onTaskSelected', (id) => {
           const task = gantt.getTask(id);
           this.$emit('task-selected', task);
         });
-        gantt.attachEvent('onTaskIdChange', (id, new_id) => {
+        const changeEventId = gantt.attachEvent('onTaskIdChange', (id, new_id) => {
           if (gantt.getSelectedId() == new_id) {
             const task = gantt.getTask(new_id);
             this.$emit('task-selected', task);
           }
         });
+        this.eventIds.push(selectedEventId);
+        this.eventIds.push(changeEventId);
         gantt.$_eventsInitialized = true;
       }
     },
@@ -348,7 +352,7 @@ export default {
 
     gantt.config.lightbox.project_sections.allow_root = false;
 
-    gantt.attachEvent("onBeforeLightbox", (id) =>  {
+    const lightBoxEvent = gantt.attachEvent("onBeforeLightbox", (id) =>  {
       const task = gantt.getTask(id);
 
       if (task.level === 0 ) {
@@ -413,6 +417,7 @@ export default {
       });
       return true;
     });
+    this.eventIds.push(lightBoxEvent);
 
 
     gantt.config.lightbox.allow_root = false;
@@ -472,8 +477,10 @@ export default {
       start_date: today, //a Date object that sets the marker's date
       css: "today", //a CSS class applied to the marker
       text: "Now", //the marker title
-      title: dateToStr( today) // the marker's tooltip
+      title: dateToStr(today) // the marker's tooltip
     });
+
+    this.markerId = gantt.getMarker(todayMarker).id;
 
     const closestTask = this.$props.tasks.data.reduce((closest, current) => {
       const currentDate = new Date(current.start_date);
@@ -611,13 +618,14 @@ export default {
 
     let filterValue = "";
 
-    gantt.attachEvent("onDataRender", function () {
+    const dataRenderEvent = gantt.attachEvent("onDataRender", function () {
     const filterEl = document.querySelector("#searchFilter")
     filterEl.addEventListener('input', function (e) {
         filterValue = filterEl.value;
         gantt.refreshData();
     });
     });
+    this.eventIds.push(dataRenderEvent);
 
     const filterLogic = (task, match)  => {
       match = match || false;
@@ -665,7 +673,7 @@ export default {
       return match;
     }
 
-    gantt.attachEvent("onBeforeTaskDisplay", (id, task) => {
+    const taskDisplayEvent = gantt.attachEvent("onBeforeTaskDisplay", (id, task) => {
       let thereIsAtLeastOneFilterToApply = false;
       for (const state in stateFilter) {
         if (!stateFilter[state]) {
@@ -684,18 +692,22 @@ export default {
       
       return filterLogic(task);
     });
+    this.eventIds.push(taskDisplayEvent);
 
-    gantt.attachEvent("onDataRender", () =>{
-      const closestTask = this.$props.tasks.data.reduce((closest, current) => {
+    const dataRenderEventId = gantt.attachEvent("onDataRender", () =>{
+      if (gantt.getTaskByTime().length > 0) {
+        const closestTask = this.$props.tasks.data.reduce((closest, current) => {
         const currentDate = new Date(current.start_date);
         const closestDate = new Date(closest.start_date);
         return Math.abs(today - currentDate) < Math.abs(today - closestDate) ? current : closest;
       });
       gantt.showDate(gantt.getMarker(todayMarker).start_date);
       gantt.showTask(closestTask.id);     
+      }
     });
+    this.eventIds.push(dataRenderEventId);
 
-    gantt.attachEvent("onLightboxSave", function(id, item){
+    const lightboxSavedEvent = gantt.attachEvent("onLightboxSave", function(id, item){
         if(!item.name){
             gantt.message({type:"error", text:"Enter task name!"});
             return false;
@@ -706,6 +718,7 @@ export default {
             }
         return true;
     });
+    this.eventIds.push(lightboxSavedEvent);
   
     gantt.$root.appendChild(legend);
     this.$_initDataProcessor();
@@ -714,7 +727,9 @@ export default {
   beforeDestroy: function() {
     console.log('destroyed');
     gantt.clearAll();
-    gantt.detachAllEvents();
+   // gantt.deleteMarker(this.markerId);
+    this.eventIds.forEach(eventId => gantt.detachEvent(eventId));
+    this.eventIds = [];
     this.dp.destructor();
     gantt.$dataProcessor = null;
     gantt.$_eventsInitialized = false;
