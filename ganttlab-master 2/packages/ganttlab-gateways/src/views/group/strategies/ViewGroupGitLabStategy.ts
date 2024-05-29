@@ -62,7 +62,7 @@ export class ViewGroupGitLabStrategy implements ViewSourceStrategy<Group> {
 
         // Fetch group members if user is admin
         const users: Array<User> = [];
-        if (configuration.admin) {
+        if (configuration.isAdmin) {
             const usersResponse = await source.safeAxiosRequest<Array<GitLabUser>>({
                 method: 'GET',
                 url: `/groups/${encodedGroup}/members/all`,
@@ -111,7 +111,7 @@ export class ViewGroupGitLabStrategy implements ViewSourceStrategy<Group> {
         const executionTime = end - start;
         console.log(`Temps d'exécution requête : ${executionTime} millisecondes.`);
 
-        if (!configuration.admin) {
+        if (!configuration.isAdmin) {
             activeGroup.users = users;
         }
 
@@ -364,6 +364,11 @@ export class ViewGroupGitLabStrategy implements ViewSourceStrategy<Group> {
 
             if (gitlabIssue.assignees) {
                 for (const user of gitlabIssue.assignees) {
+                    if (!configuration.isAdmin) {
+                        if (!users.some(u => u.username === user.username)) {
+                          users.push(new User(user.id, user.email, user.username, user.avatar_url, user.web_url));
+                        }
+                      }
                     task.addUser(user.username, user.id);
                 }
             }

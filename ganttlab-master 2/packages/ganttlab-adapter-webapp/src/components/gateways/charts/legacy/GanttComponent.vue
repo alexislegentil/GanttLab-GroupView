@@ -141,6 +141,7 @@ export default {
       selectedUsers: null,
       markerId: null,
       eventIds: [],
+      filterLogicCallCount: 0
     }
   },
   
@@ -148,7 +149,7 @@ export default {
     requestsQueue: {
       handler: function (requestsQueue) {
         const uploadButtonDiv = document.querySelector(".upload-logo-container");
-        if (requestsQueue.length > 0 && mainState.viewGateway.configuration.admin) {
+        if (requestsQueue.length > 0 && mainState.viewGateway.configuration.isAdmin) {
           if (uploadButtonDiv) {
             uploadButtonDiv.style.display = 'block';
           }
@@ -249,6 +250,7 @@ export default {
                   <div class="gantt-controls">
                       <button class="gantt-undo" onclick="gantt.undo()">Undo</button>
                       <button class="gantt-redo" onclick="gantt.redo()">Redo</button>
+                   
                     <div class="state-filter">
                       <div class="state-filter-unassigned"><input type="checkbox" id="Unassigned" class="state-checkbox" checked=${stateFilter["Unassigned"]} onChange="stateCheckboxOnChange('Unassigned')"><label for="Unassigned">Unassigned</label></div>
                       <div class="state-filter-closed" style="display : ${mainState.viewGateway.configuration.addClosedIssue ? ``:`none`}"><input type="checkbox" id="Closed" class="state-checkbox" checked=${stateFilter["Closed"]} onChange="stateCheckboxOnChange('Closed')"><label for="Closed">Closed</label></div>
@@ -256,8 +258,10 @@ export default {
                       <div class="state-filter-late"><input type="checkbox" id="Late" class="state-checkbox" checked=${stateFilter["Late"]} onChange="stateCheckboxOnChange('Late')"><label for="Late">Late</label></div>
                       <div class="state-filter-unscheduled"><input type="checkbox" id="Unscheduled" class="state-checkbox" checked=${stateFilter["Unscheduled"]} onChange="stateCheckboxOnChange('Unscheduled')"><label for="Unscheduled">Unscheduled</label></div>
                     </div>
+
                     <div class='searchEl'><label for="searchFilter">Search task :</label><input id='searchFilter' style='width: 120px;' type='text' placeholder='Search tasks...'></div>
                     ${isThereStandaloneTasks ? `<div class='standaloneFilter'><label for="standaloneFilter">Standalone tasks :</label><input id='standaloneFilter' type='checkbox' checked=${standaloneFilter}></div>` : ''}
+                    
                     <select v-model="${this.selectedScale}" class="selectScale">
                       <option value="day">Day</option>
                       <option value="2days">2 Days</option>
@@ -270,7 +274,7 @@ export default {
                         Select users
                         <div class="custom-select-arrow"></div>
                       </div>
-                      <div class="custom-select-dropdown" id="userDropdown">
+                      <div class="custom-select-dropdown" id="userDropdown" style="display: none;">
                         ${this.users.map(user => `
                           <label class="custom-select-option">
                             <input type="checkbox" value="${user.username}">
@@ -509,10 +513,6 @@ export default {
     const executionTime = end - start;
     console.log(`Temps d'exécution tri : ${executionTime} millisecondes.`);
 
-    
-    gantt.showDate(gantt.getMarker(todayMarker).start_date);
-    gantt.showTask(closestTask.id);                             // this will scroll the timeline to the task, horizontally and vertically
-
     const firstElement = this.$props.tasks.data[0];
     const lastElement = this.$props.tasks.data[this.$props.tasks.data.length - 1];
 
@@ -618,62 +618,64 @@ export default {
 
     let filterValue = "";
 
-    const dataRenderEvent = gantt.attachEvent("onDataRender", function () {
+
     const filterEl = document.querySelector("#searchFilter")
     filterEl.addEventListener('input', function (e) {
         filterValue = filterEl.value;
         gantt.refreshData();
     });
-    });
-    this.eventIds.push(dataRenderEvent);
 
-    const filterLogic = (task, match)  => {
-      match = match || false;
-      // check children
-      gantt.eachTask(function (child) {
-          if (filterLogic(child)) {
-              match = true;
-          }
-      }, task.id);
 
-      // check task
-      if (task.name.toLowerCase().indexOf(filterValue.toLowerCase()) > -1) {
-          match = true;
-      }
+        const filterLogic = (task, match) => {
+        match = match || false;
+        const lowerFilterValue = filterValue.toLowerCase();
 
-      // check users
-      if (this.selectedUsers.length > 0) {
-        if (task.level === 0) {
-          // Pour les tâches de niveau 0, vérifiez si elles ont au moins un enfant qui correspond au filtre
-          let hasMatchingChild = false;
-          gantt.eachTask((child) => {
-            if (child.users?.some(user => this.selectedUsers.includes(user.username))) {
-              hasMatchingChild = true;
+        // check children
+        gantt.eachTask(child => {
+            if (filterLogic(child)) {
+                match = true;
             }
-          }, task.id);
-          if (!hasMatchingChild) {
-            match = false;
-          }
-        } else if (task.level === 1 && !task.users?.some(user => this.selectedUsers.includes(user.username))) {
-          // Pour les tâches de niveau 1, vérifiez simplement si elles correspondent au filtre
-          match = false;
+        }, task.id);
+
+        // check task
+        if (task.name.toLowerCase().includes(lowerFilterValue)) {
+            match = true;
         }
-      }
 
-      // check state
-      if (stateFilter[task.state] === false) {
-          match = false;
-      }
+        // check users
+        if (this.selectedUsers?.length > 0) {
+            if (task.level === 0) {
+                // Pour les tâches de niveau 0, vérifiez si elles ont au moins un enfant qui correspond au filtre
+                let hasMatchingChild = false;
+                gantt.eachTask(child => {
+                    if (child.users?.some(user => this.selectedUsers.includes(user.username))) {
+                        hasMatchingChild = true;
+                    }
+                }, task.id);
+                if (!hasMatchingChild) {
+                    match = false;
+                }
+            } else if (task.level === 1 && !task.users?.some(user => this.selectedUsers.includes(user.username))) {
+                // Pour les tâches de niveau 1, vérifiez simplement si elles correspondent au filtre
+                match = false;
+            }
+        }
 
-      // check standalone
-      if (!standaloneFilter && !gantt.hasChild(task.id) && task.level === 1 && task.parent == 0 ) {
-        match = false;
-      }
+        // check state
+        if (stateFilter[task.state] === false) {
+            match = false;
+        }
 
-      return match;
-    }
+        // check standalone
+        if (!standaloneFilter && !gantt.hasChild(task.id) && task.level === 1 && task.parent == 0) {
+            match = false;
+        }
+
+        return match;
+    };
 
     const taskDisplayEvent = gantt.attachEvent("onBeforeTaskDisplay", (id, task) => {
+      this.filterLogicCallCount++;
       let thereIsAtLeastOneFilterToApply = false;
       for (const state in stateFilter) {
         if (!stateFilter[state]) {
@@ -696,13 +698,17 @@ export default {
 
     const dataRenderEventId = gantt.attachEvent("onDataRender", () =>{
       if (gantt.getTaskByTime().length > 0) {
+        const topLevelTasks = this.$props.tasks.data.filter(task => task.level === 0);
+        if (topLevelTasks.length < 10) {
+          gantt.config.open_tree_initially = true; // if less than 10 top level tasks, epics will be opened by default
+        }
         const closestTask = this.$props.tasks.data.reduce((closest, current) => {
-        const currentDate = new Date(current.start_date);
-        const closestDate = new Date(closest.start_date);
-        return Math.abs(today - currentDate) < Math.abs(today - closestDate) ? current : closest;
-      });
-      gantt.showDate(gantt.getMarker(todayMarker).start_date);
-      gantt.showTask(closestTask.id);     
+          const currentDate = new Date(current.start_date);
+          const closestDate = new Date(closest.start_date);
+          return Math.abs(today - currentDate) < Math.abs(today - closestDate) ? current : closest;
+        });
+        gantt.showDate(gantt.getMarker(todayMarker).start_date);
+        gantt.showTask(closestTask.id);     
       }
     });
     this.eventIds.push(dataRenderEventId);
@@ -727,7 +733,6 @@ export default {
   beforeDestroy: function() {
     console.log('destroyed');
     gantt.clearAll();
-   // gantt.deleteMarker(this.markerId);
     this.eventIds.forEach(eventId => gantt.detachEvent(eventId));
     this.eventIds = [];
     this.dp.destructor();
@@ -1075,7 +1080,6 @@ div:not(.gantt_row_project) > div > .gantt_tree_icon.gantt_file {
     border: 1px solid #ccc;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     z-index: 1;
-    width: 100%;
   }
   .custom-select-option {
     display: block;
