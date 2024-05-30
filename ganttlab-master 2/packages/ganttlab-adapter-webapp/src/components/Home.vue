@@ -1,140 +1,7 @@
 <template>
   <div class="w-full">
-    <div v-if="!littleHeader" class="mb-12 p-4 bg-gray-200">
-      <div class="flex items-center text-gray-600">
-        <a
-          class="w-64 flex justify-start items-center"
-          href="https://www.ganttlab.com/"
-          target="_blank"
-          rel="noopener"
-          @click="goToWebsite"
-        >
-          <Icon class="text-gray-400" size="30" name="logo-ganttlab" />
-          <h1 class="text-gray-800 text-2xl leading-none font-lead ml-2">
-            GanttLab
-          </h1>
-        </a>
-
-        <div class="flex-grow flex items-center justify-center">
-          <a
-            class="flex items-center"
-            :href="sourceUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-            @click="goToSource"
-          >
-            <div class="mr-2">
-              <Icon size="24" :name="sourceLogoIcon" />
-            </div>
-            <p>{{ sourceUrl }}</p>
-          </a>
-          <a
-            v-if="project"
-            :href="project.url"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="flex items-center justify-start ml-12 img-reset-opacity"
-            @click="goToProject"
-          >
-            <img
-              v-if="project.avatarUrl"
-              :src="project.avatarUrl"
-              :alt="project.path"
-              class="flex-shrink-0 w-6 h-6 mr-2 rounded bg-white shadow"
-            />
-            <div
-              v-else
-              class="flex-shrink-0 w-6 h-6 px-1 mr-2 rounded bg-gray-300 text-gray-500"
-            >
-              <Icon size="16" name="cube-outline" />
-            </div>
-            <p>{{ project.path }}</p>
-          </a>
-        </div>
-        <div class="w-64 flex items-center justify-end">
-          <a
-            class="mr-12 flex items-center img-reset-opacity"
-            :href="user.url"
-            target="_blank"
-            rel="noopener noreferrer"
-            @click="goToUser"
-          >
-            <p>{{ user.username }}</p>
-            <img
-              :src="user.avatarUrl"
-              :alt="user.username"
-              class="w-6 ml-2 inline-block rounded-full shadow-inner"
-            />
-          </a>
-          <div
-            class="cursor-pointer transition duration-200 ease-in hover:text-yellow-700"
-            @click="refresh"
-          >
-            <Icon size="24" name="refresh-circle-outline" />
-          </div>
-          <a
-            href="https://gitlab.com/ganttlab/ganttlab/-/blob/master/README.md#how-it-works"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="ml-4 transition duration-200 ease-in hover:text-lead-700"
-            @click="goToHelp"
-          >
-            <Icon size="24" name="help-circle-outline" />
-          </a>
-          <div
-            class="cursor-pointer ml-4 transition duration-200 ease-in hover:text-red-700"
-            @click="logout"
-          >
-            <Icon size="24" name="close-circle-outline" />
-          </div>
-        </div>
-      </div>
-      <div class="flex justify-center">
-        <div
-          class="cursor-default flex items-center content-center justify-center mt-6 -mb-10 h-20 bg-lead-600 rounded-lg shadow-md"
-        >
-          <div class="h-full w-48 p-3">
-            <p class="pb-2 text-xs tracking-wider text-lead-300">VIEW</p>
-            <ViewSelector
-              :sourceGateway="sourceGateway"
-              @set-view="setView($event)"
-            />
-          </div>
-
-          <!-- replace here w created component about the sort, filter and chart vue components -->
-                
-                <div class="h-full w-48 p-3 border-l border-lead-500">
-                  <p class="pb-2 text-xs tracking-wider text-lead-300">SORT</p>
-                  <div class="flex items-center px-2 text-lead-100">
-                    <p class="flex-grow text-lg text-lead-300">By due date</p>
-                  </div>
-                </div>
-                <div class="h-full w-48 p-3 border-l border-lead-500">
-                  <p class="pb-2 text-xs tracking-wider text-lead-300">FILTER</p>
-
-                  <div v-if="viewGateway && viewGateway.slug !== 'group'">
-                      <FilterSelector 
-                      @set-filter="setFilter($event)"/>
-                  </div>
-                  
-                  <div v-else>
-                    <div class="flex items-center px-2 text-lead-100">
-                      <p class="flex-grow text-lg text-lead-300">All Issues</p>
-                    </div> 
-                  </div>
-                </div>
-                <div class="h-full w-48 p-3 border-l border-lead-500">
-                  <p class="pb-2 text-xs tracking-wider text-lead-300">CHART</p>
-                  <div class="flex items-center px-2 text-lead-100">
-                    <p class="flex-grow text-lg text-lead-300">GanttLab Legacy</p>
-                  </div>
-                </div>
-
-          <!-- end of replace -->
-        </div>
-      </div>
-    </div>
-            <div v-else class="mb-2 p-2 bg-gray-200">
+   
+            <div class="mb-2 p-2 bg-gray-200">
               <div class="flex items-center text-gray-600 space-between">
                 <a
                   class="w-32 flex justify-start items-center"
@@ -317,7 +184,7 @@ export default class Home extends Vue {
   public paginatedTasks: PaginatedListOfTasks | null = null;
   public paginatedMilestones: PaginatedListOfMilestones | null = null;
   public group: Group | null = null;
-  public littleHeader= false;
+  public littleHeader= true;
 
   setTasksPage(page: number) {
     mainState.setViewGatewayTasksPage(page);
@@ -421,18 +288,18 @@ export default class Home extends Vue {
   }
 
   async setView(view: SourceVisitor<unknown>) {
-    let filter = mainState.filterGateway ? mainState.filterGateway.instance : null;
+    const filter = mainState.filterGateway ? mainState.filterGateway.instance : null;
 
-    if (view.slug === 'group') {
-      filter = null;
-      if (!this.littleHeader) {
-        this.littleHeader = true;
-        return;
-      }
-    }
-    else {
-      this.littleHeader = false;
-    }
+    // if (view.slug === 'group') {
+    //   filter = null;
+    //   if (!this.littleHeader) {
+    //     this.littleHeader = true;
+    //     return;
+    //   }
+    // }
+    // else {
+    //   this.littleHeader = false;
+    // }
 
     if (!this.sourceGateway) {
       return;
