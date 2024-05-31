@@ -26,7 +26,7 @@ const stateEditor = {type: "select", options: [
     ], map_to: "state"};
 
 const legend = document.createElement('div');
-legend.className = 'gantt-legend';
+legend.className = 'gantt-legend hidden';
 legend.id = 'gantt-legend';
 
 const header = document.createElement('header');
@@ -427,7 +427,7 @@ export default {
     gantt.config.lightbox.allow_root = false;
 
     gantt.templates.task_text = function(start, end, task) {
-      return "<b>Name:</b> " + task.name ;
+      return task.name ;
     };
     gantt.templates.tooltip_text = function(start, end, task) {
       // Personnalisez ici le texte du tooltip pour chaque tâche (hover)
