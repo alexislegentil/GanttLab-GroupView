@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div @click="!showModal ? pickANewView() : null">
     <transition name="component-fade" mode="out-in">
       <Modal v-if="showModal" @close="closeModal()">
         <template v-slot:header>
@@ -56,7 +56,6 @@
       <div
         v-else
         class="flex items-center cursor-pointer text-lead-100 px-2 rounded border border-lead-600 hover:border-lead-500 transition duration-125 ease-in"
-        @click="pickANewView"
       >
         <p v-if="!littleHeader" class="flex-grow text-lg">
           <span v-if="viewGateway">{{ viewGateway.name }}</span>

@@ -61,12 +61,12 @@
                       class="w-4 ml-2 inline-block rounded-full shadow-inner"
                     />
                   </a>
-                  <!-- <div
+                  <div
                     class="cursor-pointer transition duration-200 ease-in hover:text-yellow-700"
                     @click="refresh"
                   >
                     <Icon size="16" name="refresh-circle-outline" />
-                  </div> -->
+                  </div>
                   <a
                     href="https://gitlab.com/ganttlab/ganttlab/-/blob/master/README.md#how-it-works"
                     target="_blank"
