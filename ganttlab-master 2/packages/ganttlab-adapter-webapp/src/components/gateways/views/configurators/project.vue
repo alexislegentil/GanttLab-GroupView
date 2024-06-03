@@ -130,7 +130,6 @@ export default class ProjectViewConfigurator extends Vue {
     }
     try {
       this.loading = true;
-      console.log('searching for', newSearch);
       this.projects = await this.sourceGateway.searchProjects(newSearch);
       this.loading = false;
     } catch (error) {

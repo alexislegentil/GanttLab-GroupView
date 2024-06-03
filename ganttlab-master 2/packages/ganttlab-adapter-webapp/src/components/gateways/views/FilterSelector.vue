@@ -104,7 +104,6 @@ const mainState = getModule(MainModule);
   
     async selectNewFilter(newFilter: FilterGateway) {
       // Handle filter selection
-    //  console.log(`Selected filter: ${newFilter.name}`);
       this.closeModal();
 
       import(`./configurators/${newFilter.slug}.vue`)

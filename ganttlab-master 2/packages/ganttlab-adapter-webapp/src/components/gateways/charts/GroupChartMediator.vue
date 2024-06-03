@@ -81,7 +81,6 @@ export default class GroupChartMediator extends Vue {
   }
 
   get tasks() {
-    console.log(this.convertedGroup);
     return {
       data: this.convertedGroup,
       links: this.links

@@ -511,7 +511,6 @@ export default {
 
     const end = performance.now();
     const executionTime = end - start;
-    console.log(`Temps d'exécution tri : ${executionTime} millisecondes.`);
 
     const firstElement = this.$props.tasks.data[0];
     const lastElement = this.$props.tasks.data[this.$props.tasks.data.length - 1];
@@ -731,7 +730,6 @@ export default {
   },
 
   beforeDestroy: function() {
-    console.log('destroyed');
     gantt.clearAll();
     this.eventIds.forEach(eventId => gantt.detachEvent(eventId));
     this.eventIds = [];

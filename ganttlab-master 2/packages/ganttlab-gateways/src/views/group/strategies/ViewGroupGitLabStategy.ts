@@ -30,7 +30,6 @@ export class ViewGroupGitLabStrategy implements ViewSourceStrategy<Group> {
         configuration: Configuration,
         filter: Filter | null
     ): Promise<Group> {
-        const start = performance.now();
 
         const encodedGroup = encodeURIComponent(
             configuration.group.path as string,
@@ -104,12 +103,6 @@ export class ViewGroupGitLabStrategy implements ViewSourceStrategy<Group> {
             // Handle milestones
             await this.fetchMilestones(source, encodedGroup, state, labelsMap, configuration, users, activeGroup);
         }
-
-        console.log(activeGroup);
-
-        const end = performance.now();
-        const executionTime = end - start;
-        console.log(`Temps d'exécution requête : ${executionTime} millisecondes.`);
 
         if (!configuration.isAdmin) {
             activeGroup.users = users;
@@ -431,7 +424,6 @@ export class ViewGroupGitLabStrategy implements ViewSourceStrategy<Group> {
                         url: `/projects/${task.project_id}/issues/${task.task_iid}`,
                         data: data
                     });
-                    console.log(`Task ${task.id} updated successfully.`);
                 } catch (error) {
                     console.error(`Failed to update task ${task.id}: ${error}`);
                 }
@@ -452,7 +444,6 @@ export class ViewGroupGitLabStrategy implements ViewSourceStrategy<Group> {
                         url: `/groups/${encodedGroup}/epics/${task.epic_id}`,
                         data: data
                     });
-                    console.log(`Project ${task.id} updated successfully.`);
                 } catch (error) {
                     console.error(`Failed to update project ${task.id}: ${error}`);
                 }

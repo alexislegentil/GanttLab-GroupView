@@ -196,7 +196,6 @@ Add Closed Issue: increases loading time and reduces graph readability"></i>
     }
   
     setGroup(group: GitLabGroup) {
-        console.log(group);
       if (
         this.group &&
         this.group.path === group.path
@@ -210,7 +209,6 @@ Add Closed Issue: increases loading time and reduces graph readability"></i>
   
     get configuration() {
       if (this.group) {
-        console.log(this.group);
         return {
           group: new Group(
             this.group.name,
