@@ -745,7 +745,7 @@ export default {
 </script>
  
 <style >
-    @import "../../../../../../../node_modules/dhtmlx-gantt/codebase/skins/dhtmlxgantt_broadway.css";
+    @import "./skins/dhtmlxgantt_broadway.css";
 
 /* common styles for overriding */
 .ganttContainer{
