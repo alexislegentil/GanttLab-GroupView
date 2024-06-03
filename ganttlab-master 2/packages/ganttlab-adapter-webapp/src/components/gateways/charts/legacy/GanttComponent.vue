@@ -744,7 +744,7 @@ export default {
 }
 </script>
  
-<style lang="scss" scoped>
+<style >
     @import "../../../../../../../node_modules/dhtmlx-gantt/codebase/skins/dhtmlxgantt_broadway.css";
 
 /* common styles for overriding */

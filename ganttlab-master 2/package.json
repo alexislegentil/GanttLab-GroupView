@@ -17,7 +17,8 @@
     "webapp": "yarn workspace ganttlab-adapter-webapp run serve",
     "lint": "tsc --noEmit && eslint '*/**/*.{js,ts}' --quiet --fix && yarn workspace ganttlab-adapter-webapp run lint",
     "lerna:changed": "lerna changed -al",
-    "lerna:release": "lerna version --conventional-commits --changelog-preset angular --create-release gitlab"
+    "lerna:release": "lerna version --conventional-commits --changelog-preset angular --create-release gitlab",
+    "serve:dist": "npx http-server ./packages/ganttlab-adapter-webapp/dist -c-1 -p 8080 --spa"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^2.26.0",
