@@ -220,6 +220,7 @@ export default class ViewSelector extends Vue {
       // by default, simply use the first implemented view
       this.setView(this.views[0], this.views[0].defaultConfiguration);
       trackInteractionEvent('View', 'Default', this.views[0].slug);
+      this.showModal = true;
     }
   }
 }
